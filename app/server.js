@@ -55,6 +55,20 @@ db.exec(`
 
 const app = express();
 app.disable('x-powered-by');
+// Test-only request arrival trace used to prove P0 same-Task write ordering.
+app.locals.p0RequestTrace = [];
+app.use((req, _res, next) => {
+  if (process.env.TASK_TRACKER_TEST_TRACE === '1' && req.get('x-p0-request-id')) {
+    app.locals.p0RequestTrace.push({
+      requestId: req.get('x-p0-request-id'),
+      method: req.method,
+      path: req.originalUrl,
+      receivedAt: Date.now(),
+      sequence: app.locals.p0RequestTrace.length + 1
+    });
+  }
+  next();
+});
 app.use(express.json({ limit: '1mb' }));
 app.use((req, _res, next) => {
   if (req.body === undefined || req.body === null || typeof req.body !== 'object' || Array.isArray(req.body)) req.body = {};
