@@ -6,7 +6,7 @@
   "main": "app/server.js",
   "scripts": {
     "start": "node app/server.js",
-    "test": "node --test app/test/api.test.js",
+    "test": "node --test app/test/api.test.js app/test/weekly.test.js",
     "test:ui": "node --test app/test/ui.test.js"
   },
   "engines": {

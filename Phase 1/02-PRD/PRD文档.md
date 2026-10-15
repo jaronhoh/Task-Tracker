@@ -10,7 +10,7 @@
 | 来源定型稿 | Phase 1/01-产品定义/06-最终定型稿.md |
 | UI 设计基准 | shadcn/ui |
 | 开发目标 | Vibe.Power Apps |
-| 最后更新时间 | 2026-10-15 |
+| 最后更新时间 | 2026-10-16 |
 
 ## 1. 项目背景与范围
 
@@ -514,7 +514,9 @@ stateDiagram-v2
 
 - 页面顶部显示 View 标题与 Global Search。
 - 显示 Overall Total。
-- 显示 Carry Over (n) 与 New This Week (n) 两个分组。
+- 分别显示 `Carry Over (n)` 与 `New This Week (n)` 两个独立分组标题、任务数量和各自的完整任务列表；不得仅显示汇总数字或混合为一个未分组列表。
+- 每个分组的任务列表保留 Task ID、Customer Name、Task Title、Task Description、Note、Created、End、Status 全部字段。
+- 保留 Search（Global Search）、Edit Task 与 Export to Excel；行为分别沿用 F02-04、F01-02 与 F05 的既定规则。
 - 两个分组均按 Customer Name ASC、Task ID ASC 排序。
 - 不使用分页。
 
@@ -529,6 +531,9 @@ stateDiagram-v2
 7. 一周定义为星期一 00:00（含）至下一个星期一 00:00（不含），时区为 Malaysia Time (UTC+8)。
 8. Created 所属周、Current Week、Carry Over 与 New This Week 的判断，必须统一使用上述周界；不得依赖服务器默认周起始日或时区。
 9. 两个分组均按 Customer Name 升序，再按 Task ID 升序排列。
+10. 每组标题数量必须等于该组实际任务列表数量，并与顶部对应的 Carry Over / New This Week 统计卡片一致；顶部 Overall Total 必须等于两组数量之和。列表和统计必须基于同一次刷新、相同任务集合计算。
+11. 两个分组始终显示；无任务时显示数量 0 及空列表提示。每个符合规则的任务只能出现于其中一个分组，不得重复或遗漏。
+12. 新建或编辑 Task 后按既有刷新规则重新计算分组、数量及顶部统计，保留全部字段和原有 Search、Edit Task、Export to Excel 能力；本次分组显示补充不改变 F02-02 Current Week Status 的任务范围、Status 分组或统计逻辑。
 
 **4. 验收标准**
 
@@ -540,6 +545,12 @@ stateDiagram-v2
 - [ ] AC-F02-01-06：列表按 Customer Name ASC、Task ID ASC 排序。
 - [ ] AC-F02-01-07：本 View 不显示分页控件。
 - [ ] AC-F02-01-08：Created 恰好为星期一 00:00（Malaysia Time UTC+8）时归入该周；恰好为下一星期一 00:00 时不归入前一周。
+
+- [ ] AC-F02-01-09：Carry Over 与 New This Week 分别显示独立标题、数量及完整任务列表，不得仅显示统计卡片；无任务的分组仍显示标题、0 及空列表提示。
+- [ ] AC-F02-01-10：两个列表均保留 Task ID、Customer Name、Task Title、Task Description、Note、Created、End、Status；Search、Edit Task、Export to Excel 仍可按原规则使用。
+- [ ] AC-F02-01-11：各组标题数量 = 对应完整列表任务数 = 顶部对应统计卡片数量；Overall Total = Carry Over + New This Week，刷新后同步一致且任务不重复、不遗漏。
+- [ ] AC-F02-01-12：验收样例使用 Malaysia Time (UTC+8)，当前周为 2026-10-12 00:00（含）至 2026-10-19 00:00（不含）。仅有两个符合条件的任务：TSK-0001 的 Created 为 2026-10-09 10:00、Status 为 Work in Progress、End 为 NULL；TSK-0002 的 Created 为 2026-10-13 10:00、Status 为 KIV、End 为 NULL。页面应显示 `Carry Over (1)`，列表仅含 TSK-0001；`New This Week (1)`，列表仅含 TSK-0002；顶部对应卡片均为 1，Overall Total 为 2。两个任务均须显示本节规定的全部字段。
+- [ ] AC-F02-01-13：完成本次显示调整后，F02-02 Current Week Status 的既有任务纳入规则、四个 Status 分组、数量及 Overall Total 规则保持不变。
 
 #### 6.2.2 F02-02 Current Week Status
 

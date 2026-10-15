@@ -93,8 +93,8 @@ function currentWeekBounds() {
   };
 }
 
-function getViewTasks() {
-  const { start, end } = currentWeekBounds();
+function getViewTasks(bounds = currentWeekBounds()) {
+  const { start, end } = bounds;
   const weekly = state.tasks.filter(task => {
     const created = Date.parse(task.created);
     return (created < start && ACTIVE.has(task.status)) ||
@@ -104,9 +104,9 @@ function getViewTasks() {
   return state.tasks.slice();
 }
 
-function getDisplayedTasks() {
+function getDisplayedTasks(bounds) {
   const query = $('globalSearch').value.trim().toLocaleLowerCase('en-US');
-  const tasks = getViewTasks().filter(task => !query || SEARCH_FIELDS.some(field =>
+  const tasks = getViewTasks(bounds).filter(task => !query || SEARCH_FIELDS.some(field =>
     String(task[field] ?? '').toLocaleLowerCase('en-US').includes(query)));
   if (state.view === 'all') {
     const { field, direction } = state.allSort;
@@ -139,14 +139,18 @@ function escapeHtml(value) {
   })[c]);
 }
 
-function renderSummary(tasks) {
+function weeklyGroups(tasks, bounds = currentWeekBounds()) {
+  return [
+    ['Carry Over', tasks.filter(t => Date.parse(t.created) < bounds.start && ACTIVE.has(t.status))],
+    ['New This Week', tasks.filter(t => Date.parse(t.created) >= bounds.start && Date.parse(t.created) < bounds.end && t.status !== 'Deleted')]
+  ];
+}
+
+function renderSummary(tasks, groups) {
   const summary = $('summaryRow');
   const cards = [];
   if (state.view === 'weekly') {
-    const { start, end } = currentWeekBounds();
-    const carry = tasks.filter(t => Date.parse(t.created) < start && ACTIVE.has(t.status)).length;
-    const fresh = tasks.filter(t => Date.parse(t.created) >= start && Date.parse(t.created) < end && t.status !== 'Deleted').length;
-    cards.push(['Overall Total', tasks.length], ['Carry Over', carry], ['New This Week', fresh]);
+    cards.push(['Overall Total', tasks.length], ...groups.map(([label, items]) => [label, items.length]));
   } else if (state.view === 'status') {
     cards.push(['Overall Total', tasks.length]);
     for (const status of ['Work in Progress', 'Pending with Customer', 'KIV', 'Closed']) {
@@ -160,14 +164,27 @@ function renderSummary(tasks) {
 }
 
 function renderTable() {
-  const tasks = getDisplayedTasks();
+  const bounds = currentWeekBounds();
+  const tasks = getDisplayedTasks(bounds);
+  const groups = state.view === 'weekly' ? weeklyGroups(tasks, bounds) : null;
   state.displayedTasks = tasks;
-  renderSummary(tasks);
+  renderSummary(tasks, groups);
   if (state.table) {
     state.table.destroy();
     state.table = null;
   }
-  if (state.view === 'status') {
+  if (state.view === 'weekly') {
+    $('tasksTable').querySelector('tbody').innerHTML = groups.map(([label, items]) => {
+      const heading = `<tr class="status-group-row weekly-group-row"><td colspan="8">${label} (${items.length})</td></tr>`;
+      const rows = items.map(task => `<tr data-task-id="${escapeHtml(task.taskId)}" class="${task.taskId === state.selectedId ? 'selected-row' : ''}">
+        <td>${escapeHtml(task.taskId)}</td><td>${customerHtml(task)}</td><td>${escapeHtml(task.taskTitle)}</td>
+        <td>${escapeHtml(task.taskDescription || '')}</td><td>${escapeHtml(task.note || '')}</td>
+        <td>${escapeHtml(formatDateTime(task.created))}</td><td>${escapeHtml(formatDateTime(task.end))}</td>
+        <td><span class="status-pill ${statusClass(task.status)}">${escapeHtml(task.status)}</span></td>
+      </tr>`).join('');
+      return heading + (rows || '<tr class="weekly-empty-row"><td colspan="8">No results found</td></tr>');
+    }).join('');
+  } else if (state.view === 'status') {
     const groups = ['Work in Progress', 'Pending with Customer', 'KIV', 'Closed'];
     const tbody = $('tasksTable').querySelector('tbody');
     tbody.innerHTML = groups.map(status => {
@@ -663,3 +680,4 @@ async function init() {
 }
 
 init();
+
