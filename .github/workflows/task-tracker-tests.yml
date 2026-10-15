@@ -25,5 +25,10 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Check JavaScript syntax
+        run: |
+          node --check server.js
+          node --check public/app.js
+          node --check test/api.test.js
       - name: Run API tests
         run: npm test
