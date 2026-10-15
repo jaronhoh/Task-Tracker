@@ -83,7 +83,7 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
     await page.locator('#taskTitle').fill('Browser Acceptance Task Updated');
     await page.locator('#taskTitle').press('Tab');
     await page.getByText('taskTitle saved.').waitFor();
-    await page.locator('[data-close="taskDialog"]').click();
+    await page.locator('#taskDialog .icon-button[data-close="taskDialog"]').click();
     await page.locator('#taskDialog').waitFor({ state: 'hidden' });
 
     await page.locator('.view-tab[data-view="status"]').click();
@@ -109,7 +109,7 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
     await page.locator('#timeEnd').fill(malaysiaLocalEnd);
     await page.locator('#timeForm button[type="submit"]').click();
     await page.locator('#timeDialog').waitFor({ state: 'hidden' });
-    await page.locator('[data-close="taskDialog"]').click();
+    await page.locator('#taskDialog .icon-button[data-close="taskDialog"]').click();
     await page.locator('#taskDialog').waitFor({ state: 'hidden' });
     await page.locator('#tasksTable tbody tr[data-task-id="TSK-0001"] .status-pill.closed').waitFor();
 
@@ -118,7 +118,7 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
     const downloadPromise = page.waitForEvent('download');
     await page.locator('#exportBtn').click();
     const download = await downloadPromise;
-    assert.match(download.suggestedFilename(), /^TaskTracker_ShowAllData_\\d{8}\\.xlsx$/);
+    assert.match(download.suggestedFilename(), /^TaskTracker_ShowAllData_\d{8}\.xlsx$/);
     await context.close();
   } finally {
     if (browser) await browser.close();
