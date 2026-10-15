@@ -115,6 +115,14 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
 
     await page.locator('.view-tab[data-view="all"]').click();
     await page.locator('#tasksTable tbody tr[data-task-id="TSK-0001"]').waitFor();
+    await page.locator('#newTaskBtn').click();
+    await page.locator('#customerName').selectOption('QA Browser Customer');
+    await page.locator('#taskTitle').fill('AAA Sort Check');
+    await page.locator('#taskDialogFooter button[type="submit"]').click();
+    await page.locator('#taskDialog').waitFor({ state: 'hidden' });
+    await page.locator('#tasksTable tbody tr[data-task-id="TSK-0002"]').waitFor();
+    await page.locator('#tasksTable thead th').nth(2).click();
+    assert.equal((await page.locator('#tasksTable tbody tr').first().locator('td').nth(2).textContent()).trim(), 'AAA Sort Check');
     const downloadPromise = page.waitForEvent('download');
     await page.locator('#exportBtn').click();
     const download = await downloadPromise;
