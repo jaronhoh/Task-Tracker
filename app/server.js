@@ -379,7 +379,8 @@ app.use((error, _req, res, _next) => {
 });
 
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`Task Tracker API listening on http://localhost:${PORT}`));
+  const HOST = process.env.HOST || '0.0.0.0';
+  app.listen(PORT, HOST, () => console.log(`Task Tracker listening on ${HOST}:${PORT}`));
 }
 
 module.exports = { app, db, malaysiaNow, CUSTOMER_COLORS, STATUSES, nextTaskId };
