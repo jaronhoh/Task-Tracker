@@ -508,7 +508,15 @@ test('P0-008: concurrent same-Task PATCH writes apply in observed server receive
 });
 
 test('P0-010: concurrent Customer creation preserves normalized-name and color uniqueness', async () => {
-  const requests = Array.from({ length: 16 }, (_, index) =>
+  const duplicateRace = await Promise.all([
+    request(app).post('/api/customers').send({ name: 'P0 Concurrent Name' }),
+    request(app).post('/api/customers').send({ name: ' p0 concurrent name ' })
+  ]);
+  assert.equal(duplicateRace.filter(response => response.status === 201).length, 1);
+  assert.equal(duplicateRace.filter(response => response.status === 400).length, 1);
+  assert.equal((await request(app).get('/api/customers')).body.length, 1);
+
+  const requests = Array.from({ length: 15 }, (_, index) =>
     request(app).post('/api/customers').send({ name: `P0 Color Customer ${String(index + 1).padStart(2, '0')}` })
   );
   const responses = await Promise.all(requests);
@@ -516,14 +524,6 @@ test('P0-010: concurrent Customer creation preserves normalized-name and color u
   const customers = (await request(app).get('/api/customers')).body;
   assert.equal(customers.length, 16);
   assert.equal(new Set(customers.map(customer => customer.color.toUpperCase())).size, 16);
-
-  const duplicateRace = await Promise.all([
-    request(app).post('/api/customers').send({ name: 'P0 Concurrent Name' }),
-    request(app).post('/api/customers').send({ name: ' p0 concurrent name ' })
-  ]);
-  assert.equal(duplicateRace.filter(response => response.status === 201).length, 0);
-  assert.equal(duplicateRace.filter(response => response.status === 400).length, 2);
-  assert.equal((await request(app).get('/api/customers')).body.length, 16);
 });
 
 test('P0-011: Customer rename failure rolls back Customer and two linked Tasks', async () => {
