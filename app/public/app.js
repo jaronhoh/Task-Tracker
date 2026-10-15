@@ -183,7 +183,7 @@ function renderTable() {
       escapeHtml(formatDateTime(task.end)),
       `<span class="status-pill ${statusClass(task.status)}">${escapeHtml(task.status)}</span>`
     ]);
-    state.table = $('#tasksTable').DataTable({
+    state.table = window.jQuery('#tasksTable').DataTable({
     data: rows,
     columns: [
       { title: 'Task ID' }, { title: 'Customer Name' }, { title: 'Task Title' },
@@ -348,8 +348,8 @@ async function createCustomer(event) {
     const customer = await api('/api/customers', {
       method: 'POST', body: JSON.stringify({ name: $('newCustomerName').value })
     });
-    customerDialog.close();
     await loadAll();
+    customerDialog.close();
     fillCustomerSelect(customer.name);
     $('customerName').value = customer.name;
     if ($('taskId').value && taskDialog.open) queuePatch('customerName', customer.name, $('customerName'));
