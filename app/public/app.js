@@ -447,8 +447,12 @@ async function saveTime(event) {
   const task = selectedTask();
   if (!task) return;
   const created = localInputToMalaysia($('timeCreated').value);
-  const end = localInputToMalaysia($('timeEnd').value);
+  let end = localInputToMalaysia($('timeEnd').value);
   const status = $('timeStatus').value;
+  if (ACTIVE.has(status) && !ACTIVE.has(task.status)) {
+    end = null;
+    $('timeEnd').value = '';
+  }
   if (state.specialTimeFlow && ACTIVE.has(status)) {
     showDialogError('timeDialogError', 'Choose Closed or Deleted to complete this confirmation flow.');
     return;
