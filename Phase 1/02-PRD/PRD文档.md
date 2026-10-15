@@ -881,8 +881,324 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 - [ ] AC-F04-01-11：时间使用 Malaysia Time (UTC+8)。
 ### 6.5 F05 Integration & Export
 
-待进入 F05 模块详细评审。
+#### 6.5.1 F05-01 REST API — Create Task
 
+**1. 功能目标**
+
+允许外部系统通过 REST API 创建 Task，并遵循 F01 的 Task 生命周期及 F03 的 Customer 规则。
+
+**2. API 定义**
+
+| 项目 | 定义 |
+|------|------|
+| Method | `POST` |
+| Endpoint | `/api/tasks` |
+| Content-Type | `application/json` |
+| 成功状态码 | `201 Created` |
+| 成功 Response | 直接返回新建的 Task Resource JSON |
+
+**3. Request Body**
+
+```json
+{
+  "customerName": "Customer A",
+  "taskTitle": "Prepare weekly report",
+  "taskDescription": "Prepare the weekly project report",
+  "note": "Waiting for project updates",
+  "status": "KIV"
+}
+```
+
+| 字段 | 必填 | 规则 |
+|------|------|------|
+| `customerName` | 是 | Customer 名称；按 F03 规则匹配 |
+| `taskTitle` | 是 | 单行文本，最多 100 个字符 |
+| `taskDescription` | 否 | 单行文本，最多 255 个字符 |
+| `note` | 否 | 多行文本，最多 1000 个字符 |
+| `status` | 否 | 默认 `KIV`；必须使用完整 Status 名称 |
+
+**4. 业务规则**
+
+1. Task ID 由系统生成，格式为 `TSK-0001`，唯一、永久且不重复使用。
+2. Created 由系统生成，代表 Malaysia Time (UTC+8)。
+3. 未提供 Status 时，默认使用 `KIV`。
+4. Status 只接受 `Work in Progress`、`Pending with Customer`、`KIV`、`Closed`、`Deleted`。
+5. Active Status（Work in Progress、Pending with Customer、KIV）创建时 End 为 NULL。
+6. 如果创建时 Status 为 Closed 或 Deleted，End 必须按 F01 生命周期规则设置为当前 Malaysia Time，不能留下 Closed/Deleted + NULL End 的不一致数据。
+7. 如果 Customer Name 已存在，使用现有 Customer 名称规则匹配。
+8. 如果 Customer 不存在，系统尝试创建 Customer，并分配固定 16 色调色板中第一个可用颜色。
+9. Customer 名称匹配忽略首尾空格且不区分大小写。
+10. 如果 16 种颜色全部用完，不允许自动创建 Customer，也不得留下部分创建的 Task。
+11. Task 创建必须遵循 F01 Status Lifecycle 与 F03 Customer 规则。
+
+**5. 验收标准**
+
+- [ ] AC-F05-01-01：有效请求可创建 Task，并返回 HTTP 201。
+- [ ] AC-F05-01-02：系统自动生成唯一 Task ID。
+- [ ] AC-F05-01-03：系统自动生成 Created，使用 Malaysia Time (UTC+8)。
+- [ ] AC-F05-01-04：未提供 Status 时默认 KIV。
+- [ ] AC-F05-01-05：Active Status 创建时 End 为 NULL。
+- [ ] AC-F05-01-06：以 Closed 或 Deleted 创建时，End 按 F01 规则生成。
+- [ ] AC-F05-01-07：不存在的 Customer 可按规则自动创建。
+- [ ] AC-F05-01-08：颜色全部用完时，不允许创建 Customer 或留下部分 Task。
+- [ ] AC-F05-01-09：缺少必填字段、字段超长或 Status 无效时返回验证错误。
+- [ ] AC-F05-01-10：API 创建遵循与 Web App 一致的业务规则。
+
+#### 6.5.2 F05-02 REST API — Read Tasks
+
+**1. 功能目标**
+
+允许外部系统获取非 Deleted Task 列表，或根据 Task ID 读取指定 Task。
+
+**2. API 定义**
+
+| Method | Endpoint | 用途 |
+|--------|----------|------|
+| `GET` | `/api/tasks` | 获取非 Deleted Task 列表 |
+| `GET` | `/api/tasks/{taskId}` | 根据 Task ID 获取单条 Task |
+
+**3. Response 示例**
+
+```json
+{
+  "taskId": "TSK-0001",
+  "customerName": "Customer A",
+  "taskTitle": "Prepare weekly report",
+  "taskDescription": "Prepare the weekly project report",
+  "note": "Waiting for project updates",
+  "created": "2026-10-15T09:00:00",
+  "end": null,
+  "status": "KIV"
+}
+```
+
+**4. 业务规则**
+
+1. Response 直接返回 Resource JSON；不使用额外的 `data`、`result` 或 `payload` 包装对象。
+2. Task 字段采用示例中的 camelCase JSON 名称。
+3. Status 使用完整文字，不使用数字或缩写。
+4. `GET /api/tasks` 默认排除 Status = `Deleted` 的记录。
+5. `GET /api/tasks/{taskId}` 可读取指定 Task，即使该 Task 的 Status 为 `Deleted`。
+6. Task ID 不存在时返回 `404 Not Found`。
+7. 时间字段采用 F05-06 定义的不带时区本地时间字符串格式。
+
+**5. 验收标准**
+
+- [ ] AC-F05-02-01：`GET /api/tasks` 返回非 Deleted Task 列表。
+- [ ] AC-F05-02-02：`GET /api/tasks/{taskId}` 可读取指定 Task。
+- [ ] AC-F05-02-03：通过 Task ID 查询时，Deleted Task 仍可读取。
+- [ ] AC-F05-02-04：Task 不存在时返回 HTTP 404。
+- [ ] AC-F05-02-05：Response 直接返回 Resource JSON，不使用包装对象。
+- [ ] AC-F05-02-06：Status 使用完整文字。
+- [ ] AC-F05-02-07：JSON 字段名及时间格式符合本模块约定。
+
+#### 6.5.3 F05-03 REST API — Update Task
+
+**1. 功能目标**
+
+允许外部系统使用 PATCH 更新指定 Task 的部分业务字段。
+
+**2. API 定义**
+
+| 项目 | 定义 |
+|------|------|
+| Method | `PATCH` |
+| Endpoint | `/api/tasks/{taskId}` |
+| Content-Type | `application/json` |
+| 成功状态码 | `200 OK` |
+| 成功 Response | 直接返回更新后的 Task Resource JSON |
+
+**3. Request Body 示例**
+
+```json
+{
+  "taskTitle": "Prepare revised weekly report",
+  "note": "Updated based on customer feedback"
+}
+```
+
+**4. 业务规则**
+
+1. PATCH 只更新 Request Body 中提供的可更新字段；未提供的字段保持原值。
+2. 不允许修改 Task ID。
+3. 普通 PATCH 不允许修改 Created 或 End；时间修正仅通过 UI 的 Edit Time 功能进行。
+4. 可更新字段为 `customerName`、`taskTitle`、`taskDescription`、`note`、`status`。
+5. 更新 Customer Name 时，遵循 F03 名称匹配与同步更新规则。
+6. 更新 Status 时，遵循 F01 Status Lifecycle，并由系统维护 End。
+7. 无效 Status、字段超长或缺少必要值时返回 `400 Bad Request`。
+8. Task ID 不存在时返回 `404 Not Found`。
+9. 本模块不额外定义对 Deleted Task 执行 PATCH 的特殊禁止规则；请求仍须通过字段验证及 F01 生命周期规则。
+
+**5. 验收标准**
+
+- [ ] AC-F05-03-01：PATCH 可更新 Request Body 中指定的可更新字段。
+- [ ] AC-F05-03-02：未提供的字段保持原值。
+- [ ] AC-F05-03-03：不允许修改 Task ID、Created 或 End。
+- [ ] AC-F05-03-04：Status 更新遵循 F01 生命周期规则。
+- [ ] AC-F05-03-05：Customer Name 更新遵循 F03 规则。
+- [ ] AC-F05-03-06：无效请求返回 HTTP 400。
+- [ ] AC-F05-03-07：Task 不存在时返回 HTTP 404。
+- [ ] AC-F05-03-08：成功时直接返回更新后的 Resource JSON。
+
+#### 6.5.4 F05-04 REST API — Delete Task
+
+**1. 功能目标**
+
+允许外部系统逻辑删除 Task，保留历史记录。
+
+**2. API 定义**
+
+| 项目 | 定义 |
+|------|------|
+| Method | `DELETE` |
+| Endpoint | `/api/tasks/{taskId}` |
+| 成功状态码 | `200 OK` |
+| 操作类型 | Logical Delete |
+
+**3. 业务规则**
+
+1. DELETE 不执行物理删除。
+2. 对非 Deleted Task，Status 更新为 `Deleted`，End 更新为当前 Malaysia Time (UTC+8)。
+3. Task ID 保持不变，记录保留在 SQLite。
+4. Deleted Task 不显示在 Weekly Task 与 Current Week Status，但仍显示在 Show All Data。
+5. 如果 Task 已经是 Deleted，再次调用 DELETE 时返回 `400 Bad Request`，错误信息为 `Task is already deleted.` 或含义明确的等效文字；不得再次更新 End。
+6. Task ID 不存在时返回 `404 Not Found`。
+7. 成功 Response 直接返回更新后的 Task Resource JSON。
+
+**4. 验收标准**
+
+- [ ] AC-F05-04-01：DELETE 不物理删除 Task。
+- [ ] AC-F05-04-02：非 Deleted Task 的 Status 更新为 Deleted。
+- [ ] AC-F05-04-03：End 更新为当前 Malaysia Time。
+- [ ] AC-F05-04-04：Task ID 不变且记录保留。
+- [ ] AC-F05-04-05：Deleted Task 不显示于两个 Weekly Views，仍显示于 Show All Data。
+- [ ] AC-F05-04-06：再次删除已 Deleted Task 时返回 HTTP 400，且 End 不变。
+- [ ] AC-F05-04-07：Task 不存在时返回 HTTP 404。
+
+#### 6.5.5 F05-05 API Validation & Error Handling
+
+**1. HTTP 状态码**
+
+| HTTP Status | 使用场景 |
+|-------------|----------|
+| `200 OK` | GET、PATCH、DELETE 成功 |
+| `201 Created` | POST 创建成功 |
+| `400 Bad Request` | 请求格式或字段无效；或 Task 已经 Deleted |
+| `404 Not Found` | 指定 Task ID 不存在 |
+
+**2. 错误 Response 示例**
+
+```json
+{
+  "error": "Task Title is required."
+}
+```
+
+**3. 业务规则**
+
+1. 错误 Response 使用 JSON，直接返回错误对象，不使用额外包装。
+2. 错误信息必须说明失败原因。
+3. 失败请求不得显示为成功。
+4. 验证必须由系统端执行，不能只依赖 UI。
+5. Customer 名称重复、颜色用尽、无效 Status、字段超长、必填字段缺失等情况必须得到明确处理。
+6. 创建 Task 与自动创建 Customer 必须保证一致性；如果任一步骤失败，不得留下部分创建的 Task 或 Customer。
+7. 对不存在的 Task，返回 404；不得将“已 Deleted”与“Task ID 不存在”混为同一情况。
+
+**4. 验收标准**
+
+- [ ] AC-F05-05-01：请求无效时返回 HTTP 400。
+- [ ] AC-F05-05-02：Task 不存在时返回 HTTP 404。
+- [ ] AC-F05-05-03：错误 Response 为 JSON 且不带包装对象。
+- [ ] AC-F05-05-04：错误信息说明失败原因。
+- [ ] AC-F05-05-05：失败请求不会留下部分或不一致的数据。
+
+#### 6.5.6 F05-06 API DateTime Format
+
+**1. 时间格式**
+
+API 时间字段采用不带时区偏移量的本地时间字符串，格式为：
+
+`YYYY-MM-DDTHH:mm:ss`
+
+示例：
+
+```json
+{
+  "created": "2026-10-15T09:00:00",
+  "end": null
+}
+```
+
+**2. 业务规则**
+
+1. API 输入与输出统一使用上述格式。
+2. 不附加 `Z` 或 `+08:00`。
+3. 所有时间值均代表 Malaysia Time (UTC+8)。
+4. Created 与 End 的业务规则由 F01、F04 定义。
+5. API 实现不得将上述本地时间字符串误当作 UTC 后进行额外时区转换。
+
+**3. 验收标准**
+
+- [ ] AC-F05-06-01：时间字段格式为 `YYYY-MM-DDTHH:mm:ss`。
+- [ ] AC-F05-06-02：时间字符串不包含时区后缀。
+- [ ] AC-F05-06-03：API 输入与输出均按 Malaysia Time (UTC+8) 解释。
+
+#### 6.5.7 F05-07 Excel Export
+
+**1. 功能目标**
+
+允许用户将当前 View 的所有符合条件的结果导出为 Excel 文件。
+
+**2. 功能入口**
+
+每个 View 均提供 `Export to Excel` 按钮：
+
+- Weekly Task
+- Current Week Status
+- Show All Data
+
+**3. 文件规则**
+
+| 项目 | 规则 |
+|------|------|
+| 格式 | Excel `.xlsx` |
+| 每次导出 | 一个 View 对应一个独立文件 |
+| 每个文件 | 恰好一个 Sheet |
+| 导出范围 | 当前 View 的全部符合条件结果，不受分页限制 |
+| 搜索条件 | 应用当前 Global Search 条件 |
+| 文件命名 | `TaskTracker_[ViewName]_YYYYMMDD.xlsx` |
+| 文件日期 | Malaysia Time (UTC+8) |
+
+文件名示例：
+
+- `TaskTracker_WeeklyTask_20261015.xlsx`
+- `TaskTracker_CurrentWeekStatus_20261015.xlsx`
+- `TaskTracker_ShowAllData_20261015.xlsx`
+
+**4. 业务规则**
+
+1. 每个 View 独立导出一个 Excel 文件；不将三个 View 合并进同一个文件。
+2. 每个 Excel 文件只包含一个 Sheet。
+3. 导出当前 View 所有符合过滤条件的记录，不受当前页面分页大小或当前页影响。
+4. 有 Global Search 条件时，只导出符合搜索条件的记录。
+5. Weekly Task 导出当前 Carry Over 与 New This Week 结果。
+6. Current Week Status 导出当前周四个 Status 分组的结果。
+7. Show All Data 导出符合条件的全部记录，包括 Deleted。
+8. 导出内容应保留当前 View 的分组语义；各分组共用一个 Sheet，不额外创建多个 Sheet。
+9. 导出不修改 Task 数据、Status、Created 或 End。
+
+**5. 验收标准**
+
+- [ ] AC-F05-07-01：三个 View 均提供 Export to Excel。
+- [ ] AC-F05-07-02：每个 View 分别导出一个独立的 `.xlsx` 文件。
+- [ ] AC-F05-07-03：每个文件恰好包含一个 Sheet。
+- [ ] AC-F05-07-04：导出所有符合条件的记录，不受分页限制。
+- [ ] AC-F05-07-05：有搜索条件时，只导出符合搜索条件的记录。
+- [ ] AC-F05-07-06：Weekly Task 导出 Carry Over 与 New This Week 的结果。
+- [ ] AC-F05-07-07：Current Week Status 导出四个 Status 分组的结果。
+- [ ] AC-F05-07-08：Show All Data 可导出符合条件的 Deleted 记录。
+- [ ] AC-F05-07-09：文件名符合既定格式，日期使用 Malaysia Time。
+- [ ] AC-F05-07-10：导出不会修改任何 Task 数据。
 ## 7. 非功能需求
 
 ### 7.1 性能需求
