@@ -47,7 +47,7 @@ npm install
 npm test
 ```
 
-Tests use an in-memory SQLite database. They are authored but must be executed in a Node.js environment before any test is marked Pass.
+Tests use an in-memory SQLite database. GitHub Actions run `38721327387` passed JavaScript syntax checks and all 12 API tests (12 passed, 0 failed). This covers the initial automated API suite only; the 16 manual P0 scenarios and browser UI behavior still need separate verification.
 
 ## Implementation notes
 
