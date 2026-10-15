@@ -270,14 +270,17 @@ test('Customer rename rolls back when linked Task update fails', async () => {
       SELECT RAISE(ABORT, 'injected rename failure');
     END;
   `);
-  const response = await request(app).patch('/api/customers/QA%20Alpha').send({ name: 'QA Alpha Renamed' });
-  assert.equal(response.status, 500);
-  const customers = await request(app).get('/api/customers');
-  assert.equal(customers.body.length, 1);
-  assert.equal(customers.body[0].name, 'QA Alpha');
-  const after = await request(app).get(`/api/tasks/${task.taskId}`);
-  assert.equal(after.body.customerName, 'QA Alpha');
-  db.exec('DROP TRIGGER fail_task_customer_rename');
+  try {
+    const response = await request(app).patch('/api/customers/QA%20Alpha').send({ name: 'QA Alpha Renamed' });
+    assert.equal(response.status, 500);
+    const customers = await request(app).get('/api/customers');
+    assert.equal(customers.body.length, 1);
+    assert.equal(customers.body[0].name, 'QA Alpha');
+    const after = await request(app).get(`/api/tasks/${task.taskId}`);
+    assert.equal(after.body.customerName, 'QA Alpha');
+  } finally {
+    db.exec('DROP TRIGGER IF EXISTS fail_task_customer_rename');
+  }
 });
 
 test('concurrent PATCH operations preserve both independent field changes', async () => {
@@ -290,4 +293,19 @@ test('concurrent PATCH operations preserve both independent field changes', asyn
   const final = await request(app).get(`/api/tasks/${task.taskId}`);
   assert.equal(final.body.taskTitle, 'Concurrent title');
   assert.equal(final.body.note, 'Concurrent note');
+});
+
+
+test('invalid JSON returns HTTP 400 instead of an internal server error', async () => {
+  const response = await request(app).post('/api/tasks')
+    .set('Content-Type', 'application/json')
+    .send('{ invalid');
+  assert.equal(response.status, 400);
+  assert.equal(response.body.error.code, 'INVALID_JSON');
+});
+
+test('empty JSON body returns validation error instead of HTTP 500', async () => {
+  const response = await request(app).post('/api/tasks').send({});
+  assert.equal(response.status, 400);
+  assert.equal(response.body.error.code, 'VALIDATION_ERROR');
 });
