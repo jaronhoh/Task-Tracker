@@ -47,7 +47,7 @@ npm install
 npm test
 ```
 
-Tests use an in-memory SQLite database. GitHub Actions previously passed JavaScript syntax checks and all 12 initial API tests (12 passed, 0 failed). The API suite has since been expanded; check the latest Actions run for its current result. Automated API tests do not replace the 16 manual P0 scenarios or browser UI acceptance testing.
+Tests use an in-memory SQLite database. Run the API suite with `npm test` from the repository root. The Playwright browser suite is `npm run test:ui` from the repository root after `npx playwright install chromium`. Automated tests do not replace the 16 manual P0 scenarios or concurrency/fault-injection evidence.
 
 ## Implementation notes
 
@@ -56,5 +56,5 @@ Tests use an in-memory SQLite database. GitHub Actions previously passed JavaScr
 - Customer creation/rename and related Task writes use SQLite transactions.
 - Malaysia timestamps are stored with an explicit `+08:00` offset.
 - Deleted Tasks are logical deletes and remain readable.
-- The UI uses CDN-hosted DataTables and SheetJS assets, so those assets require network access in the browser.
+- The UI dependencies (jQuery, DataTables and SheetJS) are served locally from installed npm packages, so the app does not require third-party CDN access at runtime.
 - This is the initial implementation slice. See the Phase 1 PRD and P0 test documents for the complete acceptance baseline and remaining verification work.
