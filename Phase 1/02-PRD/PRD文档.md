@@ -710,6 +710,8 @@ stateDiagram-v2
 7. 取消新增时，不创建 Customer 记录。
 8. 新增失败时显示错误，并保留用户输入供修正。
 9. REST API 通过 Customer Name 自动新增 Customer 时，也必须遵守名称唯一性及固定颜色规则；颜色用完时不得新增 Customer，API 处理由 F05 定义。
+10. 服务端必须在同一事务中完成 Customer 名称唯一性检查、未使用颜色分配与 Customer 创建，并通过系统端约束防止并发请求产生重复名称或重复颜色。
+11. 并发竞争导致新增失败时，返回明确 HTTP 400 错误；不得创建重复 Customer，也不得留下部分 Customer 或 Task 数据。
 
 **4. 验收标准**
 
@@ -721,6 +723,8 @@ stateDiagram-v2
 - [ ] AC-F03-02-06：取消新增不会创建记录。
 - [ ] AC-F03-02-07：16 种颜色全部用完后，UI 与 API 均不允许新增 Customer。
 - [ ] AC-F03-02-08：新增失败时显示错误，并保留用户输入。
+- [ ] AC-F03-02-09：Customer 名称检查、颜色分配及 Customer 创建由服务端在同一事务中完成。
+- [ ] AC-F03-02-10：并发创建不能产生重复名称或重复颜色；竞争失败返回明确错误，且不留下部分数据。
 
 #### 6.3.3 F03-03 Edit Customer
 
@@ -1034,7 +1038,7 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 **4. 业务规则**
 
 1. PATCH 只更新 Request Body 中提供的可更新字段；未提供的字段保持原值。
-3. 对可选文本字段 `taskDescription` 与 `note`：字段缺省表示不修改；显式传入 `null` 或空字符串 `""` 均表示清空字段，并规范保存为数据库 NULL。必填字段不接受 `null` 或空白值；所有字段仍须遵守各自长度与格式验证。
+2. 对可选文本字段 `taskDescription` 与 `note`：字段缺省表示不修改；显式传入 `null` 或空字符串 `""` 均表示清空字段，并规范保存为数据库 NULL。必填字段不接受 `null` 或空白值；所有字段仍须遵守各自长度与格式验证。
 3. 不允许修改 Task ID。
 4. 普通 PATCH 不允许修改 Created 或 End；时间修正仅通过 UI 的 Edit Time 功能进行。
 5. 可更新字段为 `customerName`、`taskTitle`、`taskDescription`、`note`、`status`。
