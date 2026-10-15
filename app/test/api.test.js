@@ -380,3 +380,111 @@ test('Edit Time canonicalizes UTC input to Malaysia UTC+8 without changing the i
   assert.ok(response.body.end.endsWith('+08:00'));
   assert.equal(Date.parse(response.body.end), Date.parse(endUtc));
 });
+
+
+// P0 execution batch 1: D019/D013 End consistency and atomicity.
+test('P0-001 PASS: Active KIV with invalid End is repaired on a valid write', async () => {
+  const task = await createTask({ status: 'KIV' });
+  const invalidEnd = '2020-01-01T00:00:00+08:00';
+  db.prepare('UPDATE tasks SET end = ? WHERE task_id = ?').run(invalidEnd, task.taskId);
+  const response = await request(app).patch(`/api/tasks/${task.taskId}`).send({ note: 'P0-001 repair' });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.end, null);
+  assert.equal(response.body.status, 'KIV');
+  assert.equal(response.body.taskId, task.taskId);
+  assert.equal(response.body.note, 'P0-001 repair');
+  const stored = db.prepare('SELECT * FROM tasks WHERE task_id = ?').get(task.taskId);
+  assert.equal(stored.end, null);
+  assert.equal(stored.note, 'P0-001 repair');
+});
+
+test('P0-002 PASS: all three Active statuses clear invalid End on write', async () => {
+  for (const status of ['Work in Progress', 'Pending with Customer', 'KIV']) {
+    const task = await createTask({ status, taskTitle: `P0-002 ${status}` });
+    db.prepare('UPDATE tasks SET end = ? WHERE task_id = ?').run('2020-01-01T00:00:00+08:00', task.taskId);
+    const response = await request(app).patch(`/api/tasks/${task.taskId}`).send({ note: `checked ${status}` });
+    assert.equal(response.status, 200, status);
+    assert.equal(response.body.status, status);
+    assert.equal(response.body.end, null);
+    assert.equal(db.prepare('SELECT end FROM tasks WHERE task_id = ?').get(task.taskId).end, null);
+  }
+});
+
+test('P0-003 PASS: Closed with NULL End is repaired using current Malaysia time', async () => {
+  const task = await createTask({ status: 'Closed' });
+  db.prepare('UPDATE tasks SET end = NULL WHERE task_id = ?').run(task.taskId);
+  const before = Date.now();
+  const response = await request(app).patch(`/api/tasks/${task.taskId}`).send({ note: 'P0-003 repair' });
+  const after = Date.now();
+  assert.equal(response.status, 200);
+  assert.ok(response.body.end);
+  assert.ok(Date.parse(response.body.end) >= Date.parse(task.created));
+  assert.ok(Date.parse(response.body.end) >= before - 1000 && Date.parse(response.body.end) <= after + 1000);
+  assert.ok(response.body.end.endsWith('+08:00'));
+  assert.equal(db.prepare('SELECT end FROM tasks WHERE task_id = ?').get(task.taskId).end, response.body.end);
+});
+
+test('P0-004 PASS: Deleted with NULL End is repaired without physical deletion', async () => {
+  const task = await createTask({ status: 'Deleted' });
+  db.prepare('UPDATE tasks SET end = NULL WHERE task_id = ?').run(task.taskId);
+  const response = await request(app).patch(`/api/tasks/${task.taskId}`).send({ note: 'P0-004 repair' });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.status, 'Deleted');
+  assert.equal(response.body.taskId, task.taskId);
+  assert.ok(response.body.end);
+  assert.ok(response.body.end.endsWith('+08:00'));
+  assert.ok(db.prepare('SELECT 1 FROM tasks WHERE task_id = ?').get(task.taskId));
+});
+
+test('P0-005 PASS: future Created rejects repair of Closed/Deleted NULL End without partial writes', async () => {
+  const future = new Date(Date.now() + 24 * 60 * 60 * 1000 + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00');
+  for (const status of ['Closed', 'Deleted']) {
+    const task = await createTask({ status, taskTitle: `P0-005 ${status}` });
+    db.prepare('UPDATE tasks SET created = ?, end = NULL, note = ? WHERE task_id = ?').run(future, 'original note', task.taskId);
+    const response = await request(app).patch(`/api/tasks/${task.taskId}`).send({ note: 'must not persist' });
+    assert.equal(response.status, 400, status);
+    assert.equal(response.body.error.code, 'FUTURE_CREATED');
+    const stored = db.prepare('SELECT * FROM tasks WHERE task_id = ?').get(task.taskId);
+    assert.equal(stored.status, status);
+    assert.equal(stored.end, null);
+    assert.equal(stored.created, future);
+    assert.equal(stored.note, 'original note');
+  }
+});
+
+test('P0-006 PASS: future Created blocks Active to Closed and Active to Deleted', async () => {
+  const future = new Date(Date.now() + 24 * 60 * 60 * 1000 + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00');
+  for (const targetStatus of ['Closed', 'Deleted']) {
+    const task = await createTask({ taskTitle: `P0-006 to ${targetStatus}` });
+    db.prepare('UPDATE tasks SET created = ? WHERE task_id = ?').run(future, task.taskId);
+    const response = await request(app).patch(`/api/tasks/${task.taskId}`).send({ status: targetStatus });
+    assert.equal(response.status, 400, targetStatus);
+    assert.equal(response.body.error.code, 'FUTURE_CREATED');
+    const stored = db.prepare('SELECT * FROM tasks WHERE task_id = ?').get(task.taskId);
+    assert.equal(stored.status, 'KIV');
+    assert.equal(stored.end, null);
+    assert.equal(stored.created, future);
+  }
+});
+
+test('P0-007 PASS: database failure after End repair calculation rolls back all Task fields', async () => {
+  const task = await createTask({ status: 'Closed' });
+  db.prepare('UPDATE tasks SET end = NULL WHERE task_id = ?').run(task.taskId);
+  const before = db.prepare('SELECT * FROM tasks WHERE task_id = ?').get(task.taskId);
+  db.exec(`
+    CREATE TRIGGER p0_007_force_update_failure
+    BEFORE UPDATE ON tasks
+    WHEN NEW.task_id = '${task.taskId}'
+    BEGIN
+      SELECT RAISE(ABORT, 'P0-007 injected failure');
+    END;
+  `);
+  try {
+    const response = await request(app).patch(`/api/tasks/${task.taskId}`).send({ note: 'must roll back' });
+    assert.equal(response.status, 500);
+    const after = db.prepare('SELECT * FROM tasks WHERE task_id = ?').get(task.taskId);
+    assert.deepEqual(after, before);
+  } finally {
+    db.exec('DROP TRIGGER IF EXISTS p0_007_force_update_failure');
+  }
+});
