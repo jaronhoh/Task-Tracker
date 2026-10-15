@@ -58,6 +58,7 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
       const vendorStatus = await Promise.all(['/vendor/jquery/jquery.min.js','/vendor/datatables/dataTables.min.js','/vendor/datatables-css/dataTables.dataTables.min.css','/vendor/xlsx/xlsx.full.min.js'].map(async url => ({ url, status: (await page.request.get(baseUrl + url)).status() })));
       throw new Error(`UI initialization failed; badge=${badge}; vendors=${JSON.stringify(vendorStatus)}; browserErrors=${JSON.stringify(pageErrors)}; cause=${error.message}`);
     }
+    assert.equal((await page.locator('#healthBadge').textContent()).trim(), 'API Connected');
 
     await page.locator('#newTaskBtn').click();
     await page.locator('#customerName').selectOption('__add_customer__');
