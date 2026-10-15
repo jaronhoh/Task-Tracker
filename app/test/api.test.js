@@ -309,3 +309,61 @@ test('empty JSON body returns validation error instead of HTTP 500', async () =>
   assert.equal(response.status, 400);
   assert.equal(response.body.error.code, 'VALIDATION_ERROR');
 });
+
+
+test('Task creation rolls back auto-created Customer when Task insert fails', async () => {
+  db.exec(`
+    CREATE TRIGGER fail_task_insert
+    BEFORE INSERT ON tasks
+    WHEN NEW.task_title = 'Injected Failure'
+    BEGIN
+      SELECT RAISE(ABORT, 'injected task insert failure');
+    END;
+  `);
+  try {
+    const failed = await request(app).post('/api/tasks').send({
+      customerName: 'QA Atomic Customer', taskTitle: 'Injected Failure'
+    });
+    assert.equal(failed.status, 500);
+    assert.deepEqual((await request(app).get('/api/customers')).body, []);
+    const next = await createTask({ customerName: 'QA Alpha' });
+    assert.equal(next.taskId, 'TSK-0002');
+  } finally {
+    db.exec('DROP TRIGGER IF EXISTS fail_task_insert');
+  }
+});
+
+test('Customer rename collision is rejected without changing linked Tasks', async () => {
+  const first = await createTask({ customerName: 'QA Alpha' });
+  await request(app).post('/api/customers').send({ name: 'QA Beta' }).expect(201);
+  const response = await request(app).patch('/api/customers/QA%20Alpha').send({ name: ' qa beta ' });
+  assert.equal(response.status, 400);
+  const after = await request(app).get(`/api/tasks/${first.taskId}`);
+  assert.equal(after.body.customerName, 'QA Alpha');
+  const customers = await request(app).get('/api/customers');
+  assert.deepEqual(customers.body.map(customer => customer.name).sort(), ['QA Alpha', 'QA Beta']);
+});
+
+test('DELETE rejects future Created and preserves the entire Task', async () => {
+  const task = await createTask();
+  const future = new Date(Date.now() + 24 * 60 * 60 * 1000 + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00');
+  db.prepare('UPDATE tasks SET created = ? WHERE task_id = ?').run(future, task.taskId);
+  const response = await request(app).delete(`/api/tasks/${task.taskId}`);
+  assert.equal(response.status, 400);
+  assert.equal(response.body.error.code, 'FUTURE_CREATED');
+  const after = await request(app).get(`/api/tasks/${task.taskId}`);
+  assert.equal(after.body.status, 'KIV');
+  assert.equal(after.body.end, null);
+  assert.equal(after.body.created, future);
+});
+
+test('Edit Time rejects Created later than existing End without partial update', async () => {
+  const task = await createTask({ status: 'Closed' });
+  const laterCreated = new Date(Date.parse(task.end) + 60_000).toISOString().replace('Z', '+00:00');
+  const response = await request(app).patch(`/api/tasks/${task.taskId}/time`).send({ created: laterCreated });
+  assert.equal(response.status, 400);
+  const after = await request(app).get(`/api/tasks/${task.taskId}`);
+  assert.equal(after.body.created, task.created);
+  assert.equal(after.body.end, task.end);
+  assert.equal(after.body.status, 'Closed');
+});
