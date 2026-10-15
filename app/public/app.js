@@ -195,7 +195,8 @@ function renderTable() {
     lengthMenu: [25, 50, 100],
     searching: false,
     info: state.view === 'all',
-    ordering: false,
+    ordering: state.view === 'all',
+    order: state.view === 'all' ? [[0, 'asc']] : [],
     autoWidth: false,
     language: { emptyTable: 'No results found', zeroRecords: 'No results found' },
     createdRow: (row, _data, index) => {
@@ -523,7 +524,11 @@ function exportExcel() {
     showNotice('Excel export library did not load. Check network access and retry.', true);
     return;
   }
-  const rows = state.displayedTasks.map(t => ({
+  const exportTasks = state.view === 'all' && state.table
+    ? state.table.rows({ order: 'applied' }).nodes().toArray()
+      .map(row => state.tasks.find(task => task.taskId === row.dataset.taskId)).filter(Boolean)
+    : state.displayedTasks;
+  const rows = exportTasks.map(t => ({
     'Task ID': t.taskId, 'Customer Name': t.customerName, 'Task Title': t.taskTitle,
     'Task Description': t.taskDescription || '', Note: t.note || '',
     Created: t.created, End: t.end || '', Status: t.status
