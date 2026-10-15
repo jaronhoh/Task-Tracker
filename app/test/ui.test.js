@@ -69,7 +69,13 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
     await page.locator('#taskNote').fill('Initial note');
     await page.locator('#taskDialogFooter button[type="submit"]').click();
     await page.locator('#taskDialog').waitFor({ state: 'hidden' });
-    await page.locator('#tasksTable tbody tr[data-task-id="TSK-0001"]').waitFor();
+    try {
+      await page.locator('#tasksTable tbody tr[data-task-id="TSK-0001"]').waitFor({ timeout: 5000 });
+    } catch (error) {
+      const apiTasks = await page.request.get(baseUrl + '/api/tasks').then(response => response.json()).catch(e => String(e));
+      const notice = await page.locator('#notice').textContent().catch(() => 'missing');
+      throw new Error(`Task row missing; apiTasks=${JSON.stringify(apiTasks)}; notice=${notice}; browserErrors=${JSON.stringify(pageErrors)}; cause=${error.message}`);
+    }
 
     await page.locator('#tasksTable tbody tr[data-task-id="TSK-0001"]').click();
     await page.locator('#editTaskBtn').click();
