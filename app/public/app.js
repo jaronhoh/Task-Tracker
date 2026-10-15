@@ -156,17 +156,33 @@ function renderTable() {
     state.table.destroy();
     state.table = null;
   }
-  const rows = tasks.map(task => [
-    escapeHtml(task.taskId),
-    customerHtml(task),
-    escapeHtml(task.taskTitle),
-    escapeHtml(task.taskDescription || ''),
-    escapeHtml(task.note || ''),
-    escapeHtml(formatDateTime(task.created)),
-    escapeHtml(formatDateTime(task.end)),
-    `<span class="status-pill ${statusClass(task.status)}">${escapeHtml(task.status)}</span>`
-  ]);
-  state.table = $('#tasksTable').DataTable({
+  if (state.view === 'status') {
+    const groups = ['Work in Progress', 'Pending with Customer', 'KIV', 'Closed'];
+    const tbody = $('tasksTable').querySelector('tbody');
+    tbody.innerHTML = groups.map(status => {
+      const groupTasks = tasks.filter(task => task.status === status);
+      const heading = `<tr class="status-group-row"><td colspan="8"><span>${escapeHtml(status)}</span><strong>${groupTasks.length}</strong></td></tr>`;
+      const rows = groupTasks.map(task => `<tr data-task-id="${escapeHtml(task.taskId)}">
+        <td>${escapeHtml(task.taskId)}</td><td>${customerHtml(task)}</td><td>${escapeHtml(task.taskTitle)}</td>
+        <td>${escapeHtml(task.taskDescription || '')}</td><td>${escapeHtml(task.note || '')}</td>
+        <td>${escapeHtml(formatDateTime(task.created))}</td><td>${escapeHtml(formatDateTime(task.end))}</td>
+        <td><span class="status-pill ${statusClass(task.status)}">${escapeHtml(task.status)}</span></td>
+      </tr>`).join('');
+      return heading + rows;
+    }).join('');
+    state.table = null;
+  } else {
+    const rows = tasks.map(task => [
+      escapeHtml(task.taskId),
+      customerHtml(task),
+      escapeHtml(task.taskTitle),
+      escapeHtml(task.taskDescription || ''),
+      escapeHtml(task.note || ''),
+      escapeHtml(formatDateTime(task.created)),
+      escapeHtml(formatDateTime(task.end)),
+      `<span class="status-pill ${statusClass(task.status)}">${escapeHtml(task.status)}</span>`
+    ]);
+    state.table = $('#tasksTable').DataTable({
     data: rows,
     columns: [
       { title: 'Task ID' }, { title: 'Customer Name' }, { title: 'Task Title' },
@@ -185,7 +201,8 @@ function renderTable() {
       row.dataset.taskId = tasks[index]?.taskId || '';
       if (tasks[index]?.taskId === state.selectedId) row.classList.add('selected-row');
     }
-  });
+    });
+  }
   $('emptyState').hidden = tasks.length !== 0;
   $('editTaskBtn').disabled = !state.selectedId || !tasks.some(t => t.taskId === state.selectedId);
   $('editTimeBtn').hidden = state.view !== 'all';
