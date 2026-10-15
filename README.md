@@ -166,10 +166,31 @@ Phase 1 intentionally does **not** include:
 
 ## Status
 
-**Phase 1 Product Definition — Finalized**
+**Phase 1 Product Definition — Finalized; initial application implementation started**
 
 N01–N120 product questions have been resolved, with no remaining open product-definition questions.
 
 ---
 
 *Task Tracker — Phase 1*
+
+
+## Application Implementation
+
+The initial runnable application slice is under [`app/`](app/):
+
+- Express REST API and SQLite persistence
+- Task CRUD, logical delete, Malaysia Time (UTC+8), Task ID sequence that permits gaps but never reuses allocated IDs
+- Customer creation, rename, unique 16-color assignment and linked Task name updates
+- Single-page task table with Weekly Task, Current Week Status, Show All Data, global search, dialogs, Edit Time and Excel export
+- API tests under `app/test/` and a GitHub Actions workflow under `.github/workflows/`
+
+### Run locally
+
+```bash
+cd app
+npm install
+npm start
+```
+
+Open `http://localhost:3000`. To run the API test suite, use `npm test` from `app/`. The tests have been authored but should only be considered passed after a real execution result is available. This is the first implementation increment; remaining PRD acceptance criteria and UI/API edge cases still require implementation and verification.
