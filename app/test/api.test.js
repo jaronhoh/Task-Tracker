@@ -150,3 +150,79 @@ test('Edit Time saves status and End atomically and validates order', async () =
   assert.equal(after.body.end, end);
   assert.equal(after.body.created, created);
 });
+
+test('terminal status transitions refresh End and restoring Active clears End', async () => {
+  const task = await createTask();
+  const closed = await request(app).patch(`/api/tasks/${task.taskId}`).send({ status: 'Closed' });
+  assert.equal(closed.status, 200);
+  const firstEnd = closed.body.end;
+  const deleted = await request(app).patch(`/api/tasks/${task.taskId}`).send({ status: 'Deleted' });
+  assert.equal(deleted.status, 200);
+  assert.equal(deleted.body.status, 'Deleted');
+  assert.ok(Date.parse(deleted.body.end) >= Date.parse(firstEnd));
+  const reopened = await request(app).patch(`/api/tasks/${task.taskId}`).send({ status: 'Work in Progress' });
+  assert.equal(reopened.status, 200);
+  assert.equal(reopened.body.end, null);
+});
+
+test('POST can create terminal Task and generates End on server', async () => {
+  const task = await createTask({ status: 'Closed' });
+  assert.equal(task.status, 'Closed');
+  assert.ok(task.end);
+  assert.ok(Date.parse(task.end) >= Date.parse(task.created));
+});
+
+test('PATCH omitted optional fields preserves values; null and empty string clear them', async () => {
+  const task = await createTask({ taskDescription: 'Keep this', note: 'Keep note' });
+  const unchanged = await request(app).patch(`/api/tasks/${task.taskId}`).send({ taskTitle: 'Updated title' });
+  assert.equal(unchanged.body.taskDescription, 'Keep this');
+  assert.equal(unchanged.body.note, 'Keep note');
+  const cleared = await request(app).patch(`/api/tasks/${task.taskId}`).send({ taskDescription: null, note: '' });
+  assert.equal(cleared.status, 200);
+  assert.equal(cleared.body.taskDescription, null);
+  assert.equal(cleared.body.note, null);
+});
+
+test('required fields and maximum lengths are validated', async () => {
+  const missing = await request(app).post('/api/tasks').send({ customerName: 'QA Alpha' });
+  assert.equal(missing.status, 400);
+  const longTitle = await request(app).post('/api/tasks').send({
+    customerName: 'QA Alpha', taskTitle: 'x'.repeat(101)
+  });
+  assert.equal(longTitle.status, 400);
+  const task = await createTask();
+  const longNote = await request(app).patch(`/api/tasks/${task.taskId}`).send({ note: 'x'.repeat(1001) });
+  assert.equal(longNote.status, 400);
+});
+
+test('Customer matching trims spaces and ignores case on Task creation', async () => {
+  await request(app).post('/api/customers').send({ name: 'QA Alpha' }).expect(201);
+  const task = await createTask({ customerName: '  qA aLpHa  ' });
+  assert.equal(task.customerName, 'QA Alpha');
+  assert.equal((await request(app).get('/api/customers')).body.length, 1);
+});
+
+test('Customer color pool permits 16 unique colors and rejects the 17th', async () => {
+  const { CUSTOMER_COLORS } = require('../server');
+  for (let i = 0; i < CUSTOMER_COLORS.length; i += 1) {
+    const response = await request(app).post('/api/customers').send({ name: `Customer ${i + 1}` });
+    assert.equal(response.status, 201);
+  }
+  const overflow = await request(app).post('/api/customers').send({ name: 'Customer 17' });
+  assert.equal(overflow.status, 400);
+  assert.equal(overflow.body.error.code, 'CUSTOMER_COLORS_EXHAUSTED');
+  assert.equal((await request(app).get('/api/customers')).body.length, 16);
+});
+
+test('Edit Time rejects future Created terminal transition without partial writes', async () => {
+  const task = await createTask();
+  const future = new Date(Date.now() + 24 * 60 * 60 * 1000 + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00');
+  const response = await request(app).patch(`/api/tasks/${task.taskId}/time`).send({
+    created: future, status: 'Closed', end: new Date().toISOString()
+  });
+  assert.equal(response.status, 400);
+  const after = await request(app).get(`/api/tasks/${task.taskId}`);
+  assert.equal(after.body.status, 'KIV');
+  assert.equal(after.body.end, null);
+  assert.equal(after.body.created, task.created);
+});
