@@ -132,6 +132,7 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
     await page.locator('#clearSearchBtn').click();
     await page.locator('#tasksTable tbody tr[data-task-id="TSK-0002"]').waitFor();
     await page.locator('#tasksTable thead th').nth(2).click();
+    assert.equal(await page.locator('#tasksTable thead th').nth(2).getAttribute('aria-sort'), 'ascending');
     const firstTitle = (await page.locator('#tasksTable tbody tr').first().locator('td').nth(2).textContent()).trim();
     assert.equal(firstTitle, 'AAA Sort Check', `Expected ascending Task Title order; firstTitle=${firstTitle}`);
     const downloadPromise = page.waitForEvent('download');
