@@ -25,6 +25,7 @@
     <section class="toolbar">
       <div class="toolbar-actions">
         <button id="newTaskBtn" class="button primary">＋ New Task</button>
+        <button id="manageCustomersBtn" class="button">Manage Customers</button>
         <button id="editTaskBtn" class="button" disabled>Edit Task</button>
         <button id="editTimeBtn" class="button" hidden disabled>Edit Time</button>
       </div>
@@ -93,6 +94,14 @@
       <div id="customerDialogError" class="form-error" hidden></div>
       <div class="dialog-footer"><button type="button" class="button" data-close="customerDialog">Cancel</button><button type="submit" class="button primary">Add Customer</button></div>
     </form>
+  </dialog>
+
+  <dialog id="manageCustomersDialog" class="app-dialog">
+    <div class="dialog-header"><div><p class="eyebrow">CUSTOMER DIRECTORY</p><h2>Manage Customers</h2></div><button type="button" class="icon-button" data-close="manageCustomersDialog" aria-label="Close">×</button></div>
+    <p class="muted">Customer names and colors are shared by all Tasks. Customer records cannot be deleted. Each color can be assigned to only one Customer.</p>
+    <div id="manageCustomersError" class="form-error" hidden></div>
+    <div id="customerManagementList" class="customer-management-list"></div>
+    <div class="dialog-footer"><button type="button" class="button primary" data-close="manageCustomersDialog">Done</button></div>
   </dialog>
 
   <dialog id="timeDialog" class="app-dialog narrow">
