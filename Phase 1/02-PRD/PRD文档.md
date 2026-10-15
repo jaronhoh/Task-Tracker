@@ -539,7 +539,7 @@ stateDiagram-v2
 
 **1. 功能目标**
 
-按 Status 汇总并显示当前周任务，便于用户查看本周工作状态分布。
+按 Status 汇总并显示当前周新建任务及历史未完成的 Carry Over 任务，便于用户查看本周需要跟进的工作状态分布。
 
 **2. 页面内容**
 
@@ -555,11 +555,11 @@ stateDiagram-v2
 
 **3. 业务规则**
 
-1. 仅显示 Created Week = Current Week 的任务。
+1. 显示与 Weekly Task 相同的任务集合：当前周创建且 Status 不为 Deleted 的任务，以及 Created Week < Current Week 且 Status 不为 Closed / Deleted 的 Carry Over 任务。
 2. Deleted 任务不显示。
-3. 当前周已 Closed 的任务仍显示在 Closed 分组。
+3. 当前周已 Closed 的任务仍显示在 Closed 分组；历史 Closed 任务不显示。
 4. Overall Total 等于四个分组数量之和。
-5. Current Week Status 的 Overall Total 必须与 Weekly Task 的 Overall Total 相同。
+5. Current Week Status 与 Weekly Task 使用相同的任务纳入规则，因此两者的 Overall Total 必须相同。
 6. 四个分组始终可见，包括数量为 0 的分组。
 7. 所有分组按 Customer Name ASC、Task ID ASC 排序。
 
@@ -567,7 +567,7 @@ stateDiagram-v2
 
 - [ ] AC-F02-02-01：显示 Overall Total。
 - [ ] AC-F02-02-02：四个 Status 分组始终显示，即使数量为 0。
-- [ ] AC-F02-02-03：只显示当前周任务。
+- [ ] AC-F02-02-03：显示与 Weekly Task 相同的任务集合，包括当前周任务及历史未完成的 Carry Over 任务；不显示历史 Closed/Deleted 任务。
 - [ ] AC-F02-02-04：Deleted 任务不显示。
 - [ ] AC-F02-02-05：当前周 Closed 任务显示在 Closed 分组。
 - [ ] AC-F02-02-06：四个分组数量之和等于 Overall Total。
