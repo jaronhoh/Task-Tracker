@@ -236,3 +236,58 @@ test('Edit Time restoring terminal Task to Active clears End automatically', asy
   assert.equal(response.body.status, 'KIV');
   assert.equal(response.body.end, null);
 });
+
+
+test('concurrent Task creation allocates unique permanent IDs', async () => {
+  const responses = await Promise.all(Array.from({ length: 20 }, (_, index) =>
+    request(app).post('/api/tasks').send({ customerName: 'QA Alpha', taskTitle: `Concurrent ${index}` })
+  ));
+  assert.ok(responses.every(response => response.status === 201));
+  const ids = responses.map(response => response.body.taskId);
+  assert.equal(new Set(ids).size, 20);
+  const sorted = ids.slice().sort((a, b) => Number(a.slice(4)) - Number(b.slice(4)));
+  assert.deepEqual(sorted, Array.from({ length: 20 }, (_, index) => `TSK-${String(index + 1).padStart(4, '0')}`));
+});
+
+test('concurrent case-insensitive Customer creation allows only one canonical Customer', async () => {
+  const responses = await Promise.all([
+    request(app).post('/api/customers').send({ name: 'QA Race Customer' }),
+    request(app).post('/api/customers').send({ name: ' qa race customer ' })
+  ]);
+  assert.equal(responses.filter(response => response.status === 201).length, 1);
+  assert.equal(responses.filter(response => response.status === 400).length, 1);
+  const customers = await request(app).get('/api/customers');
+  assert.equal(customers.body.length, 1);
+});
+
+test('Customer rename rolls back when linked Task update fails', async () => {
+  const task = await createTask();
+  db.exec(`
+    CREATE TRIGGER fail_task_customer_rename
+    BEFORE UPDATE OF customer_name ON tasks
+    WHEN NEW.customer_name = 'QA Alpha Renamed'
+    BEGIN
+      SELECT RAISE(ABORT, 'injected rename failure');
+    END;
+  `);
+  const response = await request(app).patch('/api/customers/QA%20Alpha').send({ name: 'QA Alpha Renamed' });
+  assert.equal(response.status, 500);
+  const customers = await request(app).get('/api/customers');
+  assert.equal(customers.body.length, 1);
+  assert.equal(customers.body[0].name, 'QA Alpha');
+  const after = await request(app).get(`/api/tasks/${task.taskId}`);
+  assert.equal(after.body.customerName, 'QA Alpha');
+  db.exec('DROP TRIGGER fail_task_customer_rename');
+});
+
+test('concurrent PATCH operations preserve both independent field changes', async () => {
+  const task = await createTask();
+  const responses = await Promise.all([
+    request(app).patch(`/api/tasks/${task.taskId}`).send({ taskTitle: 'Concurrent title' }),
+    request(app).patch(`/api/tasks/${task.taskId}`).send({ note: 'Concurrent note' })
+  ]);
+  assert.ok(responses.every(response => response.status === 200));
+  const final = await request(app).get(`/api/tasks/${task.taskId}`);
+  assert.equal(final.body.taskTitle, 'Concurrent title');
+  assert.equal(final.body.note, 'Concurrent note');
+});
