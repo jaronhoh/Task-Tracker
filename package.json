@@ -6,7 +6,8 @@
   "main": "app/server.js",
   "scripts": {
     "start": "node app/server.js",
-    "test": "node --test app/test/*.test.js"
+    "test": "node --test app/test/api.test.js",
+    "test:ui": "node --test app/test/ui.test.js"
   },
   "engines": {
     "node": ">=20 <23"
@@ -16,6 +17,7 @@
     "express": "^5.1.0"
   },
   "devDependencies": {
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "playwright": "^1.55.0"
   }
 }
