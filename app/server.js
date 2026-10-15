@@ -84,6 +84,12 @@ function isFuture(value, now = malaysiaNow()) {
   return Number.isFinite(parsed) && parsed > Date.parse(now);
 }
 
+function toMalaysiaTimestamp(value) {
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) throw new HttpError(400, 'Date/time must be valid.');
+  return new Date(parsed + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00');
+}
+
 function normalizeCustomerName(value) {
   return String(value ?? '').trim().toLocaleLowerCase('en-US');
 }
@@ -255,7 +261,7 @@ function editTaskTime(taskId, body) {
 
   const edit = db.transaction(() => {
     const current = getTask(taskId);
-    const created = Object.prototype.hasOwnProperty.call(body, 'created') ? body.created : current.created;
+    let created = Object.prototype.hasOwnProperty.call(body, 'created') ? body.created : current.created;
     let end = Object.prototype.hasOwnProperty.call(body, 'end') ? body.end : current.end;
     const status = Object.prototype.hasOwnProperty.call(body, 'status') ? body.status : current.status;
     if (typeof created !== 'string' || !Number.isFinite(Date.parse(created))) {
@@ -265,8 +271,10 @@ function editTaskTime(taskId, body) {
       throw new HttpError(400, 'End must be a valid date/time string or null.');
     }
     assertStatus(status);
+    created = toMalaysiaTimestamp(created);
+    if (end !== null) end = toMalaysiaTimestamp(end);
 
-    if (status !== current.status && !ACTIVE_STATUSES.has(status) && isFuture(created)) {
+    if (status !== current.status && !ACTIVE_STATUSES.has(status) && isFuture(created))
       throw new HttpError(400, 'Cannot close or delete Task because Created is later than current Malaysia Time (UTC+08:00).', 'FUTURE_CREATED');
     }
     if (ACTIVE_STATUSES.has(status) && !ACTIVE_STATUSES.has(current.status)) {
