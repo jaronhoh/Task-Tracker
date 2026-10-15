@@ -141,13 +141,13 @@ test('Edit Time saves status and End atomically and validates order', async () =
   });
   assert.equal(response.status, 200);
   assert.equal(response.body.status, 'Closed');
-  assert.equal(response.body.end, end);
+  assert.equal(Date.parse(response.body.end), Date.parse(end));
   const invalid = await request(app).patch(`/api/tasks/${task.taskId}/time`).send({
     created: end, end: created, status: 'Closed'
   });
   assert.equal(invalid.status, 400);
   const after = await request(app).get(`/api/tasks/${task.taskId}`);
-  assert.equal(after.body.end, end);
+  assert.equal(Date.parse(after.body.end), Date.parse(end));
   assert.equal(after.body.created, created);
 });
 
@@ -366,4 +366,17 @@ test('Edit Time rejects Created later than existing End without partial update',
   assert.equal(after.body.created, task.created);
   assert.equal(after.body.end, task.end);
   assert.equal(after.body.status, 'Closed');
+});
+
+
+test('Edit Time canonicalizes UTC input to Malaysia UTC+8 without changing the instant', async () => {
+  const task = await createTask();
+  const endUtc = new Date(Date.parse(task.created) + 60_000).toISOString();
+  const response = await request(app).patch(`/api/tasks/${task.taskId}/time`).send({
+    end: endUtc, status: 'Closed'
+  });
+  assert.equal(response.status, 200);
+  assert.ok(response.body.created.endsWith('+08:00'));
+  assert.ok(response.body.end.endsWith('+08:00'));
+  assert.equal(Date.parse(response.body.end), Date.parse(endUtc));
 });
