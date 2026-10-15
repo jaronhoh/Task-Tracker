@@ -6,7 +6,8 @@ const CUSTOMER_COLORS = ['#F87171','#FB923C','#FBBF24','#A3E635','#4ADE80','#34D
 const SEARCH_FIELDS = ['taskId', 'customerName', 'taskTitle', 'taskDescription', 'note'];
 const state = {
   tasks: [], customers: [], view: 'weekly', selectedId: null,
-  displayedTasks: [], table: null, editQueue: Promise.resolve(), customerBeforeAdd: ''
+  displayedTasks: [], table: null, editQueue: Promise.resolve(), customerBeforeAdd: '',
+  specialTimeFlow: false, ignoreStatusBlur: false
 };
 
 const $ = (id) => document.getElementById(id);
@@ -432,21 +433,45 @@ async function openManageCustomers() {
   }
 }
 
-function openTimeDialog(task) {
+function openTimeDialog(task, options = {}) {
+  state.specialTimeFlow = Boolean(options.specialStatus);
   $('timeTaskLabel').textContent = `${task.taskId} · ${task.taskTitle}`;
   $('timeCreated').value = toLocalInput(task.created);
-  $('timeEnd').value = toLocalInput(task.end);
-  $('timeStatus').value = task.status;
+  $('timeCreated').disabled = state.specialTimeFlow;
+  $('timeEnd').value = state.specialTimeFlow ? '' : toLocalInput(task.end);
+  $('timeEnd').required = state.specialTimeFlow || !ACTIVE.has(options.specialStatus || task.status);
+  $('timeStatus').value = options.specialStatus || task.status;
+  $('timeDialog').querySelector('h2').textContent = state.specialTimeFlow ? 'Close Task' : 'Edit Time';
+  $('timeDialog').querySelector('form > p.muted:last-of-type').textContent = state.specialTimeFlow
+    ? 'End is required. Status and End will be saved together only after you click Save Time.'
+    : 'Saving time changes is atomic. Closed/Deleted tasks require End, and End cannot be earlier than Created.';
   showDialogError('timeDialogError', '');
   timeDialog.showModal();
+}
+
+function handleTaskStatusChange() {
+  const taskId = $('taskId').value;
+  if (!taskId || !taskDialog.open) return;
+  const task = state.tasks.find(item => item.taskId === taskId);
+  if (!task) return;
+  const requestedStatus = $('taskStatus').value;
+  if (ACTIVE.has(task.status) && !ACTIVE.has(requestedStatus)) {
+    $('taskStatus').value = task.status;
+    state.ignoreStatusBlur = true;
+    const accepted = window.confirm('This Task has no End time. To close or delete it, confirm and enter End in the next dialog. No changes will be saved until you click Save Time.');
+    if (accepted) openTimeDialog(task, { specialStatus: requestedStatus });
+    return;
+  }
+  // Other status changes continue through the ordered blur Auto Save queue.
 }
 
 async function saveTime(event) {
   event.preventDefault();
   showDialogError('timeDialogError', '');
-  const task = selectedTask();
+  const taskId = state.specialTimeFlow && $('taskId').value ? $('taskId').value : state.selectedId;
+  const task = state.tasks.find(item => item.taskId === taskId);
   if (!task) return;
-  const created = localInputToMalaysia($('timeCreated').value);
+  const created = state.specialTimeFlow ? task.created : localInputToMalaysia($('timeCreated').value);
   let end = localInputToMalaysia($('timeEnd').value);
   const status = $('timeStatus').value;
   if (ACTIVE.has(status) && !ACTIVE.has(task.status)) {
@@ -470,11 +495,22 @@ async function saveTime(event) {
     return;
   }
   try {
+    const payload = state.specialTimeFlow ? { end, status } : { created, end, status };
     await api(`/api/tasks/${encodeURIComponent(task.taskId)}/time`, {
-      method: 'PATCH', body: JSON.stringify({ created, end, status })
+      method: 'PATCH', body: JSON.stringify(payload)
     });
     timeDialog.close();
+    state.specialTimeFlow = false;
+    $('timeCreated').disabled = false;
     await loadAll();
+    if (taskDialog.open) {
+      const refreshed = state.tasks.find(item => item.taskId === task.taskId);
+      if (refreshed) {
+        $('taskStatus').value = refreshed.status;
+        $('taskCreated').value = formatDateTime(refreshed.created);
+        $('taskEnd').value = formatDateTime(refreshed.end);
+      }
+    }
     showNotice(`Time saved for ${task.taskId}.`);
   } catch (error) {
     showDialogError('timeDialogError', error.message);
@@ -515,6 +551,10 @@ function bindEvents() {
   $('taskForm').addEventListener('submit', createTask);
   $('customerForm').addEventListener('submit', createCustomer);
   $('timeForm').addEventListener('submit', saveTime);
+  $('timeStatus').addEventListener('change', () => {
+    $('timeEnd').required = !ACTIVE.has($('timeStatus').value);
+  });
+  $('taskStatus').addEventListener('change', handleTaskStatusChange);
   taskDialog.addEventListener('close', async () => {
     try { await state.editQueue; await loadAll(); }
     catch (error) { showNotice(`Refresh failed: ${error.message}`, true); }
@@ -522,6 +562,10 @@ function bindEvents() {
   document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => {
     const dialogId = button.dataset.close;
     $(dialogId).close();
+    if (dialogId === 'timeDialog') {
+      state.specialTimeFlow = false;
+      $('timeCreated').disabled = false;
+    }
     if (dialogId === 'customerDialog' && $('customerName').value === '__add_customer__') $('customerName').value = '';
   }));
   $('customerName').addEventListener('change', () => {
@@ -536,6 +580,7 @@ function bindEvents() {
   for (const [id, field] of [['taskTitle', 'taskTitle'], ['taskDescription', 'taskDescription'], ['taskNote', 'note'], ['taskStatus', 'status'], ['customerName', 'customerName']]) {
     $(id).addEventListener('blur', () => {
       if (!$('taskId').value || !taskDialog.open) return;
+      if (id === 'taskStatus' && state.ignoreStatusBlur) { state.ignoreStatusBlur = false; return; }
       const value = $(id).value;
       if (id === 'customerName' && value === '__add_customer__') return;
       if (id === 'taskTitle' && !value.trim()) {
