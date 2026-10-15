@@ -233,8 +233,8 @@ PRD 应：
 
 | 页面/区域 | 入口 | 关键组件 | 退出/下一步 |
 |-----------|------|----------|-------------|
-| Task List Row | 点击整行 | 可点击数据行 | 打开该 Task 的 Edit Task Dialog |
-| Edit Task Dialog | 点击 Task 行 | 居中 Dialog，宽度约 800px；可编辑字段；只读字段；X/Close | 字段 Blur 后保存；关闭后刷新当前列表 |
+| Task List Row | 单击一行 | 行选中高亮；不使用 Checkbox | 仅选择该 Task，并更新当前选中任务 |
+| Edit Task Dialog | 双击一行或使用明确的 Edit 操作 | 居中 Dialog，宽度约 800px；可编辑字段；只读字段；X/Close | 字段 Blur 后保存；关闭后刷新当前列表 |
 
 **3. 状态说明**
 
@@ -248,8 +248,9 @@ PRD 应：
 
 **4. 业务规则**
 
-1. 点击 Task 数据行打开 Edit Task Dialog。
-2. 可编辑字段：Customer Name、Task Title、Task Description、Note、Status。
+1. 单击 Task 数据行只选择该 Task，不打开 Edit Task Dialog；当前选中行应有清晰的视觉高亮。
+2. 双击 Task 数据行或使用明确的 Edit 操作打开该 Task 的 Edit Task Dialog。
+3. 可编辑字段：Customer Name、Task Title、Task Description、Note、Status。
 3. 只读字段：Task ID、Created、End。
 4. 任一可编辑字段发生修改并 Blur 后，系统立即保存该字段。
 5. 不提供 Save Button。
@@ -274,7 +275,7 @@ PRD 应：
 
 **6. 验收标准**
 
-- [ ] AC-F01-02-01：点击 Task 行后，打开对应 Task 的 Edit Task Dialog。
+- [ ] AC-F01-02-01：单击 Task 行只选择并高亮该行；双击该行或使用明确的 Edit 操作才打开对应 Task 的 Edit Task Dialog。
 - [ ] AC-F01-02-02：Task ID、Created、End 显示为只读。
 - [ ] AC-F01-02-03：Customer Name、Task Title、Task Description、Note、Status 可编辑。
 - [ ] AC-F01-02-04：可编辑字段修改后 Blur，系统自动保存，不需要点击 Save。
@@ -425,7 +426,7 @@ PRD 应：
 | 页面/区域 | 入口 | 关键组件 | 退出/下一步 |
 |-----------|------|----------|-------------|
 | New Task | `+ New Task` | Create Dialog | 建立 KIV Task |
-| Edit Task | 点击 Task 行 | Edit Dialog | 编辑字段或改变 Status |
+| Edit Task | 双击 Task 行或使用明确的 Edit 操作 | Edit Dialog | 编辑字段或改变 Status |
 | Status Lifecycle | 修改 Status | Status Select | 自动维护 End |
 | Show All Data | 进入历史数据 View | Task Table | 可查看 Deleted Task 并通过 Status 恢复；View 细节由 F02 定义 |
 
@@ -522,8 +523,9 @@ stateDiagram-v2
 4. 当前周内已 Closed 的任务仍显示在 New This Week。
 5. Deleted 任务不显示在 Weekly Task。
 6. Overall Total 为本 View 实际显示的任务总数，即 Carry Over 与 New This Week 数量之和。
-7. 任务所属周依据 Created 的 Malaysia Time (UTC+8) 计算。
-8. 两个分组均按 Customer Name 升序，再按 Task ID 升序排列。
+7. 一周定义为星期一 00:00（含）至下一个星期一 00:00（不含），时区为 Malaysia Time (UTC+8)。
+8. Created 所属周、Current Week、Carry Over 与 New This Week 的判断，必须统一使用上述周界；不得依赖服务器默认周起始日或时区。
+9. 两个分组均按 Customer Name 升序，再按 Task ID 升序排列。
 
 **4. 验收标准**
 
@@ -556,12 +558,13 @@ stateDiagram-v2
 **3. 业务规则**
 
 1. 显示与 Weekly Task 相同的任务集合：当前周创建且 Status 不为 Deleted 的任务，以及 Created Week < Current Week 且 Status 不为 Closed / Deleted 的 Carry Over 任务。
-2. Deleted 任务不显示。
-3. 当前周已 Closed 的任务仍显示在 Closed 分组；历史 Closed 任务不显示。
-4. Overall Total 等于四个分组数量之和。
-5. Current Week Status 与 Weekly Task 使用相同的任务纳入规则，因此两者的 Overall Total 必须相同。
-6. 四个分组始终可见，包括数量为 0 的分组。
-7. 所有分组按 Customer Name ASC、Task ID ASC 排序。
+2. Current Week 与 Created Week 的周界统一定义为星期一 00:00（含）至下一个星期一 00:00（不含），使用 Malaysia Time (UTC+8)，与 F02-01 完全一致。
+4. Deleted 任务不显示。
+4. 当前周已 Closed 的任务仍显示在 Closed 分组；历史 Closed 任务不显示。
+5. Overall Total 等于四个分组数量之和。
+6. Current Week Status 与 Weekly Task 使用相同的任务纳入规则，因此两者的 Overall Total 必须相同。
+7. 四个分组始终可见，包括数量为 0 的分组。
+8. 所有分组按 Customer Name ASC、Task ID ASC 排序。
 
 **4. 验收标准**
 
@@ -587,17 +590,19 @@ stateDiagram-v2
 - 支持分页、排序与 Global Search。
 - 默认排序为 Task ID ASC。
 - 分页选项为 25、50、100，默认 25。
-- 选中一条任务后，Action Bar 显示 Edit Time。
-- 不设置通用 Action Column、Checkbox/Row Selection、Bulk Update 或 Bulk Delete。
+- 单击一条任务后，仅选中并高亮该行；选中一条任务后，Action Bar 启用 Edit Time。
+- 双击任务行或使用明确的 Edit 操作打开 Edit Task Dialog。
+- 不设置 Checkbox、Bulk Update 或 Bulk Delete；行选中采用单击行，不使用 Checkbox。
 
 **3. 业务规则**
 
 1. Show All Data 包含全部 Task 记录，包括 Deleted。
-2. 用户可以直接编辑 Status，将 Deleted 任务恢复为其他状态；Status/End 联动遵循 F01。
-3. Edit Time 的行为由 F04 定义。
-4. 默认按 Task ID ASC 排序。
-5. 分页选项为 25、50、100，默认 25。
-6. Global Search 规则由 F02-04 定义。
+2. 单击行只选择任务；双击行或使用明确的 Edit 操作打开 Edit Task Dialog。选中行不使用 Checkbox，并以行高亮表示。
+3. 用户可以直接编辑 Status，将 Deleted 任务恢复为其他状态；Status/End 联动遵循 F01。
+4. Edit Time 的行为由 F04 定义。
+5. 默认按 Task ID ASC 排序。
+6. 分页选项为 25、50、100，默认 25。
+7. Global Search 规则由 F02-04 定义。
 
 **4. 验收标准**
 
@@ -605,8 +610,9 @@ stateDiagram-v2
 - [ ] AC-F02-03-02：默认按 Task ID ASC 排序。
 - [ ] AC-F02-03-03：分页选项为 25、50、100，默认 25。
 - [ ] AC-F02-03-04：用户可通过 Status 编辑恢复 Deleted 任务。
-- [ ] AC-F02-03-05：选中一条任务时可使用 Edit Time。
-- [ ] AC-F02-03-06：不显示通用 Action Column、Checkbox/Row Selection 或 Bulk Actions。
+- [ ] AC-F02-03-05：单击一条任务后，该行被选中并高亮，Action Bar 中的 Edit Time 可用。
+- [ ] AC-F02-03-06：双击任务行或使用明确的 Edit 操作打开 Edit Task Dialog。
+- [ ] AC-F02-03-07：不使用 Checkbox；不显示通用 Action Column、Bulk Update 或 Bulk Delete。
 
 #### 6.2.4 F02-04 Global Search
 
@@ -798,7 +804,7 @@ Customer 作为独立数据实体维护，但 Task 直接保存 Customer Name，
 **2. 业务规则**
 
 1. Customer Name 与 Customer Color 在 Customer 维护数据中统一管理。
-2. Task 记录直接保存 Customer Name。
+2. Task 记录直接保存 Customer Name；写入时应保存 Customer 实体中的规范名称，不保存仅大小写或首尾空格不同的请求变体。
 3. 修改 Customer Name 时，必须同步更新所有使用旧名称的 Task。
 4. 修改 Customer Color 时，任务列表根据最新 Customer 配置显示颜色。
 5. Customer 不允许删除。
@@ -1025,7 +1031,7 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 2. 不允许修改 Task ID。
 3. 普通 PATCH 不允许修改 Created 或 End；时间修正仅通过 UI 的 Edit Time 功能进行。
 4. 可更新字段为 `customerName`、`taskTitle`、`taskDescription`、`note`、`status`。
-5. 更新 Customer Name 时，只允许使用已存在的 Customer；名称匹配遵循 F03 规则。若指定名称不存在，返回 `400 Bad Request`，且不得更新 Task。
+5. 更新 Customer Name 时，只允许使用已存在的 Customer；名称匹配遵循 F03 规则（Trim 首尾空格且不区分大小写）。匹配到现有 Customer 后，Task.Customer Name 必须保存该 Customer 实体中规范的原始名称，而不是保留请求中的大小写或首尾空格变体。若指定名称不存在，返回 `400 Bad Request`，且不得更新 Task。
 6. 更新 Status 时，遵循 F01 Status Lifecycle，并由系统维护 End。
 7. 无效 Status、字段超长或缺少必要值时返回 `400 Bad Request`。
 8. Task ID 不存在时返回 `404 Not Found`。
@@ -1037,7 +1043,7 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 - [ ] AC-F05-03-02：未提供的字段保持原值。
 - [ ] AC-F05-03-03：不允许修改 Task ID、Created 或 End。
 - [ ] AC-F05-03-04：Status 更新遵循 F01 生命周期规则。
-- [ ] AC-F05-03-05：Customer Name 更新遵循 F03 规则；只能指定已存在的 Customer，未知名称返回 HTTP 400，Task 不得被部分更新。
+- [ ] AC-F05-03-05：Customer Name 更新遵循 F03 规则；只能指定已存在的 Customer，匹配时忽略首尾空格及大小写，成功后保存 Customer 实体中的规范名称；未知名称返回 HTTP 400，Task 不得被部分更新。
 - [ ] AC-F05-03-06：无效请求返回 HTTP 400。
 - [ ] AC-F05-03-07：Task 不存在时返回 HTTP 404。
 - [ ] AC-F05-03-08：成功时直接返回更新后的 Resource JSON。
