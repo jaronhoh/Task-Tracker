@@ -500,16 +500,215 @@ stateDiagram-v2
 
 ### 6.2 F02 Task Views & Search
 
-待进入 F02 模块详细评审。
+#### 6.2.1 F02-01 Weekly Task
 
+**1. 功能目标**
+
+显示本周新建任务及此前创建、尚未 Closed/Deleted 的 Carry Over 任务，帮助用户集中跟进本周工作。
+
+**2. 页面内容**
+
+- 页面顶部显示 View 标题与 Global Search。
+- 显示 Overall Total。
+- 显示 Carry Over (n) 与 New This Week (n) 两个分组。
+- 两个分组均按 Customer Name ASC、Task ID ASC 排序。
+- 不使用分页。
+
+**3. 业务规则**
+
+1. Carry Over：Created Week < Current Week，且 Status 不等于 Closed、Deleted。
+2. 历史未完成任务会持续 Carry Over，直到状态变为 Closed 或 Deleted。
+3. New This Week：Created Week = Current Week，且 Status 不等于 Deleted。
+4. 当前周内已 Closed 的任务仍显示在 New This Week。
+5. Deleted 任务不显示在 Weekly Task。
+6. Overall Total 为本 View 实际显示的任务总数，即 Carry Over 与 New This Week 数量之和。
+7. 任务所属周依据 Created 的 Malaysia Time (UTC+8) 计算。
+8. 两个分组均按 Customer Name 升序，再按 Task ID 升序排列。
+
+**4. 验收标准**
+
+- [ ] AC-F02-01-01：页面显示 Overall Total。
+- [ ] AC-F02-01-02：页面显示 Carry Over 与 New This Week 两个分组及各自数量。
+- [ ] AC-F02-01-03：Carry Over 仅包含较早创建且状态不是 Closed/Deleted 的任务。
+- [ ] AC-F02-01-04：New This Week 包含本周创建且状态不是 Deleted 的任务，包括本周已 Closed 任务。
+- [ ] AC-F02-01-05：Deleted 任务不显示在 Weekly Task。
+- [ ] AC-F02-01-06：列表按 Customer Name ASC、Task ID ASC 排序。
+- [ ] AC-F02-01-07：本 View 不显示分页控件。
+
+#### 6.2.2 F02-02 Current Week Status
+
+**1. 功能目标**
+
+按 Status 汇总并显示当前周任务，便于用户查看本周工作状态分布。
+
+**2. 页面内容**
+
+- 显示 Overall Total。
+- 始终显示以下四个分组，即使数量为 0：
+  - Work in Progress
+  - Pending with Customer
+  - KIV
+  - Closed
+- 每组显示任务数量及对应任务列表。
+- 列表按 Customer Name ASC、Task ID ASC 排序。
+- 不使用分页。
+
+**3. 业务规则**
+
+1. 仅显示 Created Week = Current Week 的任务。
+2. Deleted 任务不显示。
+3. 当前周已 Closed 的任务仍显示在 Closed 分组。
+4. Overall Total 等于四个分组数量之和。
+5. Current Week Status 的 Overall Total 必须与 Weekly Task 的 Overall Total 相同。
+6. 四个分组始终可见，包括数量为 0 的分组。
+7. 所有分组按 Customer Name ASC、Task ID ASC 排序。
+
+**4. 验收标准**
+
+- [ ] AC-F02-02-01：显示 Overall Total。
+- [ ] AC-F02-02-02：四个 Status 分组始终显示，即使数量为 0。
+- [ ] AC-F02-02-03：只显示当前周任务。
+- [ ] AC-F02-02-04：Deleted 任务不显示。
+- [ ] AC-F02-02-05：当前周 Closed 任务显示在 Closed 分组。
+- [ ] AC-F02-02-06：四个分组数量之和等于 Overall Total。
+- [ ] AC-F02-02-07：Overall Total 与 Weekly Task 的 Overall Total 相同。
+- [ ] AC-F02-02-08：本 View 不显示分页控件。
+
+#### 6.2.3 F02-03 Show All Data
+
+**1. 功能目标**
+
+提供全部任务记录的历史数据表格，支持搜索、排序、分页、恢复 Deleted 任务及进入 Edit Time。
+
+**2. 页面内容与交互**
+
+- 显示所有 Task 记录，包括 Status = Deleted 的记录。
+- 使用 DataTables 风格的数据表格。
+- 支持分页、排序与 Global Search。
+- 默认排序为 Task ID ASC。
+- 分页选项为 25、50、100，默认 25。
+- 选中一条任务后，Action Bar 显示 Edit Time。
+- 不设置通用 Action Column、Checkbox/Row Selection、Bulk Update 或 Bulk Delete。
+
+**3. 业务规则**
+
+1. Show All Data 包含全部 Task 记录，包括 Deleted。
+2. 用户可以直接编辑 Status，将 Deleted 任务恢复为其他状态；Status/End 联动遵循 F01。
+3. Edit Time 的行为由 F04 定义。
+4. 默认按 Task ID ASC 排序。
+5. 分页选项为 25、50、100，默认 25。
+6. Global Search 规则由 F02-04 定义。
+
+**4. 验收标准**
+
+- [ ] AC-F02-03-01：Show All Data 显示所有任务，包括 Deleted。
+- [ ] AC-F02-03-02：默认按 Task ID ASC 排序。
+- [ ] AC-F02-03-03：分页选项为 25、50、100，默认 25。
+- [ ] AC-F02-03-04：用户可通过 Status 编辑恢复 Deleted 任务。
+- [ ] AC-F02-03-05：选中一条任务时可使用 Edit Time。
+- [ ] AC-F02-03-06：不显示通用 Action Column、Checkbox/Row Selection 或 Bulk Actions。
+
+#### 6.2.4 F02-04 Global Search
+
+**1. 功能目标**
+
+允许用户在当前 View 中快速查找任务。
+
+**2. 搜索字段**
+
+- Task ID
+- Customer Name
+- Task Title
+- Task Description
+- Note
+
+**3. 业务规则**
+
+1. 搜索采用 contains 匹配，不区分大小写。
+2. 按 Enter 执行搜索。
+3. 清空搜索框并按 Enter 后，恢复当前 View 的完整结果。
+4. 无匹配结果时显示 `No results found`。
+5. 不搜索 Status、Created 或 End。
+6. 切换 View 时清空搜索内容，并显示新 View 的完整结果。
+7. 搜索结果仍遵循当前 View 的过滤、排序和分页规则。
+
+**4. 验收标准**
+
+- [ ] AC-F02-04-01：支持搜索规定的五个字段。
+- [ ] AC-F02-04-02：匹配采用 contains 且不区分大小写。
+- [ ] AC-F02-04-03：按 Enter 执行搜索。
+- [ ] AC-F02-04-04：清空搜索并按 Enter 后恢复完整当前 View。
+- [ ] AC-F02-04-05：无结果时显示 `No results found`。
+- [ ] AC-F02-04-06：不搜索 Status、Created、End。
+- [ ] AC-F02-04-07：切换 View 后搜索条件清空。
 ### 6.3 F03 Customer Management
 
 待进入 F03 模块详细评审。
 
 ### 6.4 F04 Task Time Management
 
-待进入 F04 模块详细评审。
+#### 6.4.1 F04-01 Edit Task Time
 
+**1. 功能目标**
+
+允许用户在 Show All Data 中修正任务的 Created 时间，以及在任务状态为 Closed 或 Deleted 时修正 End 时间。
+
+**2. 流程与页面交互**
+
+| 页面/区域 | 入口 | 关键组件 | 退出/下一步 |
+|-----------|------|----------|-------------|
+| Show All Data | 选中一条任务 | Action Bar、Edit Time Button | 打开 Edit Time 表单 |
+| Edit Time | 点击 Edit Time | Task ID、Task Title、Created、End | 字段 Blur 后自动保存；关闭后刷新 Show All Data |
+
+**3. 字段规则**
+
+| 字段 | 是否可编辑 | 说明 |
+|------|------------|------|
+| Task ID | 否 | 只读，用于识别任务 |
+| Task Title | 否 | 只读，用于识别任务 |
+| Created | 是 | 所有状态均可修正 |
+| End | 仅 Closed / Deleted 可编辑 | Active 状态只读 |
+
+Active 状态包括 Work in Progress、Pending with Customer、KIV。
+
+**4. 业务规则**
+
+1. Edit Time 仅从 Show All Data 的选中任务进入。
+2. 未选中任务时，Edit Time 按钮不可用。
+3. Created 与 End 修改后，在字段 Blur 时自动保存，不提供 Save Button。
+4. 用户关闭表单时直接关闭，不显示 Save Confirmation。
+5. 保存失败时显示错误并保留用户输入，不得将失败显示为成功。
+6. 修改时间不得自动改变 Status 或 Task ID。
+7. 修改 Created 后，所有依赖 Created 所属周的视图与统计必须重新计算。
+8. End 仅允许 Closed 或 Deleted 任务编辑；Active 状态的 End 为只读。
+9. End 可以为空（NULL）。
+10. 对 Closed 或 Deleted 任务，如果 End 不为空，必须满足 End >= Created。
+11. 对 Closed 或 Deleted 任务，End 为空时允许保存；本功能不因清空 End 而自动改变 Status。
+12. 后续若用户改变 Status，仍遵循 F01 Status Lifecycle：进入 Closed/Deleted 时由系统设置 End；进入 Active 时清空 End。
+13. 所有时间统一使用 Malaysia Time (UTC+8)。
+
+**5. 数据要求**
+
+| 对象 | 字段 | 类型 | 规则 |
+|------|------|------|------|
+| Task | Task ID | String | 只读、唯一且永久 |
+| Task | Task Title | String(100) | 只读 |
+| Task | Created | DateTime | 必须有有效时间；可修正 |
+| Task | End | Nullable DateTime | Active 状态只读；Closed/Deleted 状态可修正或清空 |
+
+**6. 验收标准**
+
+- [ ] AC-F04-01-01：从 Show All Data 选中任务后可打开 Edit Time。
+- [ ] AC-F04-01-02：未选中任务时 Edit Time 不可用。
+- [ ] AC-F04-01-03：Created 在字段 Blur 后自动保存。
+- [ ] AC-F04-01-04：Closed 与 Deleted 任务的 End 在字段 Blur 后自动保存。
+- [ ] AC-F04-01-05：Work in Progress、Pending with Customer、KIV 的 End 为只读。
+- [ ] AC-F04-01-06：Closed/Deleted 的 End 非空时必须晚于或等于 Created。
+- [ ] AC-F04-01-07：End 可以为空。
+- [ ] AC-F04-01-08：修改时间不改变 Status 或 Task ID。
+- [ ] AC-F04-01-09：修改 Created 后，Weekly Task 与 Current Week Status 重新计算任务归属及统计。
+- [ ] AC-F04-01-10：保存失败时显示错误并保留用户输入。
+- [ ] AC-F04-01-11：时间使用 Malaysia Time (UTC+8)。
 ### 6.5 F05 Integration & Export
 
 待进入 F05 模块详细评审。
@@ -548,7 +747,7 @@ Phase 1 未定义产品数据埋点需求。
 
 - Customer 达到16个后，不允许创建新的 Customer。
 - Task 建立时 Customer 为必填。
-- Active Task 使用 Edit Time 设置 End 时，必须完成 Closed / Deleted 选择。
+- Active Task 的 End 在 Edit Time 中只读；Closed/Deleted 的 End 非空时必须满足 End >= Created。
 - 不允许保存 Active Status + non-NULL End 的不一致数据。
 - 不允许 Closed/Deleted + NULL End 的不一致数据。
 - Deleted Task 不显示在两个 Weekly Views，但必须保留于 Show All Data。
