@@ -258,7 +258,10 @@ function editTaskTime(taskId, body) {
     if (status !== current.status && !ACTIVE_STATUSES.has(status) && isFuture(created)) {
       throw new HttpError(400, 'Cannot close or delete Task because Created is later than current Malaysia Time (UTC+08:00).', 'FUTURE_CREATED');
     }
-    if (ACTIVE_STATUSES.has(status) && end !== null) {
+    if (ACTIVE_STATUSES.has(status) && !ACTIVE_STATUSES.has(current.status)) {
+      // Restoring a Closed/Deleted Task to Active always clears End.
+      end = null;
+    } else if (ACTIVE_STATUSES.has(status) && end !== null) {
       throw new HttpError(400, 'An Active Task cannot be saved with End. Choose Closed or Deleted in the Edit Time confirmation flow.');
     }
     if (!ACTIVE_STATUSES.has(status) && end === null) {
