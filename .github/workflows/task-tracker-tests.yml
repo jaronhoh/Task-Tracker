@@ -1,5 +1,9 @@
 name: Task Tracker API Tests
 
+concurrency:
+  group: task-tracker-tests-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     paths:
