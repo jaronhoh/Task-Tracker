@@ -643,8 +643,178 @@ stateDiagram-v2
 - [ ] AC-F02-04-07：切换 View 后搜索条件清空。
 ### 6.3 F03 Customer Management
 
-待进入 F03 模块详细评审。
+#### 6.3.1 F03-01 Customer Dropdown
 
+**1. 功能目标**
+
+在 New Task 与 Edit Task 中提供 Customer 下拉列表，让用户选择已维护的 Customer，并可直接新增 Customer。
+
+**2. 页面交互**
+
+- New Task Dialog 与 Edit Task Dialog 均提供 Customer Name 下拉字段。
+- 下拉列表显示所有已维护的 Customer。
+- 每个 Customer 显示颜色标记及黑色文字。
+- 下拉列表提供 `+ Add Customer` 操作。
+- 用户只能选择现有 Customer，或通过新增流程创建 Customer；不允许直接输入任意自由文本作为 Customer。
+
+**3. 业务规则**
+
+1. Customer Name 为必填字段。
+2. Customer 名称比较时忽略首尾空格，并且不区分大小写。
+3. Task 直接保存 Customer Name，不使用 Customer ID 作为 Task 关联字段。
+4. Customer 颜色从 Customer 维护数据中读取，并用于任务列表和下拉列表显示。
+5. Customer 下拉列表及 Add/Edit 行为必须适用于 New Task 与 Edit Task。
+
+**4. 验收标准**
+
+- [ ] AC-F03-01-01：New Task 与 Edit Task 均显示 Customer 下拉列表。
+- [ ] AC-F03-01-02：Customer Name 为必填字段。
+- [ ] AC-F03-01-03：下拉列表显示所有已维护的 Customer。
+- [ ] AC-F03-01-04：下拉列表提供 `+ Add Customer`。
+- [ ] AC-F03-01-05：Customer 显示颜色标记及黑色文字。
+- [ ] AC-F03-01-06：不允许以任意自由文本创建 Task 的 Customer Name。
+- [ ] AC-F03-01-07：Customer 名称比较忽略首尾空格及大小写差异。
+
+#### 6.3.2 F03-02 Add Customer
+
+**1. 功能目标**
+
+允许用户在 Customer 下拉列表内新增 Customer，无须离开当前 Task 表单。
+
+**2. 页面交互**
+
+点击 `+ Add Customer` 后，在下拉列表内显示新增输入区域。
+
+| 组件 | 功能 |
+|------|------|
+| Customer Name Input | 输入新 Customer 名称 |
+| Color Selector | 选择固定调色板中尚未使用的颜色 |
+| ✓ / Add | 验证并新增 Customer |
+| X / Cancel | 取消新增 |
+
+**3. 业务规则**
+
+1. Customer Name 为必填字段。
+2. 新 Customer 必须使用固定的 16 色调色板中的未分配颜色。
+3. Customer 名称必须唯一；比较时忽略首尾空格及大小写。
+4. 新增成功后，Customer 加入下拉列表，并自动选中新 Customer。
+5. 如果 16 种颜色全部被使用，不允许新增 Customer。
+6. Customer 不允许删除。
+7. 取消新增时，不创建 Customer 记录。
+8. 新增失败时显示错误，并保留用户输入供修正。
+9. REST API 通过 Customer Name 自动新增 Customer 时，也必须遵守名称唯一性及固定颜色规则；颜色用完时不得新增 Customer，API 处理由 F05 定义。
+
+**4. 验收标准**
+
+- [ ] AC-F03-02-01：点击 `+ Add Customer` 后显示新增输入区域。
+- [ ] AC-F03-02-02：Customer Name 为空时不允许新增。
+- [ ] AC-F03-02-03：重复 Customer Name 不允许新增。
+- [ ] AC-F03-02-04：新增 Customer 使用固定调色板中未分配的颜色。
+- [ ] AC-F03-02-05：新增成功后 Customer 出现在下拉列表中，并自动选中。
+- [ ] AC-F03-02-06：取消新增不会创建记录。
+- [ ] AC-F03-02-07：16 种颜色全部用完后，UI 与 API 均不允许新增 Customer。
+- [ ] AC-F03-02-08：新增失败时显示错误，并保留用户输入。
+
+#### 6.3.3 F03-03 Edit Customer
+
+**1. 功能目标**
+
+允许用户修改现有 Customer 的名称及颜色，并让关联任务显示最新 Customer 信息。
+
+**2. 页面交互**
+
+- 每个 Customer 提供 Edit 图标。
+- 用户可修改 Customer Name 与 Customer Color。
+- 修改字段后，在 Blur 时自动保存。
+- 保存失败时显示错误，并保留输入供修正或重试。
+
+**3. 业务规则**
+
+1. Customer Name 与 Customer Color 均可编辑。
+2. Customer Name 修改后，在 Blur 时自动保存。
+3. Customer Color 修改后，在 Blur 时自动保存。
+4. 新名称必须符合唯一性规则；与其他 Customer 重复时拒绝保存。
+5. 颜色只能选择固定 16 色中当前未被其他 Customer 使用的颜色，或保留当前 Customer 原有颜色。
+6. Customer 不提供删除操作。
+7. Task 直接保存 Customer Name。修改 Customer Name 时，系统必须同步更新所有使用旧名称的 Task，确保关联任务继续显示最新名称。
+8. Customer Name 同步更新必须完整执行；若同步更新失败，不得留下 Customer 已改名但部分 Task 仍使用旧名称的不一致状态。
+9. 修改 Customer 不得改变 Task ID 或创建新的 Task。
+10. 修改 Customer Color 后，相关任务应根据最新 Customer 配置显示颜色。
+11. 保存失败时不得静默丢弃修改。
+
+**4. 验收标准**
+
+- [ ] AC-F03-03-01：每个 Customer 都有 Edit 操作。
+- [ ] AC-F03-03-02：Customer Name 修改后在 Blur 时自动保存。
+- [ ] AC-F03-03-03：Customer Color 修改后在 Blur 时自动保存。
+- [ ] AC-F03-03-04：重复 Customer Name 不允许保存。
+- [ ] AC-F03-03-05：Customer Name 更新后，所有使用旧名称的 Task 同步更新为新名称。
+- [ ] AC-F03-03-06：Customer Color 更新后，相关任务显示最新颜色。
+- [ ] AC-F03-03-07：修改 Customer 不改变 Task ID 或创建新 Task。
+- [ ] AC-F03-03-08：Customer 不提供删除操作。
+- [ ] AC-F03-03-09：保存失败时显示错误，且不会产生 Customer 与 Task 名称不一致的部分更新。
+
+#### 6.3.4 F03-04 Customer Color Management
+
+**1. 功能目标**
+
+使用固定调色板区分 Customer，并在 Customer 下拉列表和任务列表中显示颜色标记。
+
+**2. 业务规则**
+
+1. 系统使用固定预定义的 16 种颜色。
+2. 每个 Customer 必须使用唯一颜色。
+3. 不允许用户自行输入 RGB 或 HEX 颜色。
+4. 新增 Customer 时使用尚未分配的颜色。
+5. 编辑 Customer 时，可保留当前颜色或更换为其他未使用颜色。
+6. 更换颜色时，当前 Customer 原有颜色可视为可用。
+7. 16 种颜色全部分配后，不允许新增 Customer。
+8. 颜色唯一性由系统端强制执行，不能只依赖 UI 限制。
+9. Customer 颜色变更后，所有相关任务的显示必须反映最新颜色。
+10. Customer 显示使用颜色标记搭配黑色文字。
+
+**3. 验收标准**
+
+- [ ] AC-F03-04-01：系统只提供固定的 16 种颜色。
+- [ ] AC-F03-04-02：不同 Customer 不可使用相同颜色。
+- [ ] AC-F03-04-03：新增 Customer 自动分配未使用颜色。
+- [ ] AC-F03-04-04：颜色全部分配后，不允许新增 Customer。
+- [ ] AC-F03-04-05：Customer 可更换为其他未使用颜色。
+- [ ] AC-F03-04-06：颜色变更后，相关任务显示最新颜色。
+- [ ] AC-F03-04-07：颜色分配及唯一性由系统端强制执行。
+
+#### 6.3.5 F03-05 Customer Data & Task Relationship
+
+**1. 数据结构**
+
+Customer 作为独立数据实体维护，但 Task 直接保存 Customer Name，不通过 Customer ID 建立关联。
+
+| 对象 | 字段 | 类型 | 规则 |
+|------|------|------|------|
+| Customer | Customer Name | String | 必填、唯一；比较时忽略首尾空格及大小写 |
+| Customer | Customer Color | String | 固定 16 色之一，且在 Customer 之间唯一 |
+| Task | Customer Name | String | 必填；直接保存名称，不使用 Customer ID 关联 |
+
+**2. 业务规则**
+
+1. Customer Name 与 Customer Color 在 Customer 维护数据中统一管理。
+2. Task 记录直接保存 Customer Name。
+3. 修改 Customer Name 时，必须同步更新所有使用旧名称的 Task。
+4. 修改 Customer Color 时，任务列表根据最新 Customer 配置显示颜色。
+5. Customer 不允许删除。
+6. REST API 创建 Task 时，如果 Customer Name 尚不存在，系统可按 F05 定义的规则自动创建 Customer，并分配第一个未使用颜色。
+7. 如果 16 种颜色全部用完，UI 与 API 均不得新增 Customer。
+8. Customer 名称唯一性、颜色唯一性及名称同步规则必须由系统端强制执行。
+
+**3. 验收标准**
+
+- [ ] AC-F03-05-01：Customer Name 与 Customer Color 由独立 Customer 数据统一维护。
+- [ ] AC-F03-05-02：Task 直接保存 Customer Name，不使用 Customer ID 关联。
+- [ ] AC-F03-05-03：Customer 改名后，所有使用旧名称的 Task 同步更新。
+- [ ] AC-F03-05-04：Customer 改色后，相关 Task 显示最新颜色。
+- [ ] AC-F03-05-05：API 自动创建 Customer 时遵守相同的名称与颜色规则。
+- [ ] AC-F03-05-06：颜色用完时，不允许通过 UI 或 API 新增 Customer。
+- [ ] AC-F03-05-07：Customer 不提供删除操作。
 ### 6.4 F04 Task Time Management
 
 #### 6.4.1 F04-01 Edit Task Time
