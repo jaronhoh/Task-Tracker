@@ -233,7 +233,7 @@ PRD 应：
 
 | 页面/区域 | 入口 | 关键组件 | 退出/下一步 |
 |-----------|------|----------|-------------|
-| Task List Row | 单击一行 | 行选中高亮；不使用 Checkbox | 仅选择该 Task，并更新当前选中任务 |
+| Weekly Task / Current Week Status / Show All Data 的 Task List Row | 单击一行 | 行选中高亮；不使用 Checkbox | 仅选择该 Task，并更新当前选中任务 |
 | Edit Task Dialog | 双击一行或使用明确的 Edit 操作 | 居中 Dialog，宽度约 800px；可编辑字段；只读字段；X/Close | 字段 Blur 后保存；关闭后刷新当前列表 |
 
 **3. 状态说明**
@@ -248,8 +248,8 @@ PRD 应：
 
 **4. 业务规则**
 
-1. 单击 Task 数据行只选择该 Task，不打开 Edit Task Dialog；当前选中行应有清晰的视觉高亮。
-2. 双击 Task 数据行或使用明确的 Edit 操作打开该 Task 的 Edit Task Dialog。
+1. Weekly Task、Current Week Status 与 Show All Data 均采用相同的行交互：单击 Task 数据行只选择该 Task，不打开 Edit Task Dialog；当前选中行应有清晰的视觉高亮。
+2. 在三个 View 中，双击 Task 数据行或使用明确的 Edit 操作打开该 Task 的 Edit Task Dialog。
 3. 可编辑字段：Customer Name、Task Title、Task Description、Note、Status。
 4. 只读字段：Task ID、Created、End。
 5. 任一可编辑字段发生修改并 Blur 后，系统立即保存该字段。
@@ -275,7 +275,7 @@ PRD 应：
 
 **6. 验收标准**
 
-- [ ] AC-F01-02-01：单击 Task 行只选择并高亮该行；双击该行或使用明确的 Edit 操作才打开对应 Task 的 Edit Task Dialog。
+- [ ] AC-F01-02-01：在 Weekly Task、Current Week Status 与 Show All Data 中，单击 Task 行只选择并高亮该行；双击该行或使用明确的 Edit 操作才打开对应 Task 的 Edit Task Dialog。
 - [ ] AC-F01-02-02：Task ID、Created、End 显示为只读。
 - [ ] AC-F01-02-03：Customer Name、Task Title、Task Description、Note、Status 可编辑。
 - [ ] AC-F01-02-04：可编辑字段修改后 Blur，系统自动保存，不需要点击 Save。
@@ -426,7 +426,7 @@ PRD 应：
 | 页面/区域 | 入口 | 关键组件 | 退出/下一步 |
 |-----------|------|----------|-------------|
 | New Task | `+ New Task` | Create Dialog | 建立 KIV Task |
-| Edit Task | 双击 Task 行或使用明确的 Edit 操作 | Edit Dialog | 编辑字段或改变 Status |
+| Edit Task | 在任一 View 中双击 Task 行或使用明确的 Edit 操作 | Edit Dialog | 编辑字段或改变 Status；单击行只选择并高亮任务 |
 | Status Lifecycle | 修改 Status | Status Select | 自动维护 End |
 | Show All Data | 进入历史数据 View | Task Table | 可查看 Deleted Task 并通过 Status 恢复；View 细节由 F02 定义 |
 
@@ -859,7 +859,7 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 8. Active Task 的 End 默认只读。若用户尝试为 Active Task 设置 End，系统必须先显示 Warning Dialog，说明该操作会结束任务。用户确认继续后，才可输入 End；随后必须选择 `Closed` 或 `Deleted`，并通过专用 Save 操作一次性保存 End 与 Status。
 9. 在 Active Task 的特殊转换流程中，用户确认 Warning 后输入的 End 值必须有效；选择 `Closed` 或 `Deleted` 并点击 Save 时，系统一次性保存所选 Status 与输入的 End。此流程不先将 End 自动设为当前时间，也不在 Save 前修改 Task。
 10. 用户取消 Warning Dialog 时，不修改 Status 或 End，保留原任务数据。若用户在后续输入或选择阶段取消/关闭，未提交的 Status 与 End 变更也不得保存。
-11. End 仅允许在 Status 为 Closed 或 Deleted 时编辑。
+11. 普通 End 时间编辑仅允许在 Status 为 Closed 或 Deleted 时进行。例外：Active Task 可按本功能第8–10条的特殊转换流程，在 Warning 确认后暂存输入 End；只有选择 Closed 或 Deleted 并点击专用 Save 后，才可将 Status 与 End 一次性保存。未完成该流程前，Active Task 的 End 必须保持 NULL，且不得保存单独的 End 变更。
 12. Active Status 的 End 必须为 NULL；Closed / Deleted 的 End 必须有值，不允许清空后保存。
 13. 对 Closed 或 Deleted 任务，End 必须满足 End >= Created。保存 Created 前，系统必须检查现有 End；若新 Created 会导致 End < Created，则拒绝保存 Created 并提示用户先调整 End。
 14. 所有时间统一使用 Malaysia Time (UTC+8)。
