@@ -5,3 +5,5 @@
 .customer-select-wrap{display:flex;align-items:center;gap:9px}.customer-select-wrap select{flex:1;width:100%}.customer-select-wrap .color-dot{width:12px;height:12px;flex:0 0 12px;background:#cbd5e1}
 
 .status-group-row{cursor:default!important}.status-group-row td{background:#eef3fb!important;color:#334155;font-size:12px;font-weight:750;padding:12px 10px!important;border-top:1px solid #dbe4f0}.status-group-row td span{display:inline-block}.status-group-row td strong{float:right;display:inline-flex;min-width:24px;justify-content:center;padding:2px 8px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:11px}.status-group-row:hover td{background:#eef3fb!important}
+
+#tasksTable thead th.sortable-header{cursor:pointer;user-select:none}#tasksTable thead th.sortable-header:hover{color:#2459d3!important}#tasksTable thead th.sortable-header[data-sort-direction="asc"]::after{content:" ↑";color:#2459d3}#tasksTable thead th.sortable-header[data-sort-direction="desc"]::after{content:" ↓";color:#2459d3}
