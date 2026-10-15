@@ -1084,6 +1084,14 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 - [ ] AC-F05-04-06：再次删除已 Deleted Task 时返回 HTTP 400，且 End 不变。
 - [ ] AC-F05-04-07：Task 不存在时返回 HTTP 404。
 
+**并发更新规则（D014-B）**
+
+1. 同一 Task 的写入请求必须由服务端串行处理，并按服务端接收顺序应用，避免并发写入交错导致数据不一致。
+2. 前端对同一 Task 的 Auto Save 请求必须按用户修改顺序发送，不得因请求完成时序而反转修改顺序。
+3. 每次更新仍须遵守对应字段验证及 Status / End 生命周期规则；单次 Status 与 End 联动更新必须作为一个原子操作处理。
+4. 更新失败时，系统必须显示错误并保留用户输入，不得将失败显示为成功。
+5. 本方案不要求新增 Task 版本字段，也不定义基于版本冲突的 HTTP 409 处理。
+
 #### 6.5.5 F05-05 API Validation & Error Handling
 
 **1. HTTP 状态码**
