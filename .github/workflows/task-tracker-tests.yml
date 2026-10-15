@@ -30,3 +30,7 @@ jobs:
           node --check app/test/api.test.js
       - name: Run API tests
         run: npm test
+      - name: Install Chromium for browser tests
+        run: npx playwright install --with-deps chromium
+      - name: Run browser acceptance tests
+        run: npm run test:ui
