@@ -274,7 +274,7 @@ function editTaskTime(taskId, body) {
     created = toMalaysiaTimestamp(created);
     if (end !== null) end = toMalaysiaTimestamp(end);
 
-    if (status !== current.status && !ACTIVE_STATUSES.has(status) && isFuture(created))
+    if (status !== current.status && !ACTIVE_STATUSES.has(status) && isFuture(created)) {
       throw new HttpError(400, 'Cannot close or delete Task because Created is later than current Malaysia Time (UTC+08:00).', 'FUTURE_CREATED');
     }
     if (ACTIVE_STATUSES.has(status) && !ACTIVE_STATUSES.has(current.status)) {
