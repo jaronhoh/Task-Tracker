@@ -219,3 +219,18 @@ For the browser acceptance test, install Chromium once and run:
 npx playwright install chromium
 npm run test:ui
 ```
+
+
+## PocketBay deployment readiness
+
+Follow the official [PocketBay deployment guide](https://pocketbay.com/deploy). This repository is prepared as a Node.js web app from the repository root:
+
+- Start command: `npm start`
+- Runtime port: `PORT` (defaults to `3000`)
+- Bind address: `0.0.0.0`
+- Health endpoint: `/api/health`
+- SQLite path override: `TASK_TRACKER_DB`
+
+**Before accepting real data**, configure `TASK_TRACKER_DB` to a PocketBay persistent-storage location confirmed in the deployment console, then create a test Task and verify it survives an app restart/redeploy. Do not assume the default `app/data/task-tracker.sqlite` path is persistent unless PocketBay confirms that path is mounted persistently.
+
+Task Tracker does not implement in-app user authentication or role-based access. Keep the PocketBay app private or password-protected unless and until an explicit public-access decision is made. Do not publish real customer/task information to an unrestricted URL.
