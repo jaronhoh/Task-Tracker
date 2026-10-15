@@ -251,21 +251,21 @@ PRD 应：
 1. 单击 Task 数据行只选择该 Task，不打开 Edit Task Dialog；当前选中行应有清晰的视觉高亮。
 2. 双击 Task 数据行或使用明确的 Edit 操作打开该 Task 的 Edit Task Dialog。
 3. 可编辑字段：Customer Name、Task Title、Task Description、Note、Status。
-3. 只读字段：Task ID、Created、End。
-4. 任一可编辑字段发生修改并 Blur 后，系统立即保存该字段。
-5. 不提供 Save Button。
-6. 点击 X/Close 直接关闭 Dialog，不额外显示 Save Confirmation。
-7. 关闭 Dialog 后刷新当前 Task List。
-8. Created 与 End 不可通过普通 Edit Task 修改；时间修正只能通过 F04 的 Edit Time。
-9. Status 更新必须执行 F01-03 的 End 联动规则。
-10. Customer 选择与维护规则由 F03 定义。
+4. 只读字段：Task ID、Created、End。
+5. 任一可编辑字段发生修改并 Blur 后，系统立即保存该字段。
+6. 不提供 Save Button。
+7. 点击 X/Close 直接关闭 Dialog，不额外显示 Save Confirmation。
+8. 关闭 Dialog 后刷新当前 Task List。
+9. Created 与 End 不可通过普通 Edit Task 修改；时间修正只能通过 F04 的 Edit Time。
+10. Status 更新必须执行 F01-03 的 End 联动规则。
+11. Customer 选择与维护规则由 F03 定义。
 
 **5. 数据要求**
 
 | 对象 | 字段 | 类型 | 必填 | 备注 |
 |------|------|------|------|------|
 | Task | Task ID | String | 是 | 只读 |
-| Task | Customer Name | Customer reference | 是 | 可编辑 |
+| Task | Customer Name | String | 是 | 可编辑；直接保存 Customer Name，不使用 Customer ID 关联 |
 | Task | Task Title | String(100) | 是 | 可编辑 |
 | Task | Task Description | String(255) | 否 | 可编辑 |
 | Task | Note | String(1000) | 否 | 可编辑 |
@@ -559,7 +559,7 @@ stateDiagram-v2
 
 1. 显示与 Weekly Task 相同的任务集合：当前周创建且 Status 不为 Deleted 的任务，以及 Created Week < Current Week 且 Status 不为 Closed / Deleted 的 Carry Over 任务。
 2. Current Week 与 Created Week 的周界统一定义为星期一 00:00（含）至下一个星期一 00:00（不含），使用 Malaysia Time (UTC+8)，与 F02-01 完全一致。
-4. Deleted 任务不显示。
+3. Deleted 任务不显示。
 4. 当前周已 Closed 的任务仍显示在 Closed 分组；历史 Closed 任务不显示。
 5. Overall Total 等于四个分组数量之和。
 6. Current Week Status 与 Weekly Task 使用相同的任务纳入规则，因此两者的 Overall Total 必须相同。
