@@ -104,6 +104,7 @@ function getDisplayedTasks() {
   const query = $('globalSearch').value.trim().toLocaleLowerCase('en-US');
   const tasks = getViewTasks().filter(task => !query || SEARCH_FIELDS.some(field =>
     String(task[field] ?? '').toLocaleLowerCase('en-US').includes(query)));
+  if (state.view === 'all') return tasks.sort((a, b) => a.taskId.localeCompare(b.taskId));
   return tasks.sort((a, b) => a.customerName.localeCompare(b.customerName, undefined, { sensitivity: 'base' }) ||
     a.taskId.localeCompare(b.taskId));
 }
@@ -293,6 +294,7 @@ function queuePatch(field, value, input) {
 
 async function createTask(event) {
   event.preventDefault();
+  if ($('taskId').value) return; // Edit Task uses blur-based Auto Save, never form submission.
   showDialogError('taskDialogError', '');
   try {
     const task = await api('/api/tasks', {
