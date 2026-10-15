@@ -216,7 +216,7 @@ test('P0-009 and P0-013 UI: failed Auto Save keeps input; exhausted color pool d
     await page.waitForFunction(() => document.querySelectorAll('#customerName option').length === 18);
     const addCustomerOption = page.locator('#customerName option[value="__add_customer__"]');
     await addCustomerOption.waitFor({ state: 'attached' });
-    assert.equal(await addCustomerOption.isDisabled(), true);
+    assert.equal(await addCustomerOption.evaluate(option => option.disabled), true);
     assert.equal(await page.locator('#customerDialog').isVisible(), false);
     assert.equal((await fetch(`${baseUrl}/api/customers`).then(response => response.json())).length, 16);
   } finally {
