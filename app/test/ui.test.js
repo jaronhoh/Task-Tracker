@@ -46,9 +46,18 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
     browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({ acceptDownloads: true, timezoneId: 'Asia/Kuala_Lumpur' });
     const page = await context.newPage();
+    const pageErrors = [];
+    page.on('pageerror', error => pageErrors.push(error.message));
+    page.on('console', message => { if (message.type() === 'error') pageErrors.push(message.text()); });
     page.setDefaultTimeout(10000);
     await page.goto(baseUrl);
-    await page.getByText('API Connected').waitFor();
+    try {
+      await page.locator('#healthBadge.ok').waitFor({ state: 'visible' });
+    } catch (error) {
+      const badge = await page.locator('#healthBadge').textContent().catch(() => 'missing');
+      const vendorStatus = await Promise.all(['/vendor/jquery/jquery.min.js','/vendor/datatables/dataTables.min.js','/vendor/datatables-css/dataTables.dataTables.min.css','/vendor/xlsx/xlsx.full.min.js'].map(async url => ({ url, status: (await page.request.get(baseUrl + url)).status() })));
+      throw new Error(`UI initialization failed; badge=${badge}; vendors=${JSON.stringify(vendorStatus)}; browserErrors=${JSON.stringify(pageErrors)}; cause=${error.message}`);
+    }
 
     await page.locator('#newTaskBtn').click();
     await page.locator('#customerName').selectOption('__add_customer__');
