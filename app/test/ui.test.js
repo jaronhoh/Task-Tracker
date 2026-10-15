@@ -212,8 +212,8 @@ test('P0-009 and P0-013 UI: failed Auto Save keeps input; exhausted color pool d
     assert.equal(customers.length, 16);
     await page.reload();
     await page.locator('#healthBadge.ok').waitFor({ state: 'visible' });
-    await page.waitForFunction(() => document.querySelectorAll('#customerName option').length === 18);
     await page.locator('#newTaskBtn').click();
+    await page.waitForFunction(() => document.querySelectorAll('#customerName option').length === 18);
     const addCustomerOption = page.locator('#customerName option[value="__add_customer__"]');
     await addCustomerOption.waitFor({ state: 'attached' });
     assert.equal(await addCustomerOption.isDisabled(), true);
