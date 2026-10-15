@@ -13,6 +13,7 @@ on:
   pull_request:
     paths:
       - 'app/**'
+      - 'package.json'
       - '.github/workflows/task-tracker-tests.yml'
 
 jobs:
