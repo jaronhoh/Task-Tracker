@@ -223,7 +223,7 @@ npm run test:ui
 
 ## PocketBay deployment readiness
 
-Follow the official [PocketBay deployment guide](https://pocketbay.com/deploy). This repository is prepared as a Node.js web app from the repository root:
+See the repository's [PocketBay deployment checklist](POCKETBAY_DEPLOYMENT.md) for runtime settings, persistent-storage requirements, access control, smoke tests, and recovery. Follow the official [PocketBay deployment guide](https://pocketbay.com/deploy). This repository is prepared as a Node.js web app from the repository root:
 
 - Start command: `npm start`
 - Runtime port: `PORT` (defaults to `3000`)
