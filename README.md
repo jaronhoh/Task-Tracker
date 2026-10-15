@@ -71,7 +71,7 @@ Customers are maintained directly within the application.
 
 The weekly boundary is based on **Malaysia Time (UTC+8)**:
 
-**Monday 00:00:00 → Friday 23:59:59**
+**Monday 00:00:00 inclusive → following Monday 00:00:00 exclusive**
 
 ### Carry Over
 
@@ -166,7 +166,7 @@ Phase 1 intentionally does **not** include:
 
 ## Status
 
-**Phase 1 Product Definition — Finalized; initial application implementation started**
+**Phase 1 Product Definition — Finalized; application implementation in progress**
 
 N01–N120 product questions have been resolved, with no remaining open product-definition questions.
 
@@ -194,3 +194,21 @@ npm start
 ```
 
 Open `http://localhost:3000`. To run the API test suite, use `npm test` from `app/`. GitHub Actions run [38721327387](https://github.com/jaronhoh/Task-Tracker/actions/runs/38721327387) passed JavaScript syntax checks and all 12 initial API tests. This is not equivalent to passing all 16 manual P0 scenarios or browser UI acceptance tests. This is the first implementation increment; remaining PRD acceptance criteria and UI/API edge cases still require implementation and verification.
+
+
+## Run from repository root
+
+The repository root now contains a Node.js entry point for hosting platforms such as PocketBay:
+
+```bash
+npm install
+npm start
+```
+
+The web server binds to `0.0.0.0` and uses the hosting platform's `PORT` environment variable (default `3000`). The application health endpoint is `/api/health`. The SQLite database is created at `app/data/task-tracker.sqlite`; confirm the hosting platform provides persistent storage before relying on hosted data across redeployments.
+
+For the full local test suite from the repository root:
+
+```bash
+npm test
+```
