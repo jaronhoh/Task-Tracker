@@ -748,7 +748,7 @@ stateDiagram-v2
 5. 颜色只能选择固定 16 色中当前未被其他 Customer 使用的颜色，或保留当前 Customer 原有颜色。
 6. Customer 不提供删除操作。
 7. Task 直接保存 Customer Name。修改 Customer Name 时，系统必须同步更新所有使用旧名称的 Task，确保关联任务继续显示最新名称。
-8. Customer Name 同步更新必须完整执行；若同步更新失败，不得留下 Customer 已改名但部分 Task 仍使用旧名称的不一致状态。
+8. Customer Name 修改及所有关联 Task 的名称同步更新必须在同一事务中完整执行；若任一步骤失败，必须回滚 Customer 改名及所有关联 Task 更新，不得留下 Customer 已改名但部分 Task 仍使用旧名称的不一致状态。
 9. 修改 Customer 不得改变 Task ID 或创建新的 Task。
 10. 修改 Customer Color 后，相关任务应根据最新 Customer 配置显示颜色。
 11. 保存失败时不得静默丢弃修改。
@@ -764,6 +764,7 @@ stateDiagram-v2
 - [ ] AC-F03-03-07：修改 Customer 不改变 Task ID 或创建新 Task。
 - [ ] AC-F03-03-08：Customer 不提供删除操作。
 - [ ] AC-F03-03-09：保存失败时显示错误，且不会产生 Customer 与 Task 名称不一致的部分更新。
+- [ ] AC-F03-03-10：Customer 改名与所有关联 Task 的名称同步更新在同一事务中提交；任一步骤失败时，Customer 与关联 Task 均保持原名称。
 
 #### 6.3.4 F03-04 Customer Color Management
 
@@ -942,7 +943,7 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 8. 如果 Customer 不存在，系统在同一事务中尝试创建 Customer，并分配固定 16 色调色板中第一个可用颜色；该事务须原子地完成 Customer 名称唯一性检查、颜色分配与 Customer 创建。
 9. Customer 名称匹配忽略首尾空格且不区分大小写。
 10. 如果 16 种颜色全部用完，不允许自动创建 Customer，也不得留下部分创建的 Task。
-11. Task 创建、Task ID 分配及必要的 Customer 自动创建必须满足数据一致性要求；若创建流程失败，不得留下部分创建的 Task 或 Customer。Task ID 一旦分配过即不得重复使用。
+11. Task 创建、Task ID 分配及必要的 Customer 自动创建必须满足数据一致性要求；若创建流程失败，不得留下部分创建的 Task 或 Customer。Task ID 一旦分配过即不得重复使用，因此 Task ID 的分配记录必须在 Task 创建回滚时仍能保留，不能因创建事务回滚而重新分配该 ID。
 12. 并发请求若争用同一 Customer 名称或同一颜色，服务端必须确保名称与颜色唯一；未能成功创建的竞争请求返回明确 HTTP 400，且不得留下部分数据。
 
 **5. 验收标准**
@@ -1084,7 +1085,8 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 4. Deleted Task 不显示在 Weekly Task 与 Current Week Status，但仍显示在 Show All Data。
 5. 如果 Task 已经是 Deleted，再次调用 DELETE 时返回 `400 Bad Request`，错误信息为 `Task is already deleted.` 或含义明确的等效文字；不得再次更新 End。
 6. Task ID 不存在时返回 `404 Not Found`。
-7. 成功 Response 直接返回更新后的 Task Resource JSON。
+7. 执行 DELETE 前，必须遵循 F01-03 与 D013-A 的时间验证：若 Task 的 Created 晚于当前 Malaysia Time (UTC+8)，拒绝操作并返回明确错误；不得更新 Status 或 End，也不得留下部分更新。
+8. 成功 Response 直接返回更新后的 Task Resource JSON。
 
 **4. 验收标准**
 
@@ -1095,6 +1097,7 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 - [ ] AC-F05-04-05：Deleted Task 不显示于两个 Weekly Views，仍显示于 Show All Data。
 - [ ] AC-F05-04-06：再次删除已 Deleted Task 时返回 HTTP 400，且 End 不变。
 - [ ] AC-F05-04-07：Task 不存在时返回 HTTP 404。
+- [ ] AC-F05-04-08：当 Created 晚于当前 Malaysia Time (UTC+8) 时，DELETE 返回明确错误，且 Status 与 End 均不改变。
 
 **并发更新规则（D014-B）**
 
