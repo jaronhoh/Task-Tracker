@@ -7,6 +7,9 @@ const Database = require('better-sqlite3');
 
 const PORT = Number(process.env.PORT || 3000);
 const DB_PATH = process.env.TASK_TRACKER_DB || path.join(__dirname, 'data', 'task-tracker.sqlite');
+const ROOT_NODE_MODULES = path.join(__dirname, '..', 'node_modules');
+const LOCAL_NODE_MODULES = path.join(__dirname, 'node_modules');
+const NODE_MODULES = fs.existsSync(ROOT_NODE_MODULES) ? ROOT_NODE_MODULES : LOCAL_NODE_MODULES;
 const STATUSES = ['Work in Progress', 'Pending with Customer', 'KIV', 'Closed', 'Deleted'];
 const ACTIVE_STATUSES = new Set(['Work in Progress', 'Pending with Customer', 'KIV']);
 const CUSTOMER_COLORS = [
@@ -53,6 +56,10 @@ db.exec(`
 const app = express();
 app.disable('x-powered-by');
 app.use(express.json({ limit: '1mb' }));
+app.use('/vendor/jquery', express.static(path.join(NODE_MODULES, 'jquery', 'dist')));
+app.use('/vendor/datatables', express.static(path.join(NODE_MODULES, 'datatables.net', 'js')));
+app.use('/vendor/datatables-css', express.static(path.join(NODE_MODULES, 'datatables.net-dt', 'css')));
+app.use('/vendor/xlsx', express.static(path.join(NODE_MODULES, 'xlsx', 'dist')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 class HttpError extends Error {
