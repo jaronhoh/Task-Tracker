@@ -226,3 +226,13 @@ test('Edit Time rejects future Created terminal transition without partial write
   assert.equal(after.body.end, null);
   assert.equal(after.body.created, task.created);
 });
+
+
+test('Edit Time restoring terminal Task to Active clears End automatically', async () => {
+  const task = await createTask({ status: 'Closed' });
+  assert.ok(task.end);
+  const response = await request(app).patch(`/api/tasks/${task.taskId}/time`).send({ status: 'KIV' });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.status, 'KIV');
+  assert.equal(response.body.end, null);
+});
