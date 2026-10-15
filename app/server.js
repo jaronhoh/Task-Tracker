@@ -69,6 +69,29 @@ app.use((req, _res, next) => {
   }
   next();
 });
+// Serialize writes to the same Task in HTTP arrival order, including PATCH /time and DELETE.
+const taskWriteTails = new Map();
+app.use((req, res, next) => {
+  if (!['PATCH', 'DELETE'].includes(req.method)) return next();
+  const match = req.path.match(/^\/api\/tasks\/([^/]+)(?:\/time)?$/);
+  if (!match) return next();
+  let taskId;
+  try { taskId = decodeURIComponent(match[1]); } catch { return next(); }
+  const previous = taskWriteTails.get(taskId) || Promise.resolve();
+  let release;
+  const current = new Promise(resolve => { release = resolve; });
+  const tail = previous.then(() => current);
+  taskWriteTails.set(taskId, tail);
+  previous.then(() => {
+    const finish = () => {
+      release();
+      if (taskWriteTails.get(taskId) === tail) taskWriteTails.delete(taskId);
+    };
+    res.once('finish', finish);
+    res.once('close', finish);
+    next();
+  }).catch(next);
+});
 app.use(express.json({ limit: '1mb' }));
 app.use((req, _res, next) => {
   if (req.body === undefined || req.body === null || typeof req.body !== 'object' || Array.isArray(req.body)) req.body = {};
