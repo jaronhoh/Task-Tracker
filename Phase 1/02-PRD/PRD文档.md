@@ -821,14 +821,14 @@ Customer 作为独立数据实体维护，但 Task 直接保存 Customer Name，
 
 **1. 功能目标**
 
-允许用户在 Show All Data 中修正任务的 Created 时间及 End 时间。Active Task 若要设置 End，必须先通过 Warning Dialog 确认将 Status 改为 Closed 或 Deleted；Closed / Deleted Task 的 End 必须有值。
+允许用户在 Show All Data 中修正任务的 Created 时间及 End 时间。Active Task 若要设置 End，必须先通过 Warning Dialog 确认，然后输入 End、选择 Closed 或 Deleted，并一次性保存 Status 与 End；Closed / Deleted Task 的 End 必须有值。
 
 **2. 流程与页面交互**
 
 | 页面/区域 | 入口 | 关键组件 | 退出/下一步 |
 |-----------|------|----------|-------------|
 | Show All Data | 选中一条任务 | Action Bar、Edit Time Button | 打开 Edit Time 表单 |
-| Edit Time | 点击 Edit Time | Task ID、Task Title、Created、End | 字段 Blur 后自动保存；关闭后刷新 Show All Data |
+| Edit Time | 点击 Edit Time | Task ID、Task Title、Created、End；Active 转终态时提供专用确认/保存流程 | 普通时间修改在字段 Blur 后自动保存；Active 转 Closed/Deleted 时需一次性保存 Status 与 End；关闭后刷新 Show All Data |
 
 **3. 字段规则**
 
@@ -837,7 +837,7 @@ Customer 作为独立数据实体维护，但 Task 直接保存 Customer Name，
 | Task ID | 否 | 只读，用于识别任务 |
 | Task Title | 否 | 只读，用于识别任务 |
 | Created | 是 | 所有状态均可修正 |
-| End | Closed / Deleted 可编辑；Active 状态须先确认状态转换 | Active 状态下默认只读；尝试设置 End 时显示 Warning Dialog，确认改为 Closed 或 Deleted 后才可编辑 End |
+| End | Closed / Deleted 可编辑；Active 状态须先确认状态转换 | Active 状态下默认只读；尝试设置 End 时显示 Warning Dialog，确认后可输入 End，再选择 Closed 或 Deleted 并保存整组变更 |
 
 Active 状态包括 Work in Progress、Pending with Customer、KIV。
 
@@ -845,17 +845,17 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 
 1. Edit Time 仅从 Show All Data 的选中任务进入。
 2. 未选中任务时，Edit Time 按钮不可用。
-3. Created 与 End 修改后，在字段 Blur 时自动保存，不提供 Save Button。
+3. 普通 Created 与 Closed/Deleted 状态下的 End 修改后，在字段 Blur 时自动保存。Active Task 设置 End 的特殊转换流程例外：需在输入 End 并选择 Closed 或 Deleted 后，通过专用 Save 操作一次性提交 Status 与 End。
 4. 用户关闭表单时直接关闭，不显示 Save Confirmation。
 5. 保存失败时显示错误并保留用户输入，不得将失败显示为成功。
 6. 修改时间不得自动改变 Status 或 Task ID。
 7. 修改 Created 后，所有依赖 Created 所属周的视图与统计必须重新计算。
-8. Active Task 的 End 默认只读。若用户尝试为 Active Task 设置 End，系统必须先显示 Warning Dialog，说明该操作会将任务结束；用户必须选择 `Closed` 或 `Deleted`。
-9. 用户确认选择 `Closed` 或 `Deleted` 后，系统将 Status 更新为所选状态，并按 F01 Status Lifecycle 设置 End；之后允许用户在 Edit Time 中修正 End。
-10. 用户取消 Warning Dialog 时，不修改 Status 或 End，保留原任务数据。
+8. Active Task 的 End 默认只读。若用户尝试为 Active Task 设置 End，系统必须先显示 Warning Dialog，说明该操作会结束任务。用户确认继续后，才可输入 End；随后必须选择 `Closed` 或 `Deleted`，并通过专用 Save 操作一次性保存 End 与 Status。
+9. 在 Active Task 的特殊转换流程中，用户确认 Warning 后输入的 End 值必须有效；选择 `Closed` 或 `Deleted` 并点击 Save 时，系统一次性保存所选 Status 与输入的 End。此流程不先将 End 自动设为当前时间，也不在 Save 前修改 Task。
+10. 用户取消 Warning Dialog 时，不修改 Status 或 End，保留原任务数据。若用户在后续输入或选择阶段取消/关闭，未提交的 Status 与 End 变更也不得保存。
 11. End 仅允许在 Status 为 Closed 或 Deleted 时编辑。
 12. Active Status 的 End 必须为 NULL；Closed / Deleted 的 End 必须有值，不允许清空后保存。
-13. 对 Closed 或 Deleted 任务，End 必须满足 End >= Created。
+13. 对 Closed 或 Deleted 任务，End 必须满足 End >= Created。保存 Created 前，系统必须检查现有 End；若新 Created 会导致 End < Created，则拒绝保存 Created 并提示用户先调整 End。
 14. 所有时间统一使用 Malaysia Time (UTC+8)。
 
 **5. 数据要求**
@@ -874,11 +874,11 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 - [ ] AC-F04-01-03：Created 在字段 Blur 后自动保存。
 - [ ] AC-F04-01-04：Closed 与 Deleted 任务的 End 在字段 Blur 后自动保存。
 - [ ] AC-F04-01-05：Active Task 的 End 默认只读；尝试设置 End 时显示 Warning Dialog，并要求用户选择 Closed 或 Deleted。
-- [ ] AC-F04-01-06：确认状态转换后，Status 更新为所选 Closed / Deleted，End 由系统设置为当前 Malaysia Time。
+- [ ] AC-F04-01-06：Active Task 的特殊转换流程中，用户输入 End、选择 Closed / Deleted 并点击 Save 后，Status 与 End 一次性保存；未点击 Save 前不修改任务。
 - [ ] AC-F04-01-07：取消 Warning Dialog 时，Status 与 End 均保持不变。
 - [ ] AC-F04-01-08：Closed/Deleted 的 End 必须有值，且 End >= Created；清空 End 后不得保存。
 - [ ] AC-F04-01-09：修改时间不得直接改变 Task ID；除用户确认的 Active → Closed/Deleted 流程外，Edit Time 不自动改变 Status。
-- [ ] AC-F04-01-10：修改 Created 后，Weekly Task 与 Current Week Status 重新计算任务归属及统计。
+- [ ] AC-F04-01-10：修改 Created 后，Weekly Task 与 Current Week Status 重新计算任务归属及统计；若新 Created 大于现有 End，拒绝保存 Created 并提示先调整 End。
 - [ ] AC-F04-01-11：保存失败时显示错误并保留用户输入。
 - [ ] AC-F04-01-12：时间使用 Malaysia Time (UTC+8)。
 ### 6.5 F05 Integration & Export
@@ -1025,7 +1025,7 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 2. 不允许修改 Task ID。
 3. 普通 PATCH 不允许修改 Created 或 End；时间修正仅通过 UI 的 Edit Time 功能进行。
 4. 可更新字段为 `customerName`、`taskTitle`、`taskDescription`、`note`、`status`。
-5. 更新 Customer Name 时，遵循 F03 名称匹配与同步更新规则。
+5. 更新 Customer Name 时，只允许使用已存在的 Customer；名称匹配遵循 F03 规则。若指定名称不存在，返回 `400 Bad Request`，且不得更新 Task。
 6. 更新 Status 时，遵循 F01 Status Lifecycle，并由系统维护 End。
 7. 无效 Status、字段超长或缺少必要值时返回 `400 Bad Request`。
 8. Task ID 不存在时返回 `404 Not Found`。
@@ -1037,7 +1037,7 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 - [ ] AC-F05-03-02：未提供的字段保持原值。
 - [ ] AC-F05-03-03：不允许修改 Task ID、Created 或 End。
 - [ ] AC-F05-03-04：Status 更新遵循 F01 生命周期规则。
-- [ ] AC-F05-03-05：Customer Name 更新遵循 F03 规则。
+- [ ] AC-F05-03-05：Customer Name 更新遵循 F03 规则；只能指定已存在的 Customer，未知名称返回 HTTP 400，Task 不得被部分更新。
 - [ ] AC-F05-03-06：无效请求返回 HTTP 400。
 - [ ] AC-F05-03-07：Task 不存在时返回 HTTP 404。
 - [ ] AC-F05-03-08：成功时直接返回更新后的 Resource JSON。
@@ -1102,8 +1102,8 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 2. 错误信息必须说明失败原因。
 3. 失败请求不得显示为成功。
 4. 验证必须由系统端执行，不能只依赖 UI。
-5. Customer 名称重复、颜色用尽、无效 Status、字段超长、必填字段缺失等情况必须得到明确处理。
-6. 创建 Task 与自动创建 Customer 必须保证一致性；如果任一步骤失败，不得留下部分创建的 Task 或 Customer。
+5. Customer 名称重复、颜色用尽、未知 Customer Name、无效 Status、字段超长、必填字段缺失等情况必须得到明确处理。
+6. POST 创建 Task 与其自动创建 Customer 必须保证一致性；如果任一步骤失败，不得留下部分创建的 Task 或 Customer。PATCH 若指定不存在的 Customer Name，必须返回 400 且整个 PATCH 不得产生任何更新。
 7. 对不存在的 Task，返回 404；不得将“已 Deleted”与“Task ID 不存在”混为同一情况。
 
 **4. 验收标准**
