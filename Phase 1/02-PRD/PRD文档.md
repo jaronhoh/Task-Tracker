@@ -408,6 +408,8 @@ PRD 应：
 - [ ] AC-F01-04-05：保存失败时不显示成功状态，输入值保留以便修正或重试。
 - [ ] AC-F01-04-06：Status 保存与 End 的联动规则一致。
 - [ ] AC-F01-04-07：普通 Auto Save 不允许修改 Task ID、Created、End。
+- [ ] AC-F01-04-08：同一 Task 的 Auto Save 请求按用户修改顺序发送；服务端按接收顺序串行应用同一 Task 的写入。
+- [ ] AC-F01-04-09：Auto Save 请求失败时显示错误、保留输入，且不得显示为保存成功。
 
 **7. 权限**
 
@@ -537,6 +539,7 @@ stateDiagram-v2
 - [ ] AC-F02-01-05：Deleted 任务不显示在 Weekly Task。
 - [ ] AC-F02-01-06：列表按 Customer Name ASC、Task ID ASC 排序。
 - [ ] AC-F02-01-07：本 View 不显示分页控件。
+- [ ] AC-F02-01-08：Created 恰好为星期一 00:00（Malaysia Time UTC+8）时归入该周；恰好为下一星期一 00:00 时不归入前一周。
 
 #### 6.2.2 F02-02 Current Week Status
 
@@ -577,6 +580,7 @@ stateDiagram-v2
 - [ ] AC-F02-02-06：四个分组数量之和等于 Overall Total。
 - [ ] AC-F02-02-07：Overall Total 与 Weekly Task 的 Overall Total 相同。
 - [ ] AC-F02-02-08：本 View 不显示分页控件。
+- [ ] AC-F02-02-09：周界按 Malaysia Time UTC+8 的星期一 00:00（含）至下周星期一 00:00（不含）计算，边界任务与 Weekly Task 的纳入结果一致。
 
 #### 6.2.3 F02-03 Show All Data
 
@@ -893,6 +897,7 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 - [ ] AC-F04-01-10：修改 Created 后，Weekly Task 与 Current Week Status 重新计算任务归属及统计；若新 Created 大于现有 End，拒绝保存 Created 并提示先调整 End。
 - [ ] AC-F04-01-11：保存失败时显示错误并保留用户输入。
 - [ ] AC-F04-01-12：时间使用 Malaysia Time (UTC+8)。
+- [ ] AC-F04-01-13：End 早于 Created 时拒绝保存 End；修改 Created 会导致现有 End 早于新 Created 时拒绝保存 Created；失败时原有数据不变并显示明确错误。
 ### 6.5 F05 Integration & Export
 
 #### 6.5.1 F05-01 REST API — Create Task
@@ -1061,6 +1066,8 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 - [ ] AC-F05-03-08：成功时直接返回更新后的 Resource JSON。
 - [ ] AC-F05-03-09：PATCH 中可选字段缺省时保留原值；`taskDescription` 或 `note` 显式传入 `null` 或 `""` 时清空并保存为 NULL。
 - [ ] AC-F05-03-10：必填字段传入 `null` 或空白值时返回 HTTP 400，且整个 PATCH 不得产生部分更新。
+- [ ] AC-F05-03-11：PATCH 触发自动生成 End 的状态转换时，若 Created 晚于当前 Malaysia Time (UTC+8)，返回明确错误，且 Status 与 End 均不改变。
+- [ ] AC-F05-03-12：同一 Task 的并发 PATCH 按服务端接收顺序串行应用；前端 Auto Save 按用户修改顺序发送，失败时保留输入并显示错误。
 
 #### 6.5.4 F05-04 REST API — Delete Task
 
