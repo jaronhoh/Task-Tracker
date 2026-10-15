@@ -347,8 +347,8 @@ PRD 应：
 - [ ] AC-F01-03-05：通过普通 Edit Task 或 API 将 Active 转 Deleted 时，End 更新为当前 Malaysia Time；F04 的 Active Task Edit Time 特殊流程使用用户输入的 End。
 - [ ] AC-F01-03-06：Closed 转 Deleted 或 Deleted 转 Closed 时，End 更新为此次状态变更的当前时间。
 - [ ] AC-F01-03-07：Closed/Deleted 转 Active 时，End 清为 NULL。
-- [ ] AC-F01-03-08：系统拒绝或自动纠正 Active Status + non-NULL End 的不一致数据。
-- [ ] AC-F01-03-09：系统拒绝或自动纠正 Closed/Deleted + NULL End 的不一致数据。
+- [ ] AC-F01-03-08：当 Task 的 Status 为 Active 但 End 非 NULL 时，系统端自动将 End 纠正为 NULL；该纠正与当前写入操作必须原子完成，不得部分更新。
+- [ ] AC-F01-03-09：当 Task 的 Status 为 Closed 或 Deleted 但 End 为 NULL 时，系统端自动将 End 纠正为当前 Malaysia Time (UTC+8)；保存前必须执行 Created 时间验证。若 Created 晚于当前 Malaysia Time，系统拒绝本次写入、返回明确错误并保持原数据不变；不得部分更新。
 - [ ] AC-F01-03-10：将 Status 改为 Deleted 不会物理删除 Task 记录。
 - [ ] AC-F01-03-11：当 Created 晚于当前 Malaysia Time (UTC+8) 时，系统拒绝任何会自动生成 End 的状态转换，显示明确错误；Task 的 Status 与 End 均不得部分更新。
 
