@@ -460,6 +460,7 @@ function handleTaskStatusChange() {
     state.ignoreStatusBlur = true;
     const accepted = window.confirm('This Task has no End time. To close or delete it, confirm and enter End in the next dialog. No changes will be saved until you click Save Time.');
     if (accepted) openTimeDialog(task, { specialStatus: requestedStatus });
+    else state.ignoreStatusBlur = false;
     return;
   }
   // Other status changes continue through the ordered blur Auto Save queue.
