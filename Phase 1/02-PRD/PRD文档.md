@@ -197,7 +197,7 @@ PRD 应：
 | 对象 | 字段 | 类型 | 必填 | 备注 |
 |------|------|------|------|------|
 | Task | Task ID | String | 是 | 系统生成；唯一、永久、不重复使用 |
-| Task | Customer Name | Customer reference | 是 | 从 Customer 下拉列表选择 |
+| Task | Customer Name | String | 是 | 从 Customer 下拉列表选择；直接保存 Customer Name，不保存 Customer ID |
 | Task | Task Title | String(100) | 是 | 单行 |
 | Task | Task Description | String(255) | 否 | 单行 |
 | Task | Note | String(1000) | 否 | 多行 |
@@ -320,7 +320,7 @@ PRD 应：
 2. 新 Task 默认 Status 为 KIV。
 3. 任何 Status 均可直接转换到其他任意 Status。
 4. Active Status 包括 Work in Progress、Pending with Customer、KIV。
-5. Active Status 转为 Closed 或 Deleted 时，End 更新为当前 Malaysia Time (UTC+8)。
+5. 通过普通 Edit Task 或 API 将 Active Status 转为 Closed 或 Deleted 时，End 更新为当前 Malaysia Time (UTC+8)。F04 定义的 Active Task Edit Time 特殊流程属于例外：End 使用用户输入并与 Status 一次性保存。
 6. Closed 转为 Deleted 时，End 更新为当前 Deleted 时间。
 7. Deleted 转为 Closed 时，End 更新为当前 Closed 时间。
 8. Closed 或 Deleted 转为任意 Active Status 时，End 清为 NULL。
@@ -342,8 +342,8 @@ PRD 应：
 - [ ] AC-F01-03-01：系统仅提供规定的五种 Status。
 - [ ] AC-F01-03-02：新建 Task 默认 KIV。
 - [ ] AC-F01-03-03：任意 Status 可以直接转换到其他任意 Status。
-- [ ] AC-F01-03-04：Active 转 Closed 时，End 更新为当前 Malaysia Time。
-- [ ] AC-F01-03-05：Active 转 Deleted 时，End 更新为当前 Malaysia Time。
+- [ ] AC-F01-03-04：通过普通 Edit Task 或 API 将 Active 转 Closed 时，End 更新为当前 Malaysia Time；F04 的 Active Task Edit Time 特殊流程使用用户输入的 End。
+- [ ] AC-F01-03-05：通过普通 Edit Task 或 API 将 Active 转 Deleted 时，End 更新为当前 Malaysia Time；F04 的 Active Task Edit Time 特殊流程使用用户输入的 End。
 - [ ] AC-F01-03-06：Closed 转 Deleted 或 Deleted 转 Closed 时，End 更新为此次状态变更的当前时间。
 - [ ] AC-F01-03-07：Closed/Deleted 转 Active 时，End 清为 NULL。
 - [ ] AC-F01-03-08：系统拒绝或自动纠正 Active Status + non-NULL End 的不一致数据。
@@ -1184,7 +1184,7 @@ API 时间字段采用不带时区偏移量的本地时间字符串，格式为�
 3. 导出当前 View 所有符合过滤条件的记录，不受当前页面分页大小或当前页影响。
 4. 有 Global Search 条件时，只导出符合搜索条件的记录。
 5. Weekly Task 导出当前 Carry Over 与 New This Week 结果。
-6. Current Week Status 导出当前周四个 Status 分组的结果。
+6. Current Week Status 导出与 Weekly Task 相同的任务集合，并按四个 Status 分组展示；包含历史未 Closed/Deleted 的 Carry Over 任务。
 7. Show All Data 导出符合条件的全部记录，包括 Deleted。
 8. 导出内容应保留当前 View 的分组语义；各分组共用一个 Sheet，不额外创建多个 Sheet。
 9. 导出不修改 Task 数据、Status、Created 或 End。
@@ -1197,7 +1197,7 @@ API 时间字段采用不带时区偏移量的本地时间字符串，格式为�
 - [ ] AC-F05-07-04：导出所有符合条件的记录，不受分页限制。
 - [ ] AC-F05-07-05：有搜索条件时，只导出符合搜索条件的记录。
 - [ ] AC-F05-07-06：Weekly Task 导出 Carry Over 与 New This Week 的结果。
-- [ ] AC-F05-07-07：Current Week Status 导出四个 Status 分组的结果。
+- [ ] AC-F05-07-07：Current Week Status 导出四个 Status 分组的结果，包含历史未 Closed/Deleted 的 Carry Over 任务。
 - [ ] AC-F05-07-08：Show All Data 可导出符合条件的 Deleted 记录。
 - [ ] AC-F05-07-09：文件名符合既定格式，日期使用 Malaysia Time。
 - [ ] AC-F05-07-10：导出不会修改任何 Task 数据。
