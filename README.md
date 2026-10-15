@@ -193,7 +193,7 @@ npm install
 npm start
 ```
 
-Open `http://localhost:3000`. To run the API test suite, use `npm test` from `app/`. GitHub Actions run [38721327387](https://github.com/jaronhoh/Task-Tracker/actions/runs/38721327387) passed JavaScript syntax checks and all 12 initial API tests. This is not equivalent to passing all 16 manual P0 scenarios or browser UI acceptance tests. This is the first implementation increment; remaining PRD acceptance criteria and UI/API edge cases still require implementation and verification.
+Open `http://localhost:3000`. To run the API test suite, use `npm test` from `app/`. Automated API coverage and a Playwright browser acceptance suite are maintained separately. See the latest GitHub Actions run for the current verified result. Automated tests do not replace the 16 manual P0 scenarios, concurrency/fault-injection evidence, or deployment acceptance.
 
 
 ## Run from repository root
@@ -207,8 +207,15 @@ npm start
 
 The web server binds to `0.0.0.0` and uses the hosting platform's `PORT` environment variable (default `3000`). The application health endpoint is `/api/health`. The SQLite database is created at `app/data/task-tracker.sqlite`; confirm the hosting platform provides persistent storage before relying on hosted data across redeployments.
 
-For the full local test suite from the repository root:
+For the API test suite from the repository root:
 
 ```bash
 npm test
+```
+
+For the browser acceptance test, install Chromium once and run:
+
+```bash
+npx playwright install chromium
+npm run test:ui
 ```
