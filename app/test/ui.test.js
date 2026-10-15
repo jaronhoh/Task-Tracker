@@ -228,3 +228,62 @@ test('P0-009 and P0-013 UI: failed Auto Save keeps input; exhausted color pool d
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
 });
+
+
+test('P0-015 UI: Edit Time rejects End before Created and Created after existing End', async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'task-tracker-p0-time-'));
+  const port = await unusedPort();
+  const baseUrl = `http://127.0.0.1:${port}`;
+  const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
+    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', TASK_TRACKER_DB: path.join(tempDir, 'time.sqlite') },
+    stdio: 'ignore'
+  });
+  let browser;
+  try {
+    await waitForHealth(baseUrl, child);
+    const createResponse = await fetch(`${baseUrl}/api/tasks`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerName: 'P0 Time Customer', taskTitle: 'P0 Time Validation', status: 'Closed' })
+    });
+    assert.equal(createResponse.status, 201);
+    const task = await createResponse.json();
+
+    browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({ timezoneId: 'Asia/Kuala_Lumpur' });
+    const page = await context.newPage();
+    page.setDefaultTimeout(10000);
+    await page.goto(baseUrl);
+    await page.locator('#healthBadge.ok').waitFor({ state: 'visible' });
+    await page.locator('.view-tab[data-view="all"]').click();
+    await page.locator(`#tasksTable tbody tr[data-task-id="${task.taskId}"]`).waitFor();
+    await page.locator(`#tasksTable tbody tr[data-task-id="${task.taskId}"]`).click();
+    await page.locator('#editTimeBtn').click();
+    await page.locator('#timeDialog').waitFor({ state: 'visible' });
+
+    const createdValue = await page.locator('#timeCreated').inputValue();
+    const endValue = await page.locator('#timeEnd').inputValue();
+    const toLocalInput = epoch => new Date(epoch + 8 * 60 * 60 * 1000).toISOString().slice(0, 16);
+    const createdEpoch = Date.parse(`${createdValue}:00+08:00`);
+    await page.locator('#timeEnd').fill(toLocalInput(createdEpoch - 60_000));
+    await page.locator('#timeForm button[type="submit"]').click();
+    await page.locator('#timeDialogError').filter({ hasText: 'End cannot be earlier than Created.' }).waitFor();
+    assert.equal(await page.locator('#timeDialog').isVisible(), true);
+
+    const endEpoch = Date.parse(`${endValue}:00+08:00`);
+    await page.locator('#timeEnd').fill(endValue);
+    await page.locator('#timeCreated').fill(toLocalInput(endEpoch + 60_000));
+    await page.locator('#timeForm button[type="submit"]').click();
+    await page.locator('#timeDialogError').filter({ hasText: 'End cannot be earlier than Created.' }).waitFor();
+    const persisted = await fetch(`${baseUrl}/api/tasks/${task.taskId}`).then(response => response.json());
+    assert.equal(persisted.created, task.created);
+    assert.equal(persisted.end, task.end);
+    assert.equal(persisted.status, 'Closed');
+  } finally {
+    if (browser) await browser.close();
+    if (child.exitCode === null) {
+      child.kill('SIGTERM');
+      await Promise.race([once(child, 'exit'), new Promise(resolve => setTimeout(resolve, 1500))]);
+    }
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
