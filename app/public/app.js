@@ -2,6 +2,7 @@
 
 const STATUSES = ['Work in Progress', 'Pending with Customer', 'KIV', 'Closed', 'Deleted'];
 const ACTIVE = new Set(['Work in Progress', 'Pending with Customer', 'KIV']);
+const CUSTOMER_COLORS = ['#F87171','#FB923C','#FBBF24','#A3E635','#4ADE80','#34D399','#2DD4BF','#22D3EE','#38BDF8','#60A5FA','#818CF8','#A78BFA','#C084FC','#E879F9','#F472B6','#A8A29E'];
 const SEARCH_FIELDS = ['taskId', 'customerName', 'taskTitle', 'taskDescription', 'note'];
 const state = {
   tasks: [], customers: [], view: 'weekly', selectedId: null,
@@ -327,9 +328,84 @@ async function createCustomer(event) {
     await loadAll();
     fillCustomerSelect(customer.name);
     $('customerName').value = customer.name;
+    if ($('taskId').value && taskDialog.open) queuePatch('customerName', customer.name, $('customerName'));
     showNotice(`Customer ${customer.name} added.`);
   } catch (error) {
     showDialogError('customerDialogError', error.message);
+  }
+}
+
+function renderCustomerManagement() {
+  const list = $('customerManagementList');
+  const colorsInUse = new Map(state.customers.map(c => [c.color.toUpperCase(), c.name]));
+  list.innerHTML = state.customers.map((customer, index) => {
+    const colorOptions = CUSTOMER_COLORS.map(color => {
+      const owner = colorsInUse.get(color);
+      const disabled = owner && owner !== customer.name ? 'disabled' : '';
+      return `<option value="${color}" ${customer.color.toUpperCase() === color ? 'selected' : ''} ${disabled}>${color}${disabled ? ' (in use)' : ''}</option>`;
+    }).join('');
+    return `<div class="customer-management-row" data-customer-row="${index}">
+      <label>Customer Name
+        <input class="customer-name-editor" data-original="${escapeHtml(customer.name)}" value="${escapeHtml(customer.name)}" maxlength="100">
+      </label>
+      <label>Customer Color
+        <span class="customer-color-choice"><span class="color-dot" style="background:${escapeHtml(customer.color)}"></span>
+        <select class="customer-color-editor" data-name="${escapeHtml(customer.name)}" data-original="${escapeHtml(customer.color)}">${colorOptions}</select></span>
+      </label>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.customer-name-editor').forEach(input => input.addEventListener('blur', async () => {
+    const oldName = input.dataset.original;
+    const newName = input.value.trim();
+    if (!newName || newName === oldName) {
+      if (!newName) input.value = oldName;
+      return;
+    }
+    try {
+      await api(`/api/customers/${encodeURIComponent(oldName)}`, {
+        method: 'PATCH', body: JSON.stringify({ name: newName })
+      });
+      await loadAll();
+      renderCustomerManagement();
+      showDialogError('manageCustomersError', '');
+      showNotice(`Customer renamed to ${newName}; linked Tasks were updated.`);
+    } catch (error) {
+      showDialogError('manageCustomersError', error.message);
+      input.focus();
+    }
+  }));
+  list.querySelectorAll('.customer-color-editor').forEach(select => select.addEventListener('change', async () => {
+    const customerName = select.dataset.name;
+    const originalColor = select.dataset.original;
+    try {
+      await api(`/api/customers/${encodeURIComponent(customerName)}/color`, {
+        method: 'PATCH', body: JSON.stringify({ color: select.value })
+      });
+      await loadAll();
+      renderCustomerManagement();
+      showDialogError('manageCustomersError', '');
+      showNotice(`Color updated for ${customerName}.`);
+    } catch (error) {
+      select.value = originalColor;
+      const dot = select.closest('.customer-color-choice').querySelector('.color-dot');
+      dot.style.background = originalColor;
+      showDialogError('manageCustomersError', error.message);
+    }
+  }));
+  list.querySelectorAll('.customer-color-editor').forEach(select => select.addEventListener('change', () => {
+    const dot = select.closest('.customer-color-choice').querySelector('.color-dot');
+    dot.style.background = select.value;
+  }));
+}
+
+async function openManageCustomers() {
+  try {
+    await loadAll();
+    showDialogError('manageCustomersError', '');
+    renderCustomerManagement();
+    $('manageCustomersDialog').showModal();
+  } catch (error) {
+    showNotice(error.message, true);
   }
 }
 
@@ -398,6 +474,7 @@ function exportExcel() {
 function bindEvents() {
   document.querySelectorAll('.view-tab').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
   $('newTaskBtn').addEventListener('click', openNewTask);
+  $('manageCustomersBtn').addEventListener('click', openManageCustomers);
   $('editTaskBtn').addEventListener('click', () => { const task = selectedTask(); if (task) openEditTask(task); });
   $('editTimeBtn').addEventListener('click', () => { const task = selectedTask(); if (task) openTimeDialog(task); });
   $('exportBtn').addEventListener('click', exportExcel);
@@ -407,7 +484,11 @@ function bindEvents() {
   $('taskForm').addEventListener('submit', createTask);
   $('customerForm').addEventListener('submit', createCustomer);
   $('timeForm').addEventListener('submit', saveTime);
-  document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
+  document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => {
+    const dialogId = button.dataset.close;
+    $(dialogId).close();
+    if (dialogId === 'customerDialog' && $('customerName').value === '__add_customer__') $('customerName').value = '';
+  }));
   $('customerName').addEventListener('change', () => {
     if ($('customerName').value === '__add_customer__') {
       state.customerBeforeAdd = '';
