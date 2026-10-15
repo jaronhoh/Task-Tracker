@@ -131,15 +131,9 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
     assert.equal(await page.locator('#tasksTable tbody tr[data-task-id="TSK-0002"]').count(), 0);
     await page.locator('#clearSearchBtn').click();
     await page.locator('#tasksTable tbody tr[data-task-id="TSK-0002"]').waitFor();
-    const taskTitleHeader = page.locator('#tasksTable thead th').nth(2);
-    await taskTitleHeader.click();
-    let appliedOrder = await page.evaluate(() => window.jQuery('#tasksTable').DataTable().order());
-    if (!(appliedOrder[0]?.[0] === 2 && appliedOrder[0]?.[1] === 'asc')) {
-      await taskTitleHeader.click();
-      appliedOrder = await page.evaluate(() => window.jQuery('#tasksTable').DataTable().order());
-    }
+    await page.locator('#tasksTable thead th').nth(2).click();
     const firstTitle = (await page.locator('#tasksTable tbody tr').first().locator('td').nth(2).textContent()).trim();
-    assert.equal(firstTitle, 'AAA Sort Check', `Expected ascending Task Title order; applied order=${JSON.stringify(appliedOrder)}; firstTitle=${firstTitle}`);
+    assert.equal(firstTitle, 'AAA Sort Check', `Expected ascending Task Title order; firstTitle=${firstTitle}`);
     const downloadPromise = page.waitForEvent('download');
     await page.locator('#exportBtn').click();
     const download = await downloadPromise;
