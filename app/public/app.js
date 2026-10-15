@@ -162,7 +162,7 @@ function renderTable() {
     tbody.innerHTML = groups.map(status => {
       const groupTasks = tasks.filter(task => task.status === status);
       const heading = `<tr class="status-group-row"><td colspan="8"><span>${escapeHtml(status)}</span><strong>${groupTasks.length}</strong></td></tr>`;
-      const rows = groupTasks.map(task => `<tr data-task-id="${escapeHtml(task.taskId)}">
+      const rows = groupTasks.map(task => `<tr data-task-id="${escapeHtml(task.taskId)}" class="${task.taskId === state.selectedId ? 'selected-row' : ''}">
         <td>${escapeHtml(task.taskId)}</td><td>${customerHtml(task)}</td><td>${escapeHtml(task.taskTitle)}</td>
         <td>${escapeHtml(task.taskDescription || '')}</td><td>${escapeHtml(task.note || '')}</td>
         <td>${escapeHtml(formatDateTime(task.created))}</td><td>${escapeHtml(formatDateTime(task.end))}</td>
