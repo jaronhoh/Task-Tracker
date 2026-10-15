@@ -94,6 +94,10 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
 
     await page.locator('#tasksTable tbody tr[data-task-id="TSK-0001"]').click();
     await page.locator('#editTaskBtn').click();
+    page.once('dialog', dialog => dialog.dismiss());
+    await page.locator('#taskStatus').selectOption('Deleted');
+    assert.equal(await page.locator('#taskStatus').inputValue(), 'KIV');
+    await page.locator('#timeDialog').waitFor({ state: 'hidden' });
     page.once('dialog', dialog => dialog.accept());
     await page.locator('#taskStatus').selectOption('Closed');
     await page.locator('#timeDialog').waitFor({ state: 'visible' });
