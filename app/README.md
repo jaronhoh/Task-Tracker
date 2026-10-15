@@ -47,7 +47,7 @@ npm install
 npm test
 ```
 
-Tests use an in-memory SQLite database. GitHub Actions run `38721327387` passed JavaScript syntax checks and all 12 API tests (12 passed, 0 failed). This covers the initial automated API suite only; the 16 manual P0 scenarios and browser UI behavior still need separate verification.
+Tests use an in-memory SQLite database. GitHub Actions previously passed JavaScript syntax checks and all 12 initial API tests (12 passed, 0 failed). The API suite has since been expanded; check the latest Actions run for its current result. Automated API tests do not replace the 16 manual P0 scenarios or browser UI acceptance testing.
 
 ## Implementation notes
 
