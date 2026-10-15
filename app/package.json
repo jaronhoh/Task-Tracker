@@ -1,0 +1,19 @@
+{
+  "name": "task-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Task Tracker Phase 1 application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "express": "^5.1.0"
+  }
+}
