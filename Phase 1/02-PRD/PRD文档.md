@@ -186,7 +186,7 @@ PRD 应：
 3. Task Description 为可选单行文本，最多 255 个字符。
 4. Note 为可选多行文本，最多 1000 个字符。
 5. Status 默认值为 `KIV`。
-6. Task ID 由系统生成，格式为 `TSK-0001`、`TSK-0002`，必须唯一、永久且不得重复使用。
+6. Task ID 由服务端以原子、并发安全的方式分配，格式为 `TSK-0001`、`TSK-0002`，必须唯一、永久且不得重复使用；数据库必须有唯一约束兜底。编号允许出现空缺；一旦分配过的编号，即使对应创建请求失败或重试，也不得再次分配。
 7. Created 由系统以当前 Malaysia Time (UTC+8) 生成。
 8. 新 Task 的 End 初始为 NULL。
 9. New Task 不采用 Auto Save；只有点击 Create 且验证通过后才建立记录。
@@ -928,17 +928,18 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 
 **4. 业务规则**
 
-1. Task ID 由系统生成，格式为 `TSK-0001`，唯一、永久且不重复使用。
+1. Task ID 由服务端以原子、并发安全的方式分配，格式为 `TSK-0001`，唯一、永久且不重复使用；数据库必须有唯一约束兜底。编号允许出现空缺；一旦分配过的编号，即使对应创建请求失败或重试，也不得再次分配。
 2. Created 由系统生成，代表 Malaysia Time (UTC+8)。
 3. 未提供 Status 时，默认使用 `KIV`。
 4. Status 只接受 `Work in Progress`、`Pending with Customer`、`KIV`、`Closed`、`Deleted`。
 5. Active Status（Work in Progress、Pending with Customer、KIV）创建时 End 为 NULL。
 6. 如果创建时 Status 为 Closed 或 Deleted，End 必须按 F01 生命周期规则设置为当前 Malaysia Time，不能留下 Closed/Deleted + NULL End 的不一致数据。
 7. 如果 Customer Name 已存在，使用现有 Customer 名称规则匹配。
-8. 如果 Customer 不存在，系统尝试创建 Customer，并分配固定 16 色调色板中第一个可用颜色。
+8. 如果 Customer 不存在，系统在同一事务中尝试创建 Customer，并分配固定 16 色调色板中第一个可用颜色；该事务须原子地完成 Customer 名称唯一性检查、颜色分配与 Customer 创建。
 9. Customer 名称匹配忽略首尾空格且不区分大小写。
 10. 如果 16 种颜色全部用完，不允许自动创建 Customer，也不得留下部分创建的 Task。
-11. Task 创建必须遵循 F01 Status Lifecycle 与 F03 Customer 规则。
+11. Task 创建、Task ID 分配及必要的 Customer 自动创建必须满足数据一致性要求；若创建流程失败，不得留下部分创建的 Task 或 Customer。Task ID 一旦分配过即不得重复使用。
+12. 并发请求若争用同一 Customer 名称或同一颜色，服务端必须确保名称与颜色唯一；未能成功创建的竞争请求返回明确 HTTP 400，且不得留下部分数据。
 
 **5. 验收标准**
 
@@ -952,6 +953,9 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 - [ ] AC-F05-01-08：颜色全部用完时，不允许创建 Customer 或留下部分 Task。
 - [ ] AC-F05-01-09：缺少必填字段、字段超长或 Status 无效时返回验证错误。
 - [ ] AC-F05-01-10：API 创建遵循与 Web App 一致的业务规则。
+- [ ] AC-F05-01-11：并发创建 Task 时，Task ID 以原子、并发安全的方式分配，数据库唯一约束防止重复 ID。
+- [ ] AC-F05-01-12：Task ID 编号允许有空缺；已分配过的 ID 不得因创建失败或重试而再次使用。
+- [ ] AC-F05-01-13：POST 自动创建 Customer 时，名称检查、颜色分配与 Customer 创建在同一事务中完成；竞争失败返回明确 HTTP 400，且不留下部分 Task 或 Customer。
 
 #### 6.5.2 F05-02 REST API — Read Tasks
 
@@ -983,7 +987,7 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 
 **4. 业务规则**
 
-1. Response 直接返回 Resource JSON；不使用额外的 `data`、`result` 或 `payload` 包装对象。
+1. 单条查询直接返回一个 Task Resource JSON；列表查询 `GET /api/tasks` 直接返回 Task Resource JSON Array，不使用额外的 `data`、`result` 或 `payload` 包装对象。列表无记录时返回空数组 `[]`。
 2. Task 字段采用示例中的 camelCase JSON 名称。
 3. Status 使用完整文字，不使用数字或缩写。
 4. `GET /api/tasks` 默认排除 Status = `Deleted` 的记录。
@@ -1000,6 +1004,7 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 - [ ] AC-F05-02-05：Response 直接返回 Resource JSON，不使用包装对象。
 - [ ] AC-F05-02-06：Status 使用完整文字。
 - [ ] AC-F05-02-07：JSON 字段名及时间格式符合本模块约定。
+- [ ] AC-F05-02-08：`GET /api/tasks` 直接返回 JSON Array；无符合条件记录时返回 `[]`，不使用包装对象。
 
 #### 6.5.3 F05-03 REST API — Update Task
 
@@ -1029,14 +1034,15 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 **4. 业务规则**
 
 1. PATCH 只更新 Request Body 中提供的可更新字段；未提供的字段保持原值。
-2. 不允许修改 Task ID。
-3. 普通 PATCH 不允许修改 Created 或 End；时间修正仅通过 UI 的 Edit Time 功能进行。
-4. 可更新字段为 `customerName`、`taskTitle`、`taskDescription`、`note`、`status`。
-5. 更新 Customer Name 时，只允许使用已存在的 Customer；名称匹配遵循 F03 规则（Trim 首尾空格且不区分大小写）。匹配到现有 Customer 后，Task.Customer Name 必须保存该 Customer 实体中规范的原始名称，而不是保留请求中的大小写或首尾空格变体。若指定名称不存在，返回 `400 Bad Request`，且不得更新 Task。
-6. 更新 Status 时，遵循 F01 Status Lifecycle，并由系统维护 End。
-7. 无效 Status、字段超长或缺少必要值时返回 `400 Bad Request`。
-8. Task ID 不存在时返回 `404 Not Found`。
-9. 本模块不额外定义对 Deleted Task 执行 PATCH 的特殊禁止规则；请求仍须通过字段验证及 F01 生命周期规则。
+3. 对可选文本字段 `taskDescription` 与 `note`：字段缺省表示不修改；显式传入 `null` 或空字符串 `""` 均表示清空字段，并规范保存为数据库 NULL。必填字段不接受 `null` 或空白值；所有字段仍须遵守各自长度与格式验证。
+3. 不允许修改 Task ID。
+4. 普通 PATCH 不允许修改 Created 或 End；时间修正仅通过 UI 的 Edit Time 功能进行。
+5. 可更新字段为 `customerName`、`taskTitle`、`taskDescription`、`note`、`status`。
+6. 更新 Customer Name 时，只允许使用已存在的 Customer；名称匹配遵循 F03 规则（Trim 首尾空格且不区分大小写）。匹配到现有 Customer 后，Task.Customer Name 必须保存该 Customer 实体中规范的原始名称，而不是保留请求中的大小写或首尾空格变体。若指定名称不存在，返回 `400 Bad Request`，且不得更新 Task。
+7. 更新 Status 时，遵循 F01 Status Lifecycle，并由系统维护 End。
+8. 无效 Status、字段超长或缺少必要值时返回 `400 Bad Request`。
+9. Task ID 不存在时返回 `404 Not Found`。
+10. 本模块不额外定义对 Deleted Task 执行 PATCH 的特殊禁止规则；请求仍须通过字段验证及 F01 生命周期规则。
 
 **5. 验收标准**
 
@@ -1048,6 +1054,8 @@ Active 状态包括 Work in Progress、Pending with Customer、KIV。
 - [ ] AC-F05-03-06：无效请求返回 HTTP 400。
 - [ ] AC-F05-03-07：Task 不存在时返回 HTTP 404。
 - [ ] AC-F05-03-08：成功时直接返回更新后的 Resource JSON。
+- [ ] AC-F05-03-09：PATCH 中可选字段缺省时保留原值；`taskDescription` 或 `note` 显式传入 `null` 或 `""` 时清空并保存为 NULL。
+- [ ] AC-F05-03-10：必填字段传入 `null` 或空白值时返回 HTTP 400，且整个 PATCH 不得产生部分更新。
 
 #### 6.5.4 F05-04 REST API — Delete Task
 
