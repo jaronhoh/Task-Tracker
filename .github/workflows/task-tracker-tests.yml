@@ -32,6 +32,7 @@ jobs:
           node --check app/server.js
           node --check app/public/app.js
           node --check app/test/api.test.js
+          node --check app/test/ui.test.js
       - name: Run API tests
         run: npm test
       - name: Install Chromium for browser tests
