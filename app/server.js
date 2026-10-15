@@ -255,6 +255,9 @@ function editTaskTime(taskId, body) {
     }
     assertStatus(status);
 
+    if (status !== current.status && !ACTIVE_STATUSES.has(status) && isFuture(created)) {
+      throw new HttpError(400, 'Cannot close or delete Task because Created is later than current Malaysia Time (UTC+08:00).', 'FUTURE_CREATED');
+    }
     if (ACTIVE_STATUSES.has(status) && end !== null) {
       throw new HttpError(400, 'An Active Task cannot be saved with End. Choose Closed or Deleted in the Edit Time confirmation flow.');
     }
@@ -288,7 +291,7 @@ app.post('/api/customers', (req, res, next) => {
 
 app.patch('/api/customers/:customerName', (req, res, next) => {
   try {
-    const oldName = decodeURIComponent(req.params.customerName);
+    const oldName = req.params.customerName;
     const newName = cleanRequiredString(req.body.name, 'Customer Name', 100);
     const customer = db.transaction(() => {
       const current = getCustomer(oldName);
