@@ -232,9 +232,12 @@ function setView(view) {
 
 function fillCustomerSelect(selectedName = '') {
   const select = $('customerName');
+  const addCustomerOption = state.customers.length >= CUSTOMER_COLORS.length
+    ? '<option value="__add_customer__" disabled>＋ Add Customer (all 16 colors used)</option>'
+    : '<option value="__add_customer__">＋ Add Customer</option>';
   select.innerHTML = '<option value="">Select Customer…</option>' +
     state.customers.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('') +
-    '<option value="__add_customer__">＋ Add Customer</option>';
+    addCustomerOption;
   select.value = selectedName || '';
   updateCustomerColorPreview();
 }
