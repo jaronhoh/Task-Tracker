@@ -149,3 +149,79 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
 });
+
+
+test('P0-009 and P0-013 UI: failed Auto Save keeps input; exhausted color pool disables Customer add', async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'task-tracker-p0-ui-'));
+  const port = await unusedPort();
+  const baseUrl = `http://127.0.0.1:${port}`;
+  const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
+    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', TASK_TRACKER_DB: path.join(tempDir, 'p0.sqlite') },
+    stdio: 'ignore'
+  });
+  let browser;
+  try {
+    await waitForHealth(baseUrl, child);
+    const taskResponse = await fetch(`${baseUrl}/api/tasks`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerName: 'P0 Auto Save Customer', taskTitle: 'Original P0 title' })
+    });
+    assert.equal(taskResponse.status, 201);
+    const task = await taskResponse.json();
+
+    browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({ timezoneId: 'Asia/Kuala_Lumpur' });
+    const page = await context.newPage();
+    page.setDefaultTimeout(10000);
+    await page.goto(baseUrl);
+    await page.locator('#healthBadge.ok').waitFor({ state: 'visible' });
+    await page.locator(`#tasksTable tbody tr[data-task-id="${task.taskId}"]`).waitFor();
+    await page.locator(`#tasksTable tbody tr[data-task-id="${task.taskId}"]`).click();
+    await page.locator('#editTaskBtn').click();
+
+    await page.route(`**/api/tasks/${task.taskId}`, async route => {
+      if (route.request().method() === 'PATCH') {
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: { code: 'P0_INJECTED_FAILURE', message: 'P0 injected Auto Save failure' } })
+        });
+      } else {
+        await route.continue();
+      }
+    });
+    await page.locator('#taskTitle').fill('Unsaved P0 title');
+    await page.locator('#taskTitle').press('Tab');
+    await page.locator('#taskDialogError').filter({ hasText: 'Your input has been kept' }).waitFor();
+    assert.equal(await page.locator('#taskTitle').inputValue(), 'Unsaved P0 title');
+    const persisted = await fetch(`${baseUrl}/api/tasks/${task.taskId}`).then(response => response.json());
+    assert.equal(persisted.taskTitle, 'Original P0 title');
+
+    await page.unrouteAll({ behavior: 'wait' });
+    await page.locator('#taskDialog .icon-button[data-close="taskDialog"]').click();
+    await page.locator('#taskDialog').waitFor({ state: 'hidden' });
+
+    for (let index = 1; index <= 15; index += 1) {
+      const response = await fetch(`${baseUrl}/api/customers`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: `P0 UI Color Customer ${String(index).padStart(2, '0')}` })
+      });
+      assert.equal(response.status, 201);
+    }
+    const customers = await fetch(`${baseUrl}/api/customers`).then(response => response.json());
+    assert.equal(customers.length, 16);
+    await page.locator('#newTaskBtn').click();
+    const addCustomerOption = page.locator('#customerName option[value="__add_customer__"]');
+    await addCustomerOption.waitFor();
+    assert.equal(await addCustomerOption.isDisabled(), true);
+    assert.equal(await page.locator('#customerDialog').isVisible(), false);
+    assert.equal((await fetch(`${baseUrl}/api/customers`).then(response => response.json())).length, 16);
+  } finally {
+    if (browser) await browser.close();
+    if (child.exitCode === null) {
+      child.kill('SIGTERM');
+      await Promise.race([once(child, 'exit'), new Promise(resolve => setTimeout(resolve, 1500))]);
+    }
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
