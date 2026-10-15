@@ -1,6 +1,7 @@
 'use strict';
 
 process.env.TASK_TRACKER_DB = ':memory:';
+process.env.TASK_TRACKER_TEST_TRACE = '1';
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
@@ -49,7 +50,7 @@ test('POST creates Task, auto-creates Customer and assigns KIV by default', asyn
   assert.ok(customers.body[0].color);
 });
 
-test('PATCH unknown Customer returns 400 and performs no partial update', async () => {
+test('P0-014 PASS: PATCH unknown Customer returns 400 and performs no partial update', async () => {
   const task = await createTask();
   const response = await request(app).patch(`/api/tasks/${task.taskId}`).send({
     taskTitle: 'Should not save',
@@ -487,4 +488,127 @@ test('P0-007 PASS: database failure after End repair calculation rolls back all 
   } finally {
     db.exec('DROP TRIGGER IF EXISTS p0_007_force_update_failure');
   }
+});
+
+
+test('P0-008: concurrent same-Task PATCH writes apply in observed server receive order', async () => {
+  const task = await createTask();
+  app.locals.p0RequestTrace.length = 0;
+  const requests = [
+    request(app).patch(`/api/tasks/${task.taskId}`).set('x-p0-request-id', 'p0-first').send({ status: 'Work in Progress' }),
+    request(app).patch(`/api/tasks/${task.taskId}`).set('x-p0-request-id', 'p0-second').send({ status: 'Pending with Customer' })
+  ];
+  const responses = await Promise.all(requests);
+  assert.ok(responses.every(response => response.status === 200));
+  const trace = app.locals.p0RequestTrace.filter(item => item.path === `/api/tasks/${task.taskId}`);
+  assert.equal(trace.length, 2);
+  const final = await request(app).get(`/api/tasks/${task.taskId}`);
+  const lastReceivedId = trace.slice().sort((a, b) => a.sequence - b.sequence).at(-1).requestId;
+  assert.equal(final.body.status, lastReceivedId === 'p0-first' ? 'Work in Progress' : 'Pending with Customer');
+});
+
+test('P0-010: concurrent Customer creation preserves normalized-name and color uniqueness', async () => {
+  const requests = Array.from({ length: 16 }, (_, index) =>
+    request(app).post('/api/customers').send({ name: `P0 Color Customer ${String(index + 1).padStart(2, '0')}` })
+  );
+  const responses = await Promise.all(requests);
+  assert.ok(responses.every(response => response.status === 201));
+  const customers = (await request(app).get('/api/customers')).body;
+  assert.equal(customers.length, 16);
+  assert.equal(new Set(customers.map(customer => customer.color.toUpperCase())).size, 16);
+
+  const duplicateRace = await Promise.all([
+    request(app).post('/api/customers').send({ name: 'P0 Concurrent Name' }),
+    request(app).post('/api/customers').send({ name: ' p0 concurrent name ' })
+  ]);
+  assert.equal(duplicateRace.filter(response => response.status === 201).length, 0);
+  assert.equal(duplicateRace.filter(response => response.status === 400).length, 2);
+  assert.equal((await request(app).get('/api/customers')).body.length, 16);
+});
+
+test('P0-011: Customer rename failure rolls back Customer and two linked Tasks', async () => {
+  const first = await createTask({ customerName: 'QA Rename Old', taskTitle: 'P0 rename first' });
+  const second = await createTask({ customerName: 'QA Rename Old', taskTitle: 'P0 rename second' });
+  db.exec(`
+    CREATE TRIGGER p0_011_fail_linked_task_update
+    BEFORE UPDATE OF customer_name ON tasks
+    WHEN NEW.customer_name = 'QA Rename New'
+    BEGIN
+      SELECT RAISE(ABORT, 'P0-011 injected linked Task update failure');
+    END;
+  `);
+  try {
+    const response = await request(app).patch('/api/customers/QA%20Rename%20Old').send({ name: 'QA Rename New' });
+    assert.equal(response.status, 500);
+    const customers = (await request(app).get('/api/customers')).body;
+    assert.ok(customers.some(customer => customer.name === 'QA Rename Old'));
+    assert.ok(!customers.some(customer => customer.name === 'QA Rename New'));
+    for (const taskId of [first.taskId, second.taskId]) {
+      const stored = db.prepare('SELECT customer_name FROM tasks WHERE task_id = ?').get(taskId);
+      assert.equal(stored.customer_name, 'QA Rename Old');
+    }
+  } finally {
+    db.exec('DROP TRIGGER IF EXISTS p0_011_fail_linked_task_update');
+  }
+});
+
+test('P0-012: concurrent IDs stay unique and an allocated ID is not reused after insert failure', async () => {
+  const concurrent = await Promise.all(Array.from({ length: 10 }, (_, index) =>
+    request(app).post('/api/tasks').send({ customerName: 'QA Alpha', taskTitle: `P0 concurrent ${index}` })
+  ));
+  assert.ok(concurrent.every(response => response.status === 201));
+  const ids = concurrent.map(response => response.body.taskId);
+  assert.equal(new Set(ids).size, 10);
+
+  db.exec(`
+    CREATE TRIGGER p0_012_fail_after_id_allocation
+    BEFORE INSERT ON tasks
+    WHEN NEW.task_title = 'P0 allocated ID failure'
+    BEGIN
+      SELECT RAISE(ABORT, 'P0-012 injected insert failure');
+    END;
+  `);
+  try {
+    const failed = await request(app).post('/api/tasks').send({
+      customerName: 'QA Alpha', taskTitle: 'P0 allocated ID failure'
+    });
+    assert.equal(failed.status, 500);
+    const next = await createTask({ customerName: 'QA Alpha', taskTitle: 'P0 after gap' });
+    assert.equal(next.taskId, 'TSK-0012');
+    assert.ok(!db.prepare('SELECT 1 FROM tasks WHERE task_id = ?').get('TSK-0011'));
+  } finally {
+    db.exec('DROP TRIGGER IF EXISTS p0_012_fail_after_id_allocation');
+  }
+});
+
+test('P0-013: exhausted color pool blocks Task POST auto-Customer creation atomically', async () => {
+  const { CUSTOMER_COLORS } = require('../server');
+  for (let index = 0; index < CUSTOMER_COLORS.length; index += 1) {
+    await request(app).post('/api/customers').send({ name: `P0 Exhausted Customer ${index + 1}`).expect(201);
+  }
+  const beforeTasks = (await request(app).get('/api/tasks')).body;
+  const response = await request(app).post('/api/tasks').send({
+    customerName: 'P0 Seventeenth Customer', taskTitle: 'Must not be created'
+  });
+  assert.equal(response.status, 400);
+  assert.equal(response.body.error.code, 'CUSTOMER_COLORS_EXHAUSTED');
+  assert.equal((await request(app).get('/api/customers')).body.length, 16);
+  assert.deepEqual((await request(app).get('/api/tasks')).body, beforeTasks);
+});
+
+test('P0-016: future Created blocks terminal PATCH and logical DELETE without partial changes', async () => {
+  const future = new Date(Date.now() + 24 * 60 * 60 * 1000 + 8 * 60 * 60 * 1000).toISOString().replace('Z', '+08:00');
+  const task = await createTask({ note: 'P0-016 original' });
+  db.prepare('UPDATE tasks SET created = ? WHERE task_id = ?').run(future, task.taskId);
+  const patch = await request(app).patch(`/api/tasks/${task.taskId}`).send({ status: 'Closed', note: 'must not save' });
+  assert.equal(patch.status, 400);
+  assert.equal(patch.body.error.code, 'FUTURE_CREATED');
+  const deletion = await request(app).delete(`/api/tasks/${task.taskId}`);
+  assert.equal(deletion.status, 400);
+  assert.equal(deletion.body.error.code, 'FUTURE_CREATED');
+  const stored = db.prepare('SELECT * FROM tasks WHERE task_id = ?').get(task.taskId);
+  assert.equal(stored.status, 'KIV');
+  assert.equal(stored.end, null);
+  assert.equal(stored.created, future);
+  assert.equal(stored.note, 'P0-016 original');
 });
