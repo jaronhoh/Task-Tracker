@@ -89,7 +89,7 @@ function cleanRequiredString(value, label, maxLength) {
 }
 
 function cleanOptionalString(value, label, maxLength) {
-  if (value === null || value === '') return null;
+  if (value === undefined || value === null || value === '') return null;
   if (typeof value !== 'string') throw new HttpError(400, `${label} must be a string or null.`);
   if (value.length > maxLength) throw new HttpError(400, `${label} must not exceed ${maxLength} characters.`);
   return value;
