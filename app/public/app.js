@@ -217,6 +217,12 @@ function fillCustomerSelect(selectedName = '') {
     state.customers.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('') +
     '<option value="__add_customer__">＋ Add Customer</option>';
   select.value = selectedName || '';
+  updateCustomerColorPreview();
+}
+
+function updateCustomerColorPreview() {
+  const selected = state.customers.find(customer => customer.name === $('customerName').value);
+  $('customerColorPreview').style.background = selected?.color || '#cbd5e1';
 }
 
 function openNewTask() {
@@ -490,6 +496,7 @@ function bindEvents() {
     if (dialogId === 'customerDialog' && $('customerName').value === '__add_customer__') $('customerName').value = '';
   }));
   $('customerName').addEventListener('change', () => {
+    updateCustomerColorPreview();
     if ($('customerName').value === '__add_customer__') {
       state.customerBeforeAdd = '';
       $('newCustomerName').value = '';
