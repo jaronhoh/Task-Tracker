@@ -7,7 +7,10 @@
   "scripts": {
     "start": "node app/server.js",
     "test": "node --test app/test/api.test.js app/test/weekly.test.js",
-    "test:ui": "node --test app/test/ui.test.js"
+    "test:ui": "node --test app/test/ui.test.js",
+    "dev:ui": "vite --config app/frontend/vite.config.ts",
+    "build": "tsc -p app/frontend/tsconfig.json && vite build --config app/frontend/vite.config.ts",
+    "test:frontend": "tsx --test app/frontend/test/*.test.tsx"
   },
   "engines": {
     "node": ">=20 <23"
@@ -18,10 +21,29 @@
     "datatables.net": "^2.1.8",
     "datatables.net-dt": "^2.1.8",
     "jquery": "^3.7.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "@tanstack/react-table": "^8.21.3",
+    "radix-ui": "^1.4.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.3.1",
+    "lucide-react": "^0.468.0"
   },
   "devDependencies": {
     "supertest": "^7.1.4",
-    "playwright": "^1.55.0"
+    "playwright": "^1.55.0",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "@vitejs/plugin-react": "^4.5.0",
+    "tailwindcss": "^4.1.0",
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0",
+    "react-test-renderer": "^19.1.0",
+    "@types/react-test-renderer": "^19.1.0"
   }
 }
