@@ -511,6 +511,10 @@ function bindEvents() {
   $('taskForm').addEventListener('submit', createTask);
   $('customerForm').addEventListener('submit', createCustomer);
   $('timeForm').addEventListener('submit', saveTime);
+  taskDialog.addEventListener('close', async () => {
+    try { await state.editQueue; await loadAll(); }
+    catch (error) { showNotice(`Refresh failed: ${error.message}`, true); }
+  });
   document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => {
     const dialogId = button.dataset.close;
     $(dialogId).close();
