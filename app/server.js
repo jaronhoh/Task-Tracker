@@ -56,6 +56,10 @@ db.exec(`
 const app = express();
 app.disable('x-powered-by');
 app.use(express.json({ limit: '1mb' }));
+app.use((req, _res, next) => {
+  if (req.body === undefined || req.body === null || typeof req.body !== 'object' || Array.isArray(req.body)) req.body = {};
+  next();
+});
 app.use('/vendor/jquery', express.static(path.join(NODE_MODULES, 'jquery', 'dist')));
 app.use('/vendor/datatables', express.static(path.join(NODE_MODULES, 'datatables.net', 'js')));
 app.use('/vendor/datatables-css', express.static(path.join(NODE_MODULES, 'datatables.net-dt', 'css')));
@@ -378,6 +382,12 @@ app.delete('/api/tasks/:taskId', (req, res, next) => {
 });
 
 app.use((error, _req, res, _next) => {
+  if (error && error.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: { code: 'INVALID_JSON', message: 'Request body must contain valid JSON.' } });
+  }
+  if (error && error.type === 'entity.too.large') {
+    return res.status(413).json({ error: { code: 'PAYLOAD_TOO_LARGE', message: 'Request body must not exceed 1 MB.' } });
+  }
   if (error instanceof HttpError) {
     return res.status(error.status).json({ error: { code: error.code, message: error.message } });
   }
