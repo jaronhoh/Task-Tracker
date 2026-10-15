@@ -321,7 +321,7 @@ PRD 应：
 2. 新 Task 默认 Status 为 KIV。
 3. 任何 Status 均可直接转换到其他任意 Status。
 4. Active Status 包括 Work in Progress、Pending with Customer、KIV。
-5. 通过普通 Edit Task 或 API 将 Active Status 转为 Closed 或 Deleted 时，End 更新为当前 Malaysia Time (UTC+8)。F04 定义的 Active Task Edit Time 特殊流程属于例外：End 使用用户输入并与 Status 一次性保存。
+5. 通过普通 Edit Task 或 API 将 Active Status 转为 Closed 或 Deleted 时，End 更新为当前 Malaysia Time (UTC+8)。F04 定义的 Active Task Edit Time 特殊流程属于例外：End 使用用户输入并与 Status 一次性保存。 若当前 Created 晚于当前 Malaysia Time (UTC+8)，任何会自动生成 End 的状态转换必须拒绝保存并提示先修正 Created；不得自动调整 Created 或 End，也不得部分更新 Task。
 6. Closed 转为 Deleted 时，End 更新为当前 Deleted 时间。
 7. Deleted 转为 Closed 时，End 更新为当前 Closed 时间。
 8. Closed 或 Deleted 转为任意 Active Status 时，End 清为 NULL。
@@ -350,6 +350,7 @@ PRD 应：
 - [ ] AC-F01-03-08：系统拒绝或自动纠正 Active Status + non-NULL End 的不一致数据。
 - [ ] AC-F01-03-09：系统拒绝或自动纠正 Closed/Deleted + NULL End 的不一致数据。
 - [ ] AC-F01-03-10：将 Status 改为 Deleted 不会物理删除 Task 记录。
+- [ ] AC-F01-03-11：当 Created 晚于当前 Malaysia Time (UTC+8) 时，系统拒绝任何会自动生成 End 的状态转换，显示明确错误；Task 的 Status 与 End 均不得部分更新。
 
 **7. 权限**
 
