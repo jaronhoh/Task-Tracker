@@ -4,10 +4,12 @@ const STATUSES = ['Work in Progress', 'Pending with Customer', 'KIV', 'Closed', 
 const ACTIVE = new Set(['Work in Progress', 'Pending with Customer', 'KIV']);
 const CUSTOMER_COLORS = ['#F87171','#FB923C','#FBBF24','#A3E635','#4ADE80','#34D399','#2DD4BF','#22D3EE','#38BDF8','#60A5FA','#818CF8','#A78BFA','#C084FC','#E879F9','#F472B6','#A8A29E'];
 const SEARCH_FIELDS = ['taskId', 'customerName', 'taskTitle', 'taskDescription', 'note'];
+const ALL_SORT_FIELDS = ['taskId', 'customerName', 'taskTitle', 'taskDescription', 'note', 'created', 'end', 'status'];
 const state = {
   tasks: [], customers: [], view: 'weekly', selectedId: null,
   displayedTasks: [], table: null, editQueue: Promise.resolve(), customerBeforeAdd: '',
-  specialTimeFlow: false, ignoreStatusBlur: false
+  specialTimeFlow: false, ignoreStatusBlur: false,
+  allSort: { field: 'taskId', direction: 'asc' }
 };
 
 const $ = (id) => document.getElementById(id);
@@ -106,7 +108,15 @@ function getDisplayedTasks() {
   const query = $('globalSearch').value.trim().toLocaleLowerCase('en-US');
   const tasks = getViewTasks().filter(task => !query || SEARCH_FIELDS.some(field =>
     String(task[field] ?? '').toLocaleLowerCase('en-US').includes(query)));
-  if (state.view === 'all') return tasks.sort((a, b) => a.taskId.localeCompare(b.taskId));
+  if (state.view === 'all') {
+    const { field, direction } = state.allSort;
+    return tasks.sort((a, b) => {
+      const left = String(a[field] ?? '');
+      const right = String(b[field] ?? '');
+      const compared = left.localeCompare(right, undefined, { sensitivity: 'base', numeric: true });
+      return direction === 'asc' ? compared : -compared;
+    });
+  }
   return tasks.sort((a, b) => a.customerName.localeCompare(b.customerName, undefined, { sensitivity: 'base' }) ||
     a.taskId.localeCompare(b.taskId));
 }
@@ -195,8 +205,7 @@ function renderTable() {
     lengthMenu: [25, 50, 100],
     searching: false,
     info: state.view === 'all',
-    ordering: state.view === 'all',
-    order: state.view === 'all' ? [[0, 'asc']] : [],
+    ordering: false,
     autoWidth: false,
     language: { emptyTable: 'No results found', zeroRecords: 'No results found' },
     createdRow: (row, _data, index) => {
@@ -527,11 +536,7 @@ function exportExcel() {
     showNotice('Excel export library did not load. Check network access and retry.', true);
     return;
   }
-  const exportTasks = state.view === 'all' && state.table
-    ? state.table.rows({ order: 'applied' }).nodes().toArray()
-      .map(row => state.tasks.find(task => task.taskId === row.dataset.taskId)).filter(Boolean)
-    : state.displayedTasks;
-  const rows = exportTasks.map(t => ({
+  const rows = state.displayedTasks.map(t => ({
     'Task ID': t.taskId, 'Customer Name': t.customerName, 'Task Title': t.taskTitle,
     'Task Description': t.taskDescription || '', Note: t.note || '',
     Created: t.created, End: t.end || '', Status: t.status
@@ -603,6 +608,20 @@ function bindEvents() {
       queuePatch(field, value, $(id));
     });
   }
+  $('tasksTable').querySelector('thead').addEventListener('click', event => {
+    if (state.view !== 'all') return;
+    const header = event.target.closest('th');
+    if (!header) return;
+    const index = Array.from(header.parentElement.children).indexOf(header);
+    const field = ALL_SORT_FIELDS[index];
+    if (!field) return;
+    if (state.allSort.field === field) {
+      state.allSort.direction = state.allSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.allSort = { field, direction: 'asc' };
+    }
+    renderTable();
+  });
   $('tasksTable').addEventListener('click', event => {
     const row = event.target.closest('tbody tr[data-task-id]');
     if (!row || !row.dataset.taskId) return;
