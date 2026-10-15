@@ -106,8 +106,10 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
     await context.close();
   } finally {
     if (browser) await browser.close();
-    child.kill('SIGTERM');
-    await new Promise(resolve => child.once('exit', resolve).catch?.(() => {})).catch(() => {});
+    if (child.exitCode === null) {
+      child.kill('SIGTERM');
+      await Promise.race([once(child, 'exit'), new Promise(resolve => setTimeout(resolve, 1500))]);
+    }
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
 });
