@@ -214,6 +214,17 @@ function renderTable() {
     }
     });
   }
+  $('tasksTable').querySelectorAll('thead th').forEach((header, index) => {
+    const field = ALL_SORT_FIELDS[index];
+    header.classList.toggle('sortable-header', state.view === 'all');
+    if (state.view === 'all' && field === state.allSort.field) {
+      header.dataset.sortDirection = state.allSort.direction;
+      header.setAttribute('aria-sort', state.allSort.direction === 'asc' ? 'ascending' : 'descending');
+    } else {
+      delete header.dataset.sortDirection;
+      header.setAttribute('aria-sort', 'none');
+    }
+  });
   $('emptyState').hidden = tasks.length !== 0;
   $('editTaskBtn').disabled = !state.selectedId || !tasks.some(t => t.taskId === state.selectedId);
   $('editTimeBtn').hidden = state.view !== 'all';
