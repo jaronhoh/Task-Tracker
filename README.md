@@ -193,7 +193,7 @@ npm install
 npm start
 ```
 
-Open `http://localhost:3000`. To run the API test suite, use `npm test` from `app/`. Automated API coverage and a Playwright browser acceptance suite are maintained separately. See the latest GitHub Actions run for the current verified result. Automated tests do not replace the 16 manual P0 scenarios, concurrency/fault-injection evidence, or deployment acceptance.
+Open `http://localhost:3000`. To run the API test suite, use `npm test` from `app/`. Automated API coverage and a Playwright browser acceptance suite are maintained separately. The latest successful GitHub Actions run [38725149664](https://github.com/jaronhoh/Task-Tracker/actions/runs/38725149664) passed 26 API tests and 1 browser acceptance test. Automated tests do not replace the 16 manual P0 scenarios, concurrency/fault-injection evidence, or deployment acceptance.
 
 
 ## Run from repository root
