@@ -193,4 +193,4 @@ npm install
 npm start
 ```
 
-Open `http://localhost:3000`. To run the API test suite, use `npm test` from `app/`. The tests have been authored but should only be considered passed after a real execution result is available. This is the first implementation increment; remaining PRD acceptance criteria and UI/API edge cases still require implementation and verification.
+Open `http://localhost:3000`. To run the API test suite, use `npm test` from `app/`. GitHub Actions run [38721327387](https://github.com/jaronhoh/Task-Tracker/actions/runs/38721327387) passed JavaScript syntax checks and all 12 initial API tests. This is not equivalent to passing all 16 manual P0 scenarios or browser UI acceptance tests. This is the first implementation increment; remaining PRD acceptance criteria and UI/API edge cases still require implementation and verification.
