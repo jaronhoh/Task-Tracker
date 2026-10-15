@@ -584,7 +584,7 @@ test('P0-012: concurrent IDs stay unique and an allocated ID is not reused after
 test('P0-013: exhausted color pool blocks Task POST auto-Customer creation atomically', async () => {
   const { CUSTOMER_COLORS } = require('../server');
   for (let index = 0; index < CUSTOMER_COLORS.length; index += 1) {
-    await request(app).post('/api/customers').send({ name: `P0 Exhausted Customer ${index + 1}`).expect(201);
+    await request(app).post('/api/customers').send({ name: `P0 Exhausted Customer ${index + 1}` }).expect(201);
   }
   const beforeTasks = (await request(app).get('/api/tasks')).body;
   const response = await request(app).post('/api/tasks').send({
