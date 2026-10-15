@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Task Tracker</title>
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">WORK MANAGEMENT</p>
+      <h1>Task Tracker</h1>
+    </div>
+    <div class="header-meta"><span id="healthBadge" class="badge">Connecting…</span><span>Malaysia Time · UTC+8</span></div>
+  </header>
+  <main class="page">
+    <nav class="view-tabs" aria-label="Task views">
+      <button class="view-tab active" data-view="weekly">Weekly Task</button>
+      <button class="view-tab" data-view="status">Current Week Status</button>
+      <button class="view-tab" data-view="all">Show All Data</button>
+    </nav>
+    <section class="summary-row" id="summaryRow" aria-live="polite"></section>
+    <section class="toolbar">
+      <div class="toolbar-actions">
+        <button id="newTaskBtn" class="button primary">＋ New Task</button>
+        <button id="editTaskBtn" class="button" disabled>Edit Task</button>
+        <button id="editTimeBtn" class="button" hidden disabled>Edit Time</button>
+      </div>
+      <div class="search-wrap">
+        <label for="globalSearch">Global Search</label>
+        <input id="globalSearch" type="search" placeholder="Search tasks…" autocomplete="off">
+        <button id="clearSearchBtn" class="button small">Clear</button>
+        <button id="searchBtn" class="button small">Search</button>
+      </div>
+      <button id="exportBtn" class="button">Export to Excel</button>
+    </section>
+    <p id="notice" class="notice" role="status" hidden></p>
+    <section class="table-card">
+      <div class="table-scroll">
+        <table id="tasksTable" class="display compact" style="width:100%">
+          <thead><tr>
+            <th>Task ID</th><th>Customer Name</th><th>Task Title</th><th>Task Description</th>
+            <th>Note</th><th>Created</th><th>End</th><th>Status</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p id="emptyState" class="empty-state" hidden>No results found</p>
+    </section>
+  </main>
+
+  <dialog id="taskDialog" class="app-dialog">
+    <form id="taskForm" method="dialog">
+      <div class="dialog-header"><div><p class="eyebrow">TASK DETAILS</p><h2 id="taskDialogTitle">New Task</h2></div><button type="button" class="icon-button" data-close="taskDialog" aria-label="Close">×</button></div>
+      <input type="hidden" id="taskId">
+      <div class="form-grid">
+        <label>Customer Name <span class="required">*</span>
+          <select id="customerName" required></select>
+        </label>
+        <label>Task Title <span class="required">*</span>
+          <input id="taskTitle" maxlength="100" required>
+        </label>
+        <label class="full">Task Description
+          <input id="taskDescription" maxlength="255">
+        </label>
+        <label class="full">Note
+          <textarea id="taskNote" maxlength="1000" rows="4"></textarea>
+        </label>
+        <label>Status
+          <select id="taskStatus">
+            <option>Work in Progress</option><option>Pending with Customer</option><option>KIV</option><option>Closed</option><option>Deleted</option>
+          </select>
+        </label>
+        <label id="createdField">Created
+          <input id="taskCreated" readonly>
+        </label>
+        <label id="endField">End
+          <input id="taskEnd" readonly>
+        </label>
+      </div>
+      <div id="taskDialogError" class="form-error" hidden></div>
+      <div id="taskDialogFooter" class="dialog-footer"><button type="button" class="button" data-close="taskDialog">Cancel</button><button type="submit" class="button primary">Create Task</button></div>
+      <p id="autoSaveHint" class="muted" hidden>Editable fields save automatically when you leave a field.</p>
+    </form>
+  </dialog>
+
+  <dialog id="customerDialog" class="app-dialog narrow">
+    <form id="customerForm" method="dialog">
+      <div class="dialog-header"><div><p class="eyebrow">CUSTOMER</p><h2>Add Customer</h2></div><button type="button" class="icon-button" data-close="customerDialog" aria-label="Close">×</button></div>
+      <label>Customer Name <span class="required">*</span><input id="newCustomerName" maxlength="100" required></label>
+      <div id="customerDialogError" class="form-error" hidden></div>
+      <div class="dialog-footer"><button type="button" class="button" data-close="customerDialog">Cancel</button><button type="submit" class="button primary">Add Customer</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="timeDialog" class="app-dialog narrow">
+    <form id="timeForm" method="dialog">
+      <div class="dialog-header"><div><p class="eyebrow">TIME CORRECTION</p><h2>Edit Time</h2></div><button type="button" class="icon-button" data-close="timeDialog" aria-label="Close">×</button></div>
+      <p id="timeTaskLabel" class="muted"></p>
+      <label>Created <input id="timeCreated" type="datetime-local" required></label>
+      <label>End <input id="timeEnd" type="datetime-local"></label>
+      <label>Status
+        <select id="timeStatus"><option>Work in Progress</option><option>Pending with Customer</option><option>KIV</option><option>Closed</option><option>Deleted</option></select>
+      </label>
+      <p class="muted">Saving time changes is atomic. Closed/Deleted tasks require End, and End cannot be earlier than Created.</p>
+      <div id="timeDialogError" class="form-error" hidden></div>
+      <div class="dialog-footer"><button type="button" class="button" data-close="timeDialog">Cancel</button><button type="submit" class="button primary">Save Time</button></div>
+    </form>
+  </dialog>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
