@@ -97,7 +97,7 @@ test('React UI: ordered blur saves, retry, Customer rename/color, logical delete
   await page.locator('#taskDialog [data-close="taskDialog"]').click();await page.locator('#manageCustomersBtn').click();
   await page.locator('.customer-name-editor').fill('Renamed Customer');await page.locator('.customer-name-editor').press('Tab');await page.locator('.customer-name-editor').waitFor();
   await page.waitForFunction(()=>document.querySelector('.customer-name-editor')?.value==='Renamed Customer');
-  await page.locator('.customer-color-editor').selectOption('#FB923C');await page.waitForFunction(()=>document.querySelector('.customer-color-editor')?.value==='#FB923C');
+  const colorButton=page.getByRole('button',{name:'Customer Color for Renamed Customer'});await colorButton.click();await page.getByRole('listbox',{name:'Colors for Renamed Customer'}).getByRole('option',{name:'#FB923C'}).click();await page.getByRole('button',{name:'Customer Color for Renamed Customer'}).waitFor();
   await page.locator('#manageCustomersDialog [data-close="manageCustomersDialog"]').first().click();
   const fresh=await api(`/api/tasks/${original.taskId}`,undefined,'GET');assert.equal(fresh.customerName,'Renamed Customer');
   assert.equal((await api('/api/customers',undefined,'GET'))[0].color,'#FB923C');
@@ -134,6 +134,7 @@ test('Task form enhancements: Tracker Link, lifecycle row, swatches and guarded 
     const swatch=options.getByRole('option',{name:'#F87171'}).locator('span',{ });
     assert.equal(await swatch.evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(248, 113, 113)');
     await colorButton.press('Escape');
+    console.log('Manage Customers debug', await page.locator('.customer-management-row').evaluateAll(rows=>rows.map(row=>({inputs:[...row.querySelectorAll('input')].map(i=>i.value),buttons:[...row.querySelectorAll('button')].map(b=>({label:b.getAttribute('aria-label'),text:b.innerText}))}))));
     await page.getByRole('button',{name:'Delete Linked Customer'}).click();
     await page.locator('#manageCustomersError').filter({hasText:'referenced by 1 Task'}).waitFor();
     await page.getByRole('button',{name:'Delete Unused Customer'}).click();
