@@ -58,6 +58,31 @@ test('POST creates Task, auto-creates Customer and assigns KIV by default', asyn
   assert.ok(customers.body[0].color);
 });
 
+test('Tracker Link validates and persists for create/read/update; rejects unsafe schemes', async () => {
+  const invalid=await request(app).post('/api/tasks').send({customerName:'QA Alpha',taskTitle:'Unsafe',trackerLink:'javascript:alert(1)'});
+  assert.equal(invalid.status,400);assert.equal(invalid.body.error.code,'INVALID_TRACKER_LINK');
+  const task=await createTask({trackerLink:'https://tracker.example/tickets/123'});
+  assert.equal(task.trackerLink,'https://tracker.example/tickets/123');
+  const patch=await request(app).patch(`/api/tasks/${task.taskId}`).send({trackerLink:'http://tracker.example/updated'});
+  assert.equal(patch.status,200);assert.equal(patch.body.trackerLink,'http://tracker.example/updated');
+  const cleared=await request(app).patch(`/api/tasks/${task.taskId}`).send({trackerLink:''});
+  assert.equal(cleared.body.trackerLink,null);
+  const credentials=await request(app).post('/api/tasks').send({customerName:'QA Alpha',taskTitle:'Credential URL',trackerLink:'https://user:pass@tracker.example/'});
+  assert.equal(credentials.status,400);
+});
+
+test('Customer delete is blocked server-side for all task references and allowed when unused', async () => {
+  const referenced=await createTask({status:'Closed'});
+  const blocked=await request(app).delete('/api/customers/QA%20Alpha');
+  assert.equal(blocked.status,409);assert.equal(blocked.body.error.code,'CUSTOMER_IN_USE');assert.equal(blocked.body.error.taskCount,1);
+  assert.equal((await request(app).get(`/api/tasks/${referenced.taskId}`)).body.customerName,'QA Alpha');
+  const unused=await request(app).post('/api/customers').send({name:'Unused'});
+  assert.equal(unused.status,201);
+  const removed=await request(app).delete('/api/customers/Unused');
+  assert.equal(removed.status,200);assert.equal(removed.body.deleted,true);
+  assert.equal((await request(app).get('/api/customers')).body.some(c=>c.name==='Unused'),false);
+});
+
 test('P0-014 PASS: PATCH unknown Customer returns 400 and performs no partial update', async () => {
   const task = await createTask();
   const response = await request(app).patch(`/api/tasks/${task.taskId}`).send({
