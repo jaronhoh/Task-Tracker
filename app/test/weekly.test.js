@@ -111,3 +111,23 @@ test('status group badges use semantic color keys and display zero counts', () =
     assert.ok(elements.tbody.innerHTML.includes(`group-count-badge group-count-${key}">${count}</span>`));
   }
 });
+
+test('status summary cards filter groups and reset on repeat click', () => {
+  const { run, elements } = setup();
+  run("state.view = 'status'; state.statusFilter = 'KIV'; renderTable()");
+  assert.match(elements.summaryRow.innerHTML, /data-status-filter="KIV" aria-pressed="true"/);
+  assert.match(elements.tbody.innerHTML, /TSK-0002/);
+  assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0001/);
+  assert.equal(run('state.displayedTasks.length'), 1);
+  run("state.statusFilter = 'All'; renderTable()");
+  assert.equal(run('state.displayedTasks.length'), 2);
+});
+test('accordion groups collapse independently while retaining header counts', () => {
+  const { run, elements } = setup();
+  run("state.collapsedGroups.add('Carry Over'); renderTable()");
+  assert.match(elements.tbody.innerHTML, /data-accordion-group="Carry Over" aria-expanded="false"/);
+  assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0001/);
+  assert.match(elements.tbody.innerHTML, /TSK-0002/);
+  run("state.collapsedGroups.delete('Carry Over'); renderTable()");
+  assert.match(elements.tbody.innerHTML, /TSK-0001/);
+});
