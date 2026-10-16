@@ -16,6 +16,17 @@
 - Sites deployment/editing must use supported Sites/Work tooling; GitHub merges alone do not deploy the React/D1 Sites app.
 - Do not claim the above UI update is deployed until verified.
 
+## Next approved requirements — Task form and customer management (2026-10-16)
+
+**PRD:** `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md` (GitHub verified; implementation pending).
+- CR-005: Optional **Tracker Link** in **New Task and Edit Task**, persisted in D1, with clickable Task Table link icon (user confirmed Q1=B).
+- CR-006: **Status / Created / End on the same desktop row in both New Task and Edit Task**; responsive mobile.
+- CR-007: **Manage Customers supports deleting unused customers only**; any task reference blocks deletion (user confirmed Q2=A); require backend enforcement and confirmation.
+- CR-008: Customer Color dropdown displays actual color swatches alongside RGB/HEX codes, including selected value.
+- **Status:** requirements approved; React development, tests, database migration review, Sites deployment and browser acceptance **NOT STARTED / NOT VERIFIED**.
+- **Production baseline:** Version 7 remains the latest accepted release; do not confuse GitHub PRD commit with Sites source/deployment.
+- **Next:** implement via Work on existing Sites React/D1; preserve data, project ID, URL and access. Sync code if supported and update this handoff with verified results.
+
 ## Current status — Version 7 accepted
 
 **UI correction is accepted and deployed to the existing Site as Version 7 (2026-10-16 15:46:40 MYT).** Line tabs, Weekly/Status card filters and accordion defaults passed browser acceptance. See the latest release entry for exact evidence and provenance.
@@ -228,3 +239,8 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 - Status sources: **Sites verified / GitHub CI verified / Chromium browser verified / native production browser verified / full-row production read-only comparison verified**.
 
 - GitHub reconciliation completed: PR #6 squash-merged into main as `b994332b6093b263afaeaa9ce43d22bd93647b42`. React/D1 source and evidence are now on main under `sites/`; historical root Express files were preserved and not deployed. The handoff-document conflict was resolved by retaining main and overlaying only Sites source, acceptance workflow and final release documents. No application code changed after the passing browser acceptance commit.
+
+### 2026-10-16 — Approved task form/customer enhancement PRD (GitHub verified)
+- User confirmed Tracker Link in **New and Edit Task** plus clickable Task Table icon; Status/Created/End same row in **both** forms; customer deletion prohibited if referenced by tasks; color dropdown must display swatches.
+- Added `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md`.
+- This is documentation only: no Sites code, schema, data, deployment or access changes. Version 7 remains latest accepted release.
