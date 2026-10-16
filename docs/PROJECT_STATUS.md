@@ -8,6 +8,9 @@
 
 ## Current status
 
+**Badge enhancement (PR #4):** GitHub Actions run #38847758925 **passed**; PR #4 squash-merged into `main` at `c29db45dae9e9d0c0685b8171fcbb51dae7c9630`. **Sites deployment not verified / not performed in this interaction.** Existing production Version 4 remains the last user-reported release.
+
+
 | Area | Status | Evidence / detail |
 | --- | --- | --- |
 | Closed This Week PRD | Completed | `docs/PRD_CLOSED_THIS_WEEK_VISIBILITY_2026-10-16.md` |
