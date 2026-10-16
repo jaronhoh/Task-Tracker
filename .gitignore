@@ -6,3 +6,7 @@ app/data/
 *.sqlite-wal
 .env
 .DS_Store
+
+app/dist/
+playwright-report/
+test-results/

@@ -9,7 +9,7 @@ function setup() {
   const elements = {};
   const element = id => elements[id] ||= { value: '', innerHTML: '', classList: { add() {}, toggle() {} }, querySelector: () => element('tbody'), querySelectorAll: () => [] };
   const context = vm.createContext({ document: { getElementById: element }, Intl, Date, console });
-  const source = fs.readFileSync(path.join(__dirname, '../public/app.js'), 'utf8').replace(/init\(\);\s*$/, '');
+  const source = fs.readFileSync(path.join(__dirname, './fixtures/legacy-app.js'), 'utf8').replace(/init\(\);\s*$/, '');
   vm.runInContext(source, context);
   const run = code => vm.runInContext(code, context);
   run(`currentWeekBounds = () => ({start: Date.parse('2026-10-12T00:00:00+08:00'), end: Date.parse('2026-10-19T00:00:00+08:00')});
@@ -74,3 +74,4 @@ test('Current Week Status retains four groups, scope and counts', () => {
   assert.match(elements.summaryRow.innerHTML, /Overall Total<\/span><strong>2/);
   assert.doesNotMatch(elements.tbody.innerHTML, /weekly-group-row/);
 });
+

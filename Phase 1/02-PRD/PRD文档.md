@@ -16,7 +16,7 @@
 
 ### 1.1 背景
 
-Task Tracker 是一个独立 Web App，用于记录、跟进和每周汇报工作任务。产品采用 Single Page HTML + JavaScript、SQLite 与 DataTables，提供 Microsoft Lists / Power Apps 风格的任务表格体验。
+Task Tracker 是一个独立 Web App，用于记录、跟进和每周汇报工作任务。原实现采用 Single Page HTML + JavaScript、Express、SQLite 与 jQuery DataTables。用户已确认方案 B：将前端迁移为 React + TypeScript + Vite，采用 shadcn/ui、Tailwind CSS、TanStack Table 与 Lucide React；Express 与 SQLite 保留。
 
 本 PRD 以冻结版产品定型稿为主要事实来源。
 
@@ -142,6 +142,51 @@ PRD 应：
 - 明确页面、组件、状态、数据和验收行为。
 - 避免依赖只存在于设计稿中的隐性行为。
 - 让 Vibe.Power Apps 能根据 PRD 直接实现和验证功能。
+
+### 4.3 前端迁移方案 B（2026-10-16 用户确认）
+
+**1. 功能目标**
+
+以 React + TypeScript + Vite 逐步替换现有 HTML/jQuery 前端；使用真正的 shadcn/ui 组件、Tailwind CSS、TanStack Table 与 Lucide React，统一三个 View、统计 Card、Table、Input、Button、Tabs、Badge、Dialog 与操作入口。
+
+**2. 实施顺序与边界**
+
+| 顺序 | 交付 | 门槛 |
+|------|------|------|
+| 1 | 沿用 Phase 1 PRD 及 F01–F05 编号，更新架构、迁移边界和验收要求；同步模块规划与追加日志 | 独立文档 commit 完成后才修改应用 |
+| 2 | 从已合并 Weekly Task 分组基线创建独立开发分支；接入 React/TypeScript/Vite 与组件基础 | 不直接修改 main；保留可运行旧入口，按增量提交 |
+| 3 | 迁移 Views、Task/Customer/Dialog、自动保存、Edit Time、Restore、Excel Export | 新旧功能对照验收后移除运行入口中的 jQuery/DataTables |
+| 4 | 执行现有及新增 API/UI 测试、类型检查和生产构建，提交 PR | 如实记录实际结果和未完成项；测试未过不得标记完成 |
+
+本次不修改或部署 ChatGPT Sites；不改变数据库、数据库 schema、Express 业务逻辑、API 路径、HTTP 方法、状态码、JSON 字段及响应结构。前端静态资源构建/服务接入可以调整，但不得改变 API 契约。浏览器继续调用现有 /api/health、/api/tasks、/api/customers 及其编辑/时间/颜色端点；服务端时间输入兼容性维持现状，F05 的外部 API 文档约定不因迁移改变。
+
+**3. 业务保留与交互**
+
+- F01：完整保留 Task CRUD、单击选择/高亮、双击或明确 Edit、Deleted Restore、状态与 End 联动。已有 Task 按 Blur 自动保存，同一 Task 请求按修改顺序发送；成功后刷新相关列表/统计，失败保留输入并可重试，禁止重复保存未改变值。
+- F02：Weekly Task 保留 Carry Over / New This Week 独立标题、完整八字段、空态及数量。以同一 Malaysia 周界快照和同一过滤结果计算统计卡片与分组数量，分页不改变组总数。Carry Over 为本周前创建且仍 Active；New This Week 为本周内创建且非 Deleted；周界为星期一 00:00（含）至下周星期一 00:00（不含）。
+- Current Week Status 保留与 Weekly Task 相同的任务集合，仍按 Work in Progress、Pending with Customer、KIV、Closed 四组分类；不改成“本周更新”或按 End 分类。Deleted 不进入两个 Weekly Views。
+- Show All Data 保留 Deleted、全部字段排序、25/50/100 分页。Global Search 保留 Task ID、Customer Name、Task Title、Task Description、Note 五字段，Trim 且不区分大小写；搜索/切换 View 重置当前页，避免空白越界页。
+- F03：保留 Customer 下拉选择、Add/Edit、最多 16 个固定唯一颜色、名称匹配及改名同步历史 Task；不新增删除 Customer。
+- F04：保留只读系统字段与专用 Edit Time；Warning → 输入 End → 选择 Closed/Deleted → Save 一次性保存，取消不改变数据；错误保留输入。正常状态修改仍遵循现有生命周期和现有 UI 的确认流程。
+- F05：保留 Excel .xlsx 导出、各 View 独立文件、恰好一个 Sheet、搜索后的所有记录（不受分页限制）、分组语义和 Malaysia 日期命名。导出不写入任务。
+- 全部业务时间继续为 Malaysia Time UTC+08:00，不依赖浏览器时区；不得将不带时区的 Malaysia 本地时间字符串误当 UTC。保留服务器校验、请求顺序和原子更新规则。
+
+**4. 状态与可访问性**
+
+提供载入、连接失败、空列表、搜索无结果、保存中/成功/失败反馈。控件保留明确标签、焦点样式、键盘操作；Dialog 支持关闭及焦点返回，嵌套 Customer/Time 流程不丢失父表单草稿。窄屏允许表格横向滚动，工具栏及表单适应视口。React 负责界面状态，不以 jQuery 或手工 innerHTML 与 React 同时管理相同区域。
+
+**5. 验收标准**
+
+- [ ] AC-UI-01：文档 commit 先于实施 commit；所有修改位于独立分支，main/Sites 均未直接修改。
+- [ ] AC-UI-02：React + TypeScript + Vite、shadcn/ui + Tailwind CSS、TanStack Table、Lucide React 均在真实运行界面使用，类型检查与生产构建通过。
+- [ ] AC-UI-03：迁移完成的新入口无 jQuery/DataTables 脚本、样式或运行依赖；各业务能力均已迁移才移除旧入口。
+- [ ] AC-UI-04：现有 API 自动化测试保持通过；新增前端测试与已合并 Weekly Task 分组测试覆盖相同业务边界，不以删除旧断言掩盖回归。
+- [ ] AC-UI-05：TSK-0001 Carry Over、TSK-0002 New This Week 样例、UTC+08 周一边界、历史 Closed、Deleted、搜索和空组均正确；卡片、组总数及完整过滤记录集合一致。
+- [ ] AC-UI-06：Current Week Status 四组及其总和与同样条件下 Weekly Task 的集合一致，分类逻辑不变。
+- [ ] AC-UI-07：Task 新建、Blur 串行保存、失败重试、状态转换、Deleted Restore、Customer 改名/颜色及 Edit Time 确认/取消通过 UI 回归。
+- [ ] AC-UI-08：Search、全部字段 Sorting、分页切换、搜索后页码重置正确；导出搜索后的全部分页数据，恰好一个 Sheet，保留分组语义及 Malaysia 日期。
+- [ ] AC-UI-09：在 Malaysia 与其他浏览器时区运行时周界/时间语义一致；窄屏、键盘和 Dialog 焦点检查通过。
+- [ ] AC-UI-10：Express/SQLite 业务实现、schema 及既有 API 契约保持；最终报告列出测试证据、分阶段 commit/PR 和未完成项，不将规划视为完成。
 
 ## 5. 模块概览
 
@@ -1265,7 +1310,7 @@ Deleted Task 为 Logical Delete，Task 记录保留于 SQLite。
 
 ### 7.4 可维护性
 
-系统采用 Single Page HTML + JavaScript、SQLite 和 DataTables 的独立 Web App 架构。
+系统前端采用 React + TypeScript + Vite、shadcn/ui + Tailwind CSS、TanStack Table 与 Lucide React；后端保留 Express + SQLite。迁移期间按 4.3 分阶段替换 jQuery DataTables，业务模块与 API 契约维持 F01–F05 定义。
 
 ### 7.5 UI 一致性
 
@@ -1290,3 +1335,4 @@ Phase 1 未定义产品数据埋点需求。
 - Physical Delete 不属于 Phase 1。
 - 未确认的新增业务规则不得直接写入正式功能正文。
 - shadcn/ui 组件具体选型若影响工程实现，应在对应功能模块评审时明确。
+
