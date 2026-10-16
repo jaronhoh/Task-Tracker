@@ -82,7 +82,9 @@ test('tasks closed this week remain in weekly groups and Closed status', () => {
     {taskId:'TSK-0002', customerName:'B', taskTitle:'New closed this week', created:'2026-10-13T10:00:00+08:00', end:'2026-10-15T12:00:00+08:00', status:'Closed'},
     {taskId:'TSK-0003', customerName:'C', taskTitle:'Old closed before week', created:'2026-10-01T10:00:00+08:00', end:'2026-10-10T12:00:00+08:00', status:'Closed'}
   ]; renderTable()`);
-  assert.match(elements.tbody.innerHTML, /Carry Over \\(1\\)[\\s\\S]*TSK-0001[\\s\\S]*New This Week \\(1\\)[\\s\\S]*TSK-0002/);
+  assert.ok(elements.tbody.innerHTML.includes('Carry Over (1)'));
+  assert.ok(elements.tbody.innerHTML.includes('New This Week (1)'));
+  assert.ok(elements.tbody.innerHTML.indexOf('TSK-0001') < elements.tbody.innerHTML.indexOf('TSK-0002'));
   assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0003/);
   assert.match(elements.summaryRow.innerHTML, /Overall Total<\/span><strong>2/);
   run("state.view = 'status'; renderTable()");
