@@ -9,11 +9,15 @@ on:
     paths:
       - 'app/**'
       - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
       - '.github/workflows/task-tracker-tests.yml'
   pull_request:
     paths:
       - 'app/**'
       - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
       - '.github/workflows/task-tracker-tests.yml'
 
 jobs:
@@ -27,16 +31,24 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm install
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
       - name: Check JavaScript syntax
         run: |
           node --check app/server.js
-          node --check app/public/app.js
           node --check app/test/api.test.js
           node --check app/test/ui.test.js
+      - name: Type check and build React frontend
+        run: pnpm run build
+      - name: React frontend regression tests
+        run: pnpm run test:frontend
       - name: Run API tests
-        run: npm test
+        run: pnpm test
       - name: Install Chromium for browser tests
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
       - name: Run browser acceptance tests
-        run: npm run test:ui
+        run: pnpm run test:ui
+

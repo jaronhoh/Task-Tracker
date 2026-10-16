@@ -7,9 +7,6 @@ const Database = require('better-sqlite3');
 
 const PORT = Number(process.env.PORT || 3000);
 const DB_PATH = process.env.TASK_TRACKER_DB || path.join(__dirname, 'data', 'task-tracker.sqlite');
-const ROOT_NODE_MODULES = path.join(__dirname, '..', 'node_modules');
-const LOCAL_NODE_MODULES = path.join(__dirname, 'node_modules');
-const NODE_MODULES = fs.existsSync(ROOT_NODE_MODULES) ? ROOT_NODE_MODULES : LOCAL_NODE_MODULES;
 const STATUSES = ['Work in Progress', 'Pending with Customer', 'KIV', 'Closed', 'Deleted'];
 const ACTIVE_STATUSES = new Set(['Work in Progress', 'Pending with Customer', 'KIV']);
 const CUSTOMER_COLORS = [
@@ -97,11 +94,8 @@ app.use((req, _res, next) => {
   if (req.body === undefined || req.body === null || typeof req.body !== 'object' || Array.isArray(req.body)) req.body = {};
   next();
 });
-app.use('/vendor/jquery', express.static(path.join(NODE_MODULES, 'jquery', 'dist')));
-app.use('/vendor/datatables', express.static(path.join(NODE_MODULES, 'datatables.net', 'js')));
-app.use('/vendor/datatables-css', express.static(path.join(NODE_MODULES, 'datatables.net-dt', 'css')));
-app.use('/vendor/xlsx', express.static(path.join(NODE_MODULES, 'xlsx', 'dist')));
-app.use(express.static(path.join(__dirname, 'public')));
+// Vite builds the React UI here. API handlers and SQLite remain unchanged.
+app.use(express.static(path.join(__dirname, 'dist')));
 
 class HttpError extends Error {
   constructor(status, message, code = 'VALIDATION_ERROR') {
@@ -449,3 +443,4 @@ if (require.main === module) {
 }
 
 module.exports = { app, db, malaysiaNow, CUSTOMER_COLORS, STATUSES, nextTaskId };
+

@@ -9,6 +9,7 @@ This repository is prepared for a **Node.js** deployment from the repository roo
 | App root | Repository root |
 | Runtime | Node.js 22 (supported range: Node.js 20–22) |
 | Install command | `npm install` |
+| Build command (source checkout) | `npm run build` |
 | Start command | `npm start` |
 | Bind address | `0.0.0.0` |
 | Port | `PORT` environment variable (default `3000`) |
@@ -41,3 +42,6 @@ Official guide: https://pocketbay.com/deploy
 ## Recovery
 
 If a deployment fails, review PocketBay's structured build error, repair hint, and log tail before retrying. Use PocketBay version history/rollback if a later release breaks a previously working deployment. Do not report the project as deployed until the public/private app URL and health check have been verified.
+
+
+The packaged ZIP includes prebuilt `app/dist` assets and needs no frontend rebuild. A source checkout must run the build command before starting. This migration does not perform a deployment.

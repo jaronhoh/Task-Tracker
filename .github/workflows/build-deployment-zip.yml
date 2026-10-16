@@ -20,11 +20,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - name: Build React static assets
+        run: pnpm install --frozen-lockfile && pnpm run build
       - name: Build deployment package
         run: |
           mkdir -p dist
           zip -r dist/Task-Tracker-PocketBay.zip \
-            package.json README.md POCKETBAY_DEPLOYMENT.md app/server.js app/public app/.env.example \
+            package.json pnpm-lock.yaml pnpm-workspace.yaml README.md POCKETBAY_DEPLOYMENT.md app/server.js app/dist app/.env.example \
             -x '*/node_modules/*' '*/data/*' '*.sqlite*' '*.env'
       - name: Upload deployment ZIP
         uses: actions/upload-artifact@v4
@@ -33,3 +41,4 @@ jobs:
           path: dist/Task-Tracker-PocketBay.zip
           if-no-files-found: error
           retention-days: 14
+

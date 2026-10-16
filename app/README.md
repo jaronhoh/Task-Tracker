@@ -7,17 +7,18 @@ This folder contains the first runnable implementation slice for Phase 1.
 - Node.js 20+
 - Express REST API
 - SQLite via `better-sqlite3`
-- Single-page HTML/JavaScript frontend
-- DataTables for task table interaction
+- React + TypeScript + Vite frontend
+- shadcn/ui + Tailwind CSS, TanStack Table and Lucide React
 - SheetJS for current-view Excel export
 
 ## Run locally
 
-From this directory:
+From the repository root (Node 22):
 
 ```bash
-npm install
-npm start
+pnpm install --frozen-lockfile
+pnpm run build
+pnpm start
 ```
 
 Open `http://localhost:3000`.
@@ -56,5 +57,6 @@ Tests use an in-memory SQLite database. Run the API suite with `npm test` from t
 - Customer creation/rename and related Task writes use SQLite transactions.
 - Malaysia timestamps are stored with an explicit `+08:00` offset.
 - Deleted Tasks are logical deletes and remain readable.
-- The UI dependencies (jQuery, DataTables and SheetJS) are served locally from installed npm packages, so the app does not require third-party CDN access at runtime.
+- Vite bundles frontend dependencies into app/dist, served by Express. jQuery/DataTables are removed from the runtime. SheetJS is loaded as a local build chunk on export; no third-party CDN is required.
 - This is the initial implementation slice. See the Phase 1 PRD and P0 test documents for the complete acceptance baseline and remaining verification work.
+

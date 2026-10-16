@@ -7,10 +7,10 @@
   "scripts": {
     "start": "node app/server.js",
     "test": "node --test app/test/api.test.js app/test/weekly.test.js",
-    "test:ui": "node --test app/test/ui.test.js",
+    "test:ui": "node --test app/test/ui.test.js app/test/migration-ui.test.js",
     "dev:ui": "vite --config app/frontend/vite.config.ts",
     "build": "tsc -p app/frontend/tsconfig.json && vite build --config app/frontend/vite.config.ts",
-    "test:frontend": "tsx --test app/frontend/test/*.test.tsx"
+    "test:frontend": "tsx --tsconfig app/frontend/tsconfig.json --test app/frontend/test/*.test.tsx"
   },
   "engines": {
     "node": ">=20 <23"
@@ -18,9 +18,6 @@
   "dependencies": {
     "better-sqlite3": "^11.8.1",
     "express": "^5.1.0",
-    "datatables.net": "^2.1.8",
-    "datatables.net-dt": "^2.1.8",
-    "jquery": "^3.7.1",
     "xlsx": "^0.18.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -42,8 +39,7 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@types/node": "^22.0.0",
-    "tsx": "^4.20.0",
-    "react-test-renderer": "^19.1.0",
-    "@types/react-test-renderer": "^19.1.0"
-  }
+    "tsx": "^4.20.0"
+  },
+  "packageManager": "pnpm@11.25.0"
 }

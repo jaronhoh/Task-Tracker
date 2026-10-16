@@ -55,7 +55,7 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
       await page.locator('#healthBadge.ok').waitFor({ state: 'visible' });
     } catch (error) {
       const badge = await page.locator('#healthBadge').textContent().catch(() => 'missing');
-      const vendorStatus = await Promise.all(['/vendor/jquery/jquery.min.js','/vendor/datatables/dataTables.min.js','/vendor/datatables-css/dataTables.dataTables.min.css','/vendor/xlsx/xlsx.full.min.js'].map(async url => ({ url, status: (await page.request.get(baseUrl + url)).status() })));
+      const vendorStatus = await Promise.all(['/'].map(async url => ({ url, status: (await page.request.get(baseUrl + url)).status() })));
       throw new Error(`UI initialization failed; badge=${badge}; vendors=${JSON.stringify(vendorStatus)}; browserErrors=${JSON.stringify(pageErrors)}; cause=${error.message}`);
     }
     assert.equal((await page.locator('#healthBadge').textContent()).trim(), 'API Connected');
@@ -287,3 +287,4 @@ test('P0-015 UI: Edit Time rejects End before Created and Created after existing
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
 });
+

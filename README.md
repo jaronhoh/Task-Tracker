@@ -6,11 +6,11 @@ A simple task management and weekly reporting web application designed around a 
 
 **Task Tracker** is a Phase 1 product designed to make daily task tracking and weekly reporting simple and lightweight.
 
-The planned application uses:
+The application uses:
 
-- **Single Page HTML + JavaScript** frontend
+- **React + TypeScript + Vite**, shadcn/ui + Tailwind CSS frontend
 - **SQLite** database
-- **DataTables** for the main task listing
+- **TanStack Table** for sorting/pagination and **Lucide React** icons
 - **REST API** for Task CRUD
 - **Excel Export** for the current view
 - **Malaysia Time (UTC+8)** for task timestamps and weekly boundaries
@@ -188,12 +188,12 @@ The initial runnable application slice is under [`app/`](app/):
 ### Run locally
 
 ```bash
-cd app
-npm install
-npm start
+pnpm install --frozen-lockfile
+pnpm run build
+pnpm start
 ```
 
-Open `http://localhost:3000`. To run the API test suite, use `npm test` from `app/`. Automated API coverage and a Playwright browser acceptance suite are maintained separately. The latest successful GitHub Actions run [38726212709](https://github.com/jaronhoh/Task-Tracker/actions/runs/38726212709) passed 31 API tests and 1 browser acceptance test. Automated tests do not replace the 16 manual P0 scenarios, concurrency/fault-injection evidence, or deployment acceptance.
+Open `http://localhost:3000`. To run the API test suite, use `npm test` from `app/`. Automated API coverage and a Playwright browser acceptance suite are maintained separately. Historical GitHub Actions run [38726212709](https://github.com/jaronhoh/Task-Tracker/actions/runs/38726212709) passed 31 API tests and 1 browser acceptance test; see the React migration validation report for current local evidence. Automated tests do not replace the 16 manual P0 scenarios, concurrency/fault-injection evidence, or deployment acceptance.
 
 
 ## Run from repository root
@@ -202,6 +202,7 @@ The repository root now contains a Node.js entry point for hosting platforms suc
 
 ```bash
 npm install
+npm run build
 npm start
 ```
 
@@ -234,3 +235,28 @@ See the repository's [PocketBay deployment checklist](POCKETBAY_DEPLOYMENT.md) f
 **Before accepting real data**, configure `TASK_TRACKER_DB` to a PocketBay persistent-storage location confirmed in the deployment console, then create a test Task and verify it survives an app restart/redeploy. Do not assume the default `app/data/task-tracker.sqlite` path is persistent unless PocketBay confirms that path is mounted persistently.
 
 Task Tracker does not implement in-app user authentication or role-based access. Keep the PocketBay app private or password-protected unless and until an explicit public-access decision is made. Do not publish real customer/task information to an unrestricted URL.
+
+
+## React frontend migration (2026-10-16)
+
+The frontend uses React + TypeScript + Vite, shadcn/ui (Radix components), Tailwind CSS, TanStack Table and Lucide React. Express API handlers and SQLite schema remain unchanged. No ChatGPT Sites changes or deployment are included.
+
+From the repository root with Node 22:
+
+```sh
+corepack enable
+pnpm install --frozen-lockfile
+pnpm run build
+pnpm start
+```
+
+Open http://localhost:3000. `pnpm run dev:ui` starts Vite with `/api` proxied to Express on port 3000 (run `pnpm start` separately). Production Express serves `app/dist`; rebuild after changing frontend sources. `app/dist` is generated and is not committed. Existing `npm install`, `npm run build`, `npm start` also work, but the checked-in pnpm lockfile is the reproducible dependency baseline.
+
+```sh
+pnpm test
+pnpm run test:frontend
+pnpm exec playwright install chromium
+pnpm run test:ui
+```
+
+The historical Weekly Task VM tests remain as a baseline against an archived fixture; new tests exercise the migrated React model/rendering and browser UI. Browser tests use temporary SQLite databases and include pagination/export, cross-timezone weekly grouping, autosave retry/order, Customer editing and Deleted restore. The deployment ZIP workflow builds static assets; generating a ZIP does not deploy the app. Existing broad manual PRD acceptance tests remain distinct from automated evidence.
