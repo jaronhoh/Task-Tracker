@@ -123,6 +123,8 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
       await card(label).click();assert.deepEqual(await ids(),expected);
       assert.equal(await card(label).getAttribute('aria-pressed'),'true');
       assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','2','1']);
+      console.log(JSON.stringify({width,view:'weekly',card:label,ids:await ids()}));
+      if(process.env.TASK_TRACKER_EVIDENCE_DIR&&label==='New This Week')await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`weekly-${width}.png`),fullPage:true});
       if(label!=='Overall Total'){await card(label).click();assert.deepEqual(await ids(),['carry','closed','new']);}
     }
     for(const toggle of await page.locator('.group-toggle').all()){
@@ -140,8 +142,18 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
       await card(label).click();assert.deepEqual(await ids(),expected);
       assert.equal(await card(label).getAttribute('aria-pressed'),'true');
       assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','1','0','1','1']);
+      console.log(JSON.stringify({width,view:'status',card:label,ids:await ids()}));
+      if(process.env.TASK_TRACKER_EVIDENCE_DIR&&label==='KIV')await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`status-${width}.png`),fullPage:true});
       if(label!=='All'){await card(label).click();assert.deepEqual(await ids(),['carry','closed','new']);}
     }
+    for(const toggle of await page.locator('.group-toggle').all()){
+      const initial=await toggle.getAttribute('aria-expanded');
+      await toggle.press('Enter');assert.notEqual(await toggle.getAttribute('aria-expanded'),initial);
+      await toggle.press('Space');assert.equal(await toggle.getAttribute('aria-expanded'),initial);
+      await toggle.click();await toggle.click();assert.equal(await toggle.getAttribute('aria-expanded'),initial);
+    }
+    const tabPositions=await page.locator('.view-tab').evaluateAll(ns=>ns.map(n=>n.getBoundingClientRect().top));
+    assert.ok(tabPositions.every(y=>y===tabPositions[0]),'tabs remain one line');
     await page.locator('#globalSearch').fill('unmatched');await page.locator('#searchBtn').click();
     assert.equal(await page.locator('.group-toggle[aria-expanded="false"]').count(),4);
     await page.locator('#clearSearchBtn').click();assert.equal(await page.locator('.group-toggle[aria-expanded="true"]').count(),3);
