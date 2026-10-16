@@ -10,11 +10,28 @@ function addCustomer(s,name) {
   if(!color) throw new HttpError(400,'All 16 Customer colors are in use.','CUSTOMER_COLORS_EXHAUSTED');
   const c={name:cleaned,normalized_name:normalized,color}; s.customers.push(c); return c;
 }
+function cleanTrackerLink(value) {
+  if (value === undefined || value === null || value === '') return null;
+  if (typeof value !== 'string' || value.length > 2048) throw new HttpError(400,'Tracker Link must be a valid HTTP or HTTPS URL (maximum 2048 characters).','INVALID_TRACKER_LINK');
+  let url;
+  try { url = new URL(value); } catch { throw new HttpError(400,'Tracker Link must be a valid HTTP or HTTPS URL.','INVALID_TRACKER_LINK'); }
+  if (!['http:','https:'].includes(url.protocol) || !url.hostname || url.username || url.password) throw new HttpError(400,'Tracker Link must use HTTP or HTTPS and cannot contain embedded credentials.','INVALID_TRACKER_LINK');
+  return url.href;
+}
 export async function operate(repo,method,path,body={}) {
   if(path==='/api/health' && method==='GET') return {status:'ok',timeZone:'Malaysia Time (UTC+08:00)'};
   if(path==='/api/tasks' && method==='GET') return (await repo.snapshot()).tasks.map(rowToTask);
   if(path==='/api/customers' && method==='GET') return (await repo.snapshot()).customers.map(({name,color})=>({name,color}));
   if(path==='/api/customers' && method==='POST') return repo.transact(s=>{const c=addCustomer(s,body.name);return {name:c.name,normalizedName:c.normalized_name,color:c.color};});
+  const cd=path.match(/^\/api\/customers\/([^/]+)$/);
+  if(cd && method==='DELETE') return repo.transact(s=>{
+    const c=customer(s,decodeURIComponent(cd[1]));
+    if(!c) throw new HttpError(404,'Customer was not found.','CUSTOMER_NOT_FOUND');
+    const taskCount=s.tasks.filter(t=>t.customer_name===c.name).length;
+    if(taskCount) { const error=new HttpError(409,`Cannot delete ${c.name}: it is referenced by ${taskCount} Task${taskCount===1?'':'s'}.`,'CUSTOMER_IN_USE');error.taskCount=taskCount;throw error; }
+    s.customers=s.customers.filter(row=>row!==c);
+    return {name:c.name,deleted:true};
+  });
   const cm=path.match(/^\/api\/customers\/([^/]+)(\/color)?$/);
   if(cm && method==='PATCH') return repo.transact(s=>{
     const c=customer(s,decodeURIComponent(cm[1]));
@@ -38,10 +55,11 @@ export async function operate(repo,method,path,body={}) {
       const customerName=cleanRequiredString(body.customerName,'Customer Name',100);
       const taskTitle=cleanRequiredString(body.taskTitle,'Task Title',100);
       const taskDescription=cleanOptionalString(body.taskDescription,'Task Description',255),note=cleanOptionalString(body.note,'Note',1000);
+      const trackerLink=cleanTrackerLink(body.trackerLink);
       const status=body.status??'KIV';assertStatus(status);
       const created=malaysiaNow(),end=resolveStatusEnd(status,created,null,status==='Closed'||status==='Deleted');
       const c=customer(s,customerName)||addCustomer(s,customerName);
-      const t={task_id:taskId,customer_name:c.name,task_title:taskTitle,task_description:taskDescription,note,created,end,status};
+      const t={task_id:taskId,customer_name:c.name,task_title:taskTitle,task_description:taskDescription,note,created,end,status,tracker_link:trackerLink};
       s.tasks.push(t);return rowToTask(t);
     });
   }
@@ -73,6 +91,7 @@ export async function operate(repo,method,path,body={}) {
         if(has(body,'taskTitle'))t.task_title=cleanRequiredString(body.taskTitle,'Task Title',100);
         if(has(body,'taskDescription'))t.task_description=cleanOptionalString(body.taskDescription,'Task Description',255);
         if(has(body,'note'))t.note=cleanOptionalString(body.note,'Note',1000);
+        if(has(body,'trackerLink'))t.tracker_link=cleanTrackerLink(body.trackerLink);
         const status=has(body,'status')?body.status:t.status;assertStatus(status);
         t.end=resolveStatusEnd(status,t.created,t.end,status!==t.status);validateTaskTimes(t.created,t.end);t.status=status;
       }

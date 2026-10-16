@@ -28,6 +28,6 @@ async function execute(request,db) {
     return Response.json(result,{status:request.method==='POST'?201:200,headers:{'Cache-Control':'no-store'}});
   } catch(error) {
     if(!(error instanceof HttpError))console.error(error);
-    return Response.json({error:{code:error.code||'INTERNAL_ERROR',message:error instanceof HttpError?error.message:'An unexpected server error occurred.'}},{status:error instanceof HttpError?error.status:500,headers:{'Cache-Control':'no-store'}});
+    return Response.json({error:{code:error.code||'INTERNAL_ERROR',message:error instanceof HttpError?error.message:'An unexpected server error occurred.',...(Number.isInteger(error.taskCount)?{taskCount:error.taskCount}:{})}},{status:error instanceof HttpError?error.status:500,headers:{'Cache-Control':'no-store'}});
   }
 }
