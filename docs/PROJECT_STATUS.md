@@ -27,6 +27,15 @@
 - **Production baseline:** Version 7 was the baseline; Version 8 is now the latest deployed release. GitHub and Sites source commits are recorded separately below.
 - **Next:** complete desktop/mobile visual acceptance in a supported browser environment when available, and address any user-reported issues.
 
+## Newly approved follow-up — Alerts and Manage Customers UI (2026-10-16)
+
+**PRD:** `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md` §6, CR-009–CR-011. **Status: requirements recorded on GitHub; Sites implementation, browser QA and deployment pending.**
+- CR-009: transient messages use shadcn/ui Base Alert appearance, float at bottom-right, auto-dismiss after 5 seconds; confirmations are excluded.
+- CR-010: Add Customer action inside Manage Customers; update list and task customer selectors after successful creation.
+- CR-011: Delete button aligned on the same desktop row as its customer field; retain transactional backend reference guard.
+- Baseline is **Sites Version 8**, already deployed (browser visual acceptance was skipped with user authorization). Preserve Sites/D1 and existing production data.
+- Next: implement/test in `sites/react-d1/` and existing Sites source, perform desktop/mobile browser QA, deploy existing Site, update GitHub handoff with real evidence.
+
 ## Current status — Version 8 deployed
 
 **UI correction is accepted and deployed to the existing Site as Version 7 (2026-10-16 15:46:40 MYT).** Line tabs, Weekly/Status card filters and accordion defaults passed browser acceptance. See the latest release entry for exact evidence and provenance.
@@ -263,3 +272,8 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 - Delivered: safe HTTP/HTTPS Tracker Link entry and link icon; desktop form lifecycle row; customer deletion guard enforced transactionally in D1; visible customer color swatches and HEX code; additive nullable `tasks.tracker_link` migration.
 - Automated validation: API/D1/weekly **55/55 passed**; React model/render **13/13 passed**; TypeScript and production build passed. Chromium UI suite and real-browser desktop/mobile acceptance were skipped under the user's explicit authorization because Chromium was unavailable and Sites preview returned `ERR_CONNECTION_REFUSED`.
 - Production preservation: read-only before/after comparison confirmed 32 tasks, 6 customers, every existing Task field, customer row, `app_sequence` (next value 33), and `app_revision` (144) unchanged. The new `tracker_link` column is null for all existing tasks. URL, D1 binding, environment configuration and owner-only access policy were preserved.
+
+### 2026-10-16 — Follow-up UI requirements CR-009–CR-011 (GitHub verified)
+- User requested shadcn/ui Alert-styled bottom-right notifications that disappear after 5 seconds, Add Customer inside Manage Customers, and same-row Delete buttons.
+- Updated `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md` §6 with acceptance criteria, mobile/accessibility and safety constraints.
+- Documentation-only GitHub update; **no new Sites implementation, testing, deployment or production data changes**. Version 8 remains latest deployed baseline.
