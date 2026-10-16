@@ -16,10 +16,10 @@
     <div class="header-meta"><span id="healthBadge" class="badge">Connecting…</span><span>Malaysia Time · UTC+8</span></div>
   </header>
   <main class="page">
-    <nav class="view-tabs" aria-label="Task views">
-      <button class="view-tab active" data-view="weekly">Weekly Task</button>
-      <button class="view-tab" data-view="status">Current Week Status</button>
-      <button class="view-tab" data-view="all">Show All Data</button>
+    <nav role="tab" aria-selected="false" class="view-tabs" role="tablist" aria-label="Task views">
+      <button role="tab" aria-selected="true" class="view-tab active" data-view="weekly">Weekly Task</button>
+      <button role="tab" aria-selected="false" class="view-tab" data-view="status">Current Week Status</button>
+      <button role="tab" aria-selected="false" class="view-tab" data-view="all">Show All Data</button>
     </nav>
     <section class="summary-row" id="summaryRow" aria-live="polite"></section>
     <section class="toolbar">
