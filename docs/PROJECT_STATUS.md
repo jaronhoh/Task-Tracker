@@ -73,6 +73,15 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 8. Add a dated entry to the change log below; keep historical entries rather than overwriting them.
 9. For feature work, maintain the PRD separately under `docs/`; this file tracks **delivery state**, not the full product specification.
 
+## In-progress change — Colored Group Count Badges (2026-10-16)
+
+- Status: **Implementation committed on feature branch; tests and deployment not yet verified.**
+- Branch: `feat/status-count-color-badges-20261016`
+- PRD: `docs/PRD_STATUS_COUNT_BADGES_2026-10-16.md`
+- Scope: pill-shaped, status-colored numeric count badges in Weekly Task and Current Week Status group headings; no business logic or database changes.
+- Next: run tests, review PR, merge after checks, deploy existing Site, verify production data, update this log.
+- Last confirmed production release remains **Version 4** (user reported).
+
 ## Next actions
 
 - No outstanding implementation or deployment action for Version 4 **based on the user-provided release report**.
@@ -87,6 +96,7 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 | 2026-10-16 | CI Run #91 passed including API and browser tests | Passed | GitHub verified |
 | 2026-10-16 | PR #3 squash-merged into `main` as `6b14576` | Merged | GitHub verified |
 | 2026-10-16 | Sites Version 4 deployment, 62 tests, 32 tasks and related data preserved | Succeeded (reported) | User reported |
+| 2026-10-16 | Colored group count badges PRD and implementation added to feature branch; not yet deployed | In progress | GitHub verified |
 | 2026-10-16 | Created persistent project status / handoff record | Completed | GitHub commit of this file |
 
 ## Update template for future entries
