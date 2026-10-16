@@ -1,7 +1,7 @@
 export const STATUSES = ['Work in Progress', 'Pending with Customer', 'KIV', 'Closed', 'Deleted'] as const
 export type Status = typeof STATUSES[number]
 export type View = 'weekly' | 'status' | 'all'
-export interface Task { taskId: string; customerName: string; taskTitle: string; taskDescription: string | null; note: string | null; created: string; end: string | null; status: Status }
+export interface Task { taskId: string; customerName: string; taskTitle: string; taskDescription: string | null; note: string | null; created: string; end: string | null; status: Status; trackerLink?: string | null }
 export interface Customer { name: string; color: string }
 export const ACTIVE = new Set<string>(STATUSES.slice(0, 3))
 export const COLORS = ['#F87171','#FB923C','#FBBF24','#A3E635','#4ADE80','#34D399','#2DD4BF','#22D3EE','#38BDF8','#60A5FA','#818CF8','#A78BFA','#C084FC','#E879F9','#F472B6','#A8A29E']
