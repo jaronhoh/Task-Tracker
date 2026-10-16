@@ -75,11 +75,11 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 
 ## In-progress change — Colored Group Count Badges (2026-10-16)
 
-- Status: **Implementation committed on feature branch; tests and deployment not yet verified.**
+- Status: **Implementation and GitHub Actions tests passed; PR review/merge and Sites deployment pending.**
 - Branch: `feat/status-count-color-badges-20261016`
 - PRD: `docs/PRD_STATUS_COUNT_BADGES_2026-10-16.md`
 - Scope: pill-shaped, status-colored numeric count badges in Weekly Task and Current Week Status group headings; no business logic or database changes.
-- Next: run tests, review PR, merge after checks, deploy existing Site, verify production data, update this log.
+- CI: **passed** — GitHub Actions run `38847047408`, source commit `a51be08f820428d807961b30e6bdc30d9197c46d` (API tests and browser acceptance tests).\n- Next: review/merge PR #4, deploy existing Site, verify production data, update this log.
 - Last confirmed production release remains **Version 4** (user reported).
 
 ## Next actions
