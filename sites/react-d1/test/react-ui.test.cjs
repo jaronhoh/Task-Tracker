@@ -112,6 +112,7 @@ test('Task form enhancements: Tracker Link, lifecycle row, swatches and guarded 
   const created=await api('/api/tasks',{customerName:'Linked Customer',taskTitle:'Linked task',trackerLink:'https://tracker.example/item/1'});
   await api('/api/customers',{name:'Unused Customer'});
   for(const width of [1440,390]) {
+    await api(`/api/tasks/${created.taskId}`,{trackerLink:'https://tracker.example/item/1'},'PATCH');
     const ctx=await browser.newContext({viewport:{width,height:900}}),page=await ctx.newPage();page.setDefaultTimeout(8000);page.on('dialog',d=>d.accept());
     await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
     await page.locator('[data-view="all"]').click();
