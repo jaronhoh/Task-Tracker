@@ -6,6 +6,16 @@
 > Last updated: **2026-10-16** (Malaysia, UTC+08:00)
 > Project: `jaronhoh/Task-Tracker` · Default branch: `main`
 
+## Architecture decision — ChatGPT Sites only (2026-10-16)
+
+**User directive:** Abandon PocketBay/PocketBase and the legacy SQLite/Express app. The **existing ChatGPT Sites React/D1 application is the only active product**. Do not implement new features in `app/` or deploy the legacy Express app. GitHub may remain a source for PRDs, handoff records, and historical code, but the legacy code is **not** the production deployment source.
+
+- Existing Sites URL, production D1 database, task/customer records, sequences, revisions, and access settings must remain unchanged unless explicitly requested.
+- PR #5 (legacy UI accordion / line tabs / clickable cards) **closed without merge** because it targeted Express.
+- **Outstanding Sites UI request:** replace group-by headings with accessible accordions; switch view tabs to a line-style TabsList; make summary cards clickable filters for All / Work in Progress / Pending with Customer / KIV / Closed. Implement directly in the existing Sites React app, verify in browser, then record deployed version and data-integrity evidence.
+- Sites deployment/editing must use supported Sites/Work tooling; GitHub merges alone do not deploy the React/D1 Sites app.
+- Do not claim the above UI update is deployed until verified.
+
 ## Current status
 
 **Badge enhancement (PR #4): deployed to existing Sites as Version 5 on 2026-10-16 12:12:15 MYT (Sites verified).** Ported the badge UI to the existing React/D1 application. Production task/customer/sequence/revision rows are identical before and after deployment; URL and access policy preserved. GitHub main remains the legacy Express app; Sites source commit is recorded separately below.
