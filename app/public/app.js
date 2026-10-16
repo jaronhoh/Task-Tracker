@@ -167,6 +167,10 @@ function renderSummary(tasks, groups) {
     `<div class="summary-card"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`).join('');
 }
 
+function groupCountBadge(count, kind) {
+  return `<span class="group-count-badge group-count-${escapeHtml(kind)}">${count}</span>`;
+}
+
 function renderTable() {
   const bounds = currentWeekBounds();
   const tasks = getDisplayedTasks(bounds);
@@ -179,7 +183,7 @@ function renderTable() {
   }
   if (state.view === 'weekly') {
     $('tasksTable').querySelector('tbody').innerHTML = groups.map(([label, items]) => {
-      const heading = `<tr class="status-group-row weekly-group-row"><td colspan="8">${label} (${items.length})</td></tr>`;
+      const heading = `<tr class="status-group-row weekly-group-row"><td colspan="8"><span>${escapeHtml(label)}</span>${groupCountBadge(items.length, label === 'Carry Over' ? 'carry-over' : 'new-this-week')}</td></tr>`;
       const rows = items.map(task => `<tr data-task-id="${escapeHtml(task.taskId)}" class="${task.taskId === state.selectedId ? 'selected-row' : ''}">
         <td>${escapeHtml(task.taskId)}</td><td>${customerHtml(task)}</td><td>${escapeHtml(task.taskTitle)}</td>
         <td>${escapeHtml(task.taskDescription || '')}</td><td>${escapeHtml(task.note || '')}</td>
@@ -193,7 +197,7 @@ function renderTable() {
     const tbody = $('tasksTable').querySelector('tbody');
     tbody.innerHTML = groups.map(status => {
       const groupTasks = tasks.filter(task => task.status === status);
-      const heading = `<tr class="status-group-row"><td colspan="8"><span>${escapeHtml(status)}</span><strong>${groupTasks.length}</strong></td></tr>`;
+      const heading = `<tr class="status-group-row"><td colspan="8"><span>${escapeHtml(status)}</span>${groupCountBadge(groupTasks.length, statusClass(status))}</td></tr>`;
       const rows = groupTasks.map(task => `<tr data-task-id="${escapeHtml(task.taskId)}" class="${task.taskId === state.selectedId ? 'selected-row' : ''}">
         <td>${escapeHtml(task.taskId)}</td><td>${customerHtml(task)}</td><td>${escapeHtml(task.taskTitle)}</td>
         <td>${escapeHtml(task.taskDescription || '')}</td><td>${escapeHtml(task.note || '')}</td>
