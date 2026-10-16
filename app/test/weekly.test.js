@@ -74,3 +74,28 @@ test('Current Week Status retains four groups, scope and counts', () => {
   assert.match(elements.summaryRow.innerHTML, /Overall Total<\/span><strong>2/);
   assert.doesNotMatch(elements.tbody.innerHTML, /weekly-group-row/);
 });
+
+test('tasks closed this week remain in weekly groups and Closed status', () => {
+  const { run, elements } = setup();
+  run(`state.tasks = [
+    {taskId:'TSK-0001', customerName:'A', taskTitle:'Older closed this week', created:'2026-10-09T10:00:00+08:00', end:'2026-10-14T12:00:00+08:00', status:'Closed'},
+    {taskId:'TSK-0002', customerName:'B', taskTitle:'New closed this week', created:'2026-10-13T10:00:00+08:00', end:'2026-10-15T12:00:00+08:00', status:'Closed'},
+    {taskId:'TSK-0003', customerName:'C', taskTitle:'Old closed before week', created:'2026-10-01T10:00:00+08:00', end:'2026-10-10T12:00:00+08:00', status:'Closed'}
+  ]; renderTable()`);
+  assert.match(elements.tbody.innerHTML, /Carry Over \\(1\\)[\\s\\S]*TSK-0001[\\s\\S]*New This Week \\(1\\)[\\s\\S]*TSK-0002/);
+  assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0003/);
+  assert.match(elements.summaryRow.innerHTML, /Overall Total<\\/span><strong>2/);
+  run("state.view = 'status'; renderTable()");
+  assert.match(elements.tbody.innerHTML, /Closed[\\s\\S]*TSK-0001[\\s\\S]*TSK-0002/);
+  assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0003/);
+  assert.match(elements.summaryRow.innerHTML, /Closed<\\/span><strong>2/);
+});
+
+test('closed End uses Malaysia Monday inclusive/exclusive bounds', () => {
+  const { run } = setup();
+  run(`state.tasks = [
+    {taskId:'at-start',customerName:'A',created:'2026-10-01T00:00:00+08:00',end:'2026-10-12T00:00:00+08:00',status:'Closed'},
+    {taskId:'at-end',customerName:'A',created:'2026-10-01T00:00:00+08:00',end:'2026-10-19T00:00:00+08:00',status:'Closed'}
+  ]`);
+  assert.equal(run("JSON.stringify(getViewTasks().map(t=>t.taskId))"), '["at-start"]');
+});
