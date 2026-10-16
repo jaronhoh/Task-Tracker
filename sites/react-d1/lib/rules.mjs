@@ -63,7 +63,8 @@ function rowToTask(row) {
     note: row.note,
     created: row.created,
     end: row.end,
-    status: row.status
+    status: row.status,
+    trackerLink: row.tracker_link ?? null
   };
 }
 
