@@ -197,7 +197,7 @@ function renderTable() {
     const tbody = $('tasksTable').querySelector('tbody');
     tbody.innerHTML = groups.map(status => {
       const groupTasks = tasks.filter(task => task.status === status);
-      const heading = `<tr class="status-group-row"><td colspan="8"><span>${escapeHtml(status)}</span>${groupCountBadge(groupTasks.length, statusClass(status))}</td></tr>`;
+      const heading = `<tr class="status-group-row"><td colspan="8"><span>${escapeHtml(status)}</span>${groupCountBadge(groupTasks.length, ({ "Work in Progress": "work-in-progress", "Pending with Customer": "pending-with-customer", "KIV": "kiv", "Closed": "closed" })[status])}</td></tr>`;
       const rows = groupTasks.map(task => `<tr data-task-id="${escapeHtml(task.taskId)}" class="${task.taskId === state.selectedId ? 'selected-row' : ''}">
         <td>${escapeHtml(task.taskId)}</td><td>${customerHtml(task)}</td><td>${escapeHtml(task.taskTitle)}</td>
         <td>${escapeHtml(task.taskDescription || '')}</td><td>${escapeHtml(task.note || '')}</td>
