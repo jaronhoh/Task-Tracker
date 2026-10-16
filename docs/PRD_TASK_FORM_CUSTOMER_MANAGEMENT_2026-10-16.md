@@ -1,9 +1,9 @@
 # PRD — Task Form & Customer Management Enhancements
 
 **Date:** 2026-10-16 (MYT)  
-**Status:** Requirements confirmed by user; implementation / testing / Sites deployment pending  
+**Status:** CR-005–CR-008 deployed in Sites Version 8 (browser QA skipped); CR-009–CR-011 approved and pending implementation  
 **Product:** Existing Task Tracker ChatGPT Sites React/D1 (not legacy Express)  
-**Baseline:** Sites Version 7, as recorded in `docs/PROJECT_STATUS.md`
+**Baseline:** Sites Version 8, as recorded in `docs/PROJECT_STATUS.md`
 
 ## 1. Objective
 Improve New Task and Edit Task workflows, allow safe customer removal, and make customer colors visually identifiable.
@@ -77,3 +77,51 @@ Improve New Task and Edit Task workflows, allow safe customer removal, and make 
 - Task Table link-icon placement should follow the existing table design without displacing key columns.
 - Export inclusion of Tracker Link is **not** approved; preserve existing export semantics.
 - Customer deletion counts all existing task references, including closed/older tasks; confirm exact treatment of soft-deleted task records from the existing schema before implementation, favoring data safety.
+
+## 6. Follow-up change requests — 2026-10-16 (user confirmed)
+
+### CR-009 — Bottom-right auto-dismiss notification using shadcn/ui Alert
+**Scope:** User-facing transient success/error/information messages across Task Tracker, including task/customer create, update and delete flows.
+
+- Replace existing transient message presentation with the visual semantics and styling of **shadcn/ui Alert (Base UI)**: https://ui.shadcn.com/docs/components/base/alert.
+- Present these messages as **floating alerts fixed to the bottom-right of the viewport**, not as inline banners or modal dialogs.
+- Each transient alert **automatically disappears after 5 seconds (5000 ms)** from appearance. Multiple messages must remain readable (stack without overlap) and clear their own timers.
+- Support success, error and informational variants with readable message text; use accessible live-region announcements. Avoid stealing keyboard focus.
+- Do not auto-dismiss confirmation dialogs, unsaved-data warnings or other interactions requiring user action; these are **not** transient notifications.
+- Mobile: bottom-right placement remains visible within viewport with safe margins, no obstruction of critical controls.
+- Note: shadcn/ui `Alert` is ordinarily an inline component; implement the explicitly requested floating position and timer using an appropriate React notification container/lifecycle while preserving the requested Alert visual style. Do not claim native Alert has built-in timed dismissal.
+
+**AC-CR-009-01:** On success and failure actions, alert appears bottom-right with shadcn Alert visual design and disappears within ~5 seconds without interaction.
+**AC-CR-009-02:** Two rapid alerts are individually readable and dismiss without timer leakage; mobile viewport and accessibility verified.
+**AC-CR-009-03:** Destructive-action confirmation and blocking validation are not silently dismissed before the user can act.
+
+### CR-010 — Add Customer within Manage Customers
+**Scope:** Manage Customers dialog/page.
+
+- Provide a clearly visible **Add Customer** action in Manage Customers, in addition to the existing delete/edit functionality.
+- Allow entry of customer name and the existing customer color selection; reuse current validation, uniqueness rules and API behavior.
+- On successful creation, update the Manage Customers list and customer selectors in New/Edit Task without page reload; show CR-009 success alert.
+- On validation/API failure, preserve entered data and show actionable error; no duplicate or partial customer created.
+- Do not remove or regress existing Add Customer entry points, if any.
+
+**AC-CR-010-01:** Add customer from Manage Customers → new row visible and selectable in New/Edit Task.
+**AC-CR-010-02:** Invalid/duplicate names follow existing validation rules, no accidental duplicates; notification behavior matches CR-009.
+
+### CR-011 — Delete button inline with customer field
+**Scope:** Manage Customers list layout.
+
+- Place the **Delete** button **on the same horizontal row as its corresponding customer field/control** on desktop, aligned clearly with the customer being deleted.
+- Preserve customer field usability, color swatch display and spacing; avoid wrapping Delete onto a separate row at normal desktop widths.
+- On small mobile screens, maintain usability and prevent clipping/overlap; compact inline layout where feasible, responsive wrapping only when necessary.
+- Keep the previously approved **server-side task-reference deletion guard**, confirmation dialog, and permissions unchanged.
+
+**AC-CR-011-01:** Desktop screenshot shows each customer field and its Delete button on the same row.
+**AC-CR-011-02:** Delete targets the correct customer; referenced customers remain protected; mobile controls do not overlap.
+
+### Release and acceptance requirements for CR-009–CR-011
+- Modify **existing Sites React/D1** application and source mirrored in `sites/react-d1/`; do not modify legacy Express.
+- Test notifications (including timer cleanup), customer creation, row alignment, customer-delete safety, and task/customer regression.
+- Perform **real browser** desktop/mobile interaction and visual acceptance; do not equate unit tests with actual UI acceptance.
+- Preserve existing Site URL, project, D1 data, task/customer identifiers, sequence, revision, access policy and config, except user-authorized new customer data created during production use.
+- Sync code and tests to GitHub, record distinct GitHub and Sites source commits, and update `docs/PROJECT_STATUS.md` with test, deploy and verification evidence.
+- **Current state:** documentation approved/updated only; no claim of CR-009–CR-011 implementation or deployment.
