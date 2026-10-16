@@ -82,13 +82,13 @@ test('tasks closed this week remain in weekly groups and Closed status', () => {
     {taskId:'TSK-0002', customerName:'B', taskTitle:'New closed this week', created:'2026-10-13T10:00:00+08:00', end:'2026-10-15T12:00:00+08:00', status:'Closed'},
     {taskId:'TSK-0003', customerName:'C', taskTitle:'Old closed before week', created:'2026-10-01T10:00:00+08:00', end:'2026-10-10T12:00:00+08:00', status:'Closed'}
   ]; renderTable()`);
-  assert.ok(elements.tbody.innerHTML.includes('Carry Over (1)'));
-  assert.ok(elements.tbody.innerHTML.includes('New This Week (1)'));
+  assert.ok(elements.tbody.innerHTML.includes('<span>Carry Over</span><span class="group-count-badge group-count-carry-over">1</span>'));
+  assert.ok(elements.tbody.innerHTML.includes('<span>New This Week</span><span class="group-count-badge group-count-new-this-week">1</span>'));
   assert.ok(elements.tbody.innerHTML.indexOf('TSK-0001') < elements.tbody.innerHTML.indexOf('TSK-0002'));
   assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0003/);
   assert.match(elements.summaryRow.innerHTML, /Overall Total<\/span><strong>2/);
   run("state.view = 'status'; renderTable()");
-  assert.ok(elements.tbody.innerHTML.includes('<span>Closed</span><strong>2</strong>'));
+  assert.ok(elements.tbody.innerHTML.includes('<span>Closed</span><span class="group-count-badge group-count-closed">2</span>'));
   assert.ok(elements.tbody.innerHTML.includes('data-task-id="TSK-0001"'));
   assert.ok(elements.tbody.innerHTML.includes('data-task-id="TSK-0002"'));
   assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0003/);
@@ -102,4 +102,12 @@ test('closed End uses Malaysia Monday inclusive/exclusive bounds', () => {
     {taskId:'at-end',customerName:'A',created:'2026-10-01T00:00:00+08:00',end:'2026-10-19T00:00:00+08:00',status:'Closed'}
   ]`);
   assert.equal(run("JSON.stringify(getViewTasks().map(t=>t.taskId))"), '["at-start"]');
+});
+
+test('status group badges use semantic color keys and display zero counts', () => {
+  const { run, elements } = setup();
+  run("state.view = 'status'; renderTable()");
+  for (const [key, count] of [['work-in-progress', 1], ['pending-with-customer', 0], ['kiv', 1], ['closed', 0]]) {
+    assert.ok(elements.tbody.innerHTML.includes(`group-count-badge group-count-${key}">${count}</span>`));
+  }
 });
