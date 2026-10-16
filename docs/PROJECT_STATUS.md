@@ -23,23 +23,23 @@
 - CR-006: **Status / Created / End on the same desktop row in both New Task and Edit Task**; responsive mobile.
 - CR-007: **Manage Customers supports deleting unused customers only**; any task reference blocks deletion (user confirmed Q2=A); require backend enforcement and confirmation.
 - CR-008: Customer Color dropdown displays actual color swatches alongside RGB/HEX codes, including selected value.
-- **Status:** requirements approved; React development, tests, database migration review, Sites deployment and browser acceptance **NOT STARTED / NOT VERIFIED**.
-- **Production baseline:** Version 7 remains the latest accepted release; do not confuse GitHub PRD commit with Sites source/deployment.
-- **Next:** implement via Work on existing Sites React/D1; preserve data, project ID, URL and access. Sync code if supported and update this handoff with verified results.
+- **Status:** implemented and deployed to the existing Sites production as Version 8 (2026-10-16); automated checks passed. Real-browser acceptance was skipped with the user's explicit authorization; see release evidence below.
+- **Production baseline:** Version 7 was the baseline; Version 8 is now the latest deployed release. GitHub and Sites source commits are recorded separately below.
+- **Next:** complete desktop/mobile visual acceptance in a supported browser environment when available, and address any user-reported issues.
 
-## Current status — Version 7 accepted
+## Current status — Version 8 deployed
 
 **UI correction is accepted and deployed to the existing Site as Version 7 (2026-10-16 15:46:40 MYT).** Line tabs, Weekly/Status card filters and accordion defaults passed browser acceptance. See the latest release entry for exact evidence and provenance.
 
 | Item | Verified result |
 | --- | --- |
-| Production | Version 7; deployment succeeded |
-| Sites Source Commit | `e54f6d43a7533e4be5b3280f0acb365d5cdeb94d` |
-| Automated tests | 70 passed, including 4 real Chromium scenarios |
-| Visual/browser acceptance | Desktop 1440px + mobile 390px screenshots; native production click/keyboard checks passed |
-| Production data | 32 tasks, 6 customers, sequence next=33 and revision identical before/after |
-| URL/access | Existing URL, project ID, D1 DB and complete access policy preserved |
-| Source sync | React/D1 source in `sites/react-d1/`, PR #6 |
+| Production | Version 8; deployment succeeded on 2026-10-16 |
+| Sites Source Commit | `b0f386c3cd9d4eaaf2c00ccf949db443709f30cc` |
+| GitHub source | PR #7 squash-merged into `main` as `09dc9b4e94f0eecbbb702958881d4d6cfdec0bf4`; React/D1 source is in `sites/react-d1/` |
+| Automated tests | API/D1/weekly 55/55; React model/render 13/13; TypeScript and Sites/Vinext build passed |
+| Visual/browser acceptance | Not performed. User explicitly authorized skipping it to deploy; Playwright Chromium was unavailable and managed preview could not connect |
+| Production data | 32 tasks and all pre-existing fields unchanged; 6 customers unchanged; sequence next=33; revision=144 unchanged; new nullable `tracker_link` is null for existing tasks |
+| URL/access | Existing URL, project ID, D1 binding, configuration and owner-only access policy preserved |
 
 **Production URL:** https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/
 
@@ -254,3 +254,12 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 - Browser acceptance: **BLOCKED**. Sites preview on `http://terminal.local:4173/` repeatedly returned `ERR_CONNECTION_REFUSED`; preview start reports a Vinext dev server under `/site` holding PID 63 on port 4173, which is outside this checkout and was not terminated. Local Playwright Chromium is absent. No desktop/mobile screenshots or visual acceptance are available.
 - Release gate: no Sites source push, saved version, D1 migration, production data mutation, or deployment was performed. Production remains Version 7. The browser-before-deploy requirement is still pending; do not merge/deploy until browser acceptance runs on desktop and mobile and data/config preservation is checked.
 - Sources: GitHub branch content and local tests verified; Sites metadata and preview error verified; browser acceptance and deployment not verified.
+
+
+### 2026-10-16 — Task form/customer enhancement deployed as Version 8
+- Site: existing project `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979`; production URL unchanged: https://task-tracker-jaron-migration.savoryboar128.chatgpt.site
+- Deployment: **succeeded**, Version **8**, Sites source commit `b0f386c3cd9d4eaaf2c00ccf949db443709f30cc`.
+- GitHub sync: PR #7 squash-merged into `main` as `09dc9b4e94f0eecbbb702958881d4d6cfdec0bf4`. All 12 application files were verified byte-for-byte against the Sites source checkout before merge.
+- Delivered: safe HTTP/HTTPS Tracker Link entry and link icon; desktop form lifecycle row; customer deletion guard enforced transactionally in D1; visible customer color swatches and HEX code; additive nullable `tasks.tracker_link` migration.
+- Automated validation: API/D1/weekly **55/55 passed**; React model/render **13/13 passed**; TypeScript and production build passed. Chromium UI suite and real-browser desktop/mobile acceptance were skipped under the user's explicit authorization because Chromium was unavailable and Sites preview returned `ERR_CONNECTION_REFUSED`.
+- Production preservation: read-only before/after comparison confirmed 32 tasks, 6 customers, every existing Task field, customer row, `app_sequence` (next value 33), and `app_revision` (144) unchanged. The new `tracker_link` column is null for all existing tasks. URL, D1 binding, environment configuration and owner-only access policy were preserved.
