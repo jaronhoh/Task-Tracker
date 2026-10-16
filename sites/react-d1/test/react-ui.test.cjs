@@ -161,7 +161,8 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
     const chrome=await page.locator('.view-tab').evaluateAll(ns=>ns.map(n=>{const s=getComputedStyle(n);return {top:s.borderTopWidth,left:s.borderLeftWidth,right:s.borderRightWidth,bg:s.backgroundColor,bottom:s.borderBottomColor}}));
     for(const s of chrome){assert.equal(s.top,'0px');assert.equal(s.left,'0px');assert.equal(s.right,'0px');assert.equal(s.bg,'rgba(0, 0, 0, 0)');}
     assert.equal(chrome[1].bottom,'rgb(37, 99, 235)');
-    await page.locator('[data-view="weekly"]').focus();await page.keyboard.press('ArrowRight');
+    await page.locator('[data-view="weekly"]').click();await page.locator('[data-view="weekly"]').press('ArrowRight');
+    await page.locator('[data-view="status"][aria-selected="true"]').waitFor();
     assert.equal(await page.locator('[data-view="status"]').getAttribute('aria-selected'),'true');
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     if(process.env.TASK_TRACKER_EVIDENCE_DIR)await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`correction-${width}.png`),fullPage:true});

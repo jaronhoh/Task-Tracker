@@ -12,6 +12,7 @@ jobs:
     timeout-minutes: 15
     defaults:
       run:
+        shell: bash
         working-directory: sites/react-d1
     env:
       TASK_TRACKER_EVIDENCE_DIR: ${{ github.workspace }}/sites-evidence
