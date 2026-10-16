@@ -8,7 +8,7 @@
 
 ## Current status
 
-**Badge enhancement (PR #4):** PR #4 merged and CI Run #103 passed (GitHub verified). **Deployment stopped on 2026-10-16: GitHub `main` is the legacy Express/local-SQLite application; the existing Sites release uses React/Vinext + D1. Safe reuse of the production database by a direct `main` deployment is not established.** Existing Version 4 deployment independently verified as succeeded. No new Site, deployment, database migration, reset, import, environment change, or access change was performed.
+**Badge enhancement (PR #4): deployed to existing Sites as Version 5 on 2026-10-16 12:12:15 MYT (Sites verified).** Ported the badge UI to the existing React/D1 application. Production task/customer/sequence/revision rows are identical before and after deployment; URL and access policy preserved. GitHub main remains the legacy Express app; Sites source commit is recorded separately below.
 
 
 | Area | Status | Evidence / detail |
@@ -17,14 +17,14 @@
 | Implementation | Completed | `app/public/app.js` |
 | Regression tests | Passed | GitHub Actions Run #91, commit `4608faf` |
 | PR #3 | Merged | Squash merge commit `6b14576bbc0a7a886cf222f8e28bbdef2e1e00d0` |
-| Production Sites deployment | **Succeeded — Version 4** | User-provided deployment report; source commit `6b14576` |
-| Post-deployment verification | **Passed (reported)** | User reports 62 tests passed and data integrity verified |
+| Production Sites deployment | **Succeeded — Version 5** | Sites verified; source `1ea52b12e736ef80d636e20d5d1ea5c0d3017096` |
+| Post-deployment verification | **Data and assets passed; visual QA pending** | 32 tasks, 6 customers, sequence next=33 and revision unchanged; served JS/CSS hashes match build |
 
 **Production URL:** https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/
 
-**Important evidence distinction:** GitHub PR/CI details were verified through GitHub. The Sites deployment status, Version 4, 62 passing tests, and production data counts were **reported by the user** on 2026-10-16; they were not independently checked through a Sites management tool in this conversation.
+**Evidence distinction:** Earlier Version 4 / 62-test release details below are historical user reports. Version 4 deployment metadata and Version 5 deployment, live database rows and served assets were independently verified in the 2026-10-16 release workflow. Local current-release validation totals 63 passing tests; browser visual verification remains outstanding.
 
-## Latest release: Version 4 — Closed This Week visibility
+## Previous release: Version 4 — Closed This Week visibility
 
 **Business requirement:** A task closed during the current Malaysia week must appear in Weekly Task and Current Week Status, even when created in a prior week.
 
@@ -78,16 +78,16 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 
 ## In-progress change — Colored Group Count Badges (2026-10-16)
 
-- Status: **PR #4 merged; GitHub Actions passed; Sites deployment blocked by legacy-main / Sites architecture mismatch.**
+- Status: **Deployed — Sites Version 5; React port tested, build and production resource checks passed; database equality verified. Browser visual QA not performed in this environment.**
 - Branch: `feat/status-count-color-badges-20261016`
 - PRD: `docs/PRD_STATUS_COUNT_BADGES_2026-10-16.md`
 - Scope: pill-shaped, status-colored numeric count badges in Weekly Task and Current Week Status group headings; no business logic or database changes.
-- CI: **passed** — GitHub Actions run `38847047408`, source commit `a51be08f820428d807961b30e6bdc30d9197c46d` (API tests and browser acceptance tests).\n- Next: synchronize the Sites-compatible source and port the badge enhancement to its React frontend; preserve the existing project and D1 binding, validate and deploy through Sites only after database preservation is established.
-- Last confirmed production release remains **Version 4** (user reported).
+- CI: **passed** — GitHub Actions run `38847047408`, source commit `a51be08f820428d807961b30e6bdc30d9197c46d` (API tests and browser acceptance tests).\n- Follow-up: keep GitHub legacy main and Sites React source clearly distinguished; synchronize source architecture in a separate reviewed change. Browser visual verification remains outstanding.
+- Latest production release: **Version 5** (Sites verified), source `1ea52b12e736ef80d636e20d5d1ea5c0d3017096`.
 
 ## Next actions
 
-- No outstanding implementation or deployment action for Version 4 **based on the user-provided release report**.
+- Version 5 deployed; optional browser visual acceptance and a separately reviewed GitHub/Sites source reconciliation remain.
 - For the next feature or bug fix: write/update PRD → create feature branch → implement → test (API + UI) → review PR → merge → deploy existing Site → verify data preservation → update this file.
 - If future checks reveal production discrepancies, open a new issue/PR and log it here.
 
@@ -101,6 +101,7 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 | 2026-10-16 | Sites Version 4 deployment, 62 tests, 32 tasks and related data preserved | Succeeded (reported) | User reported |
 | 2026-10-16 | Colored group count badges PRD and implementation added to feature branch; not yet deployed | In progress | GitHub verified |
 | 2026-10-16 | Created persistent project status / handoff record | Completed | GitHub commit of this file |
+| 2026-10-16 | Ported PR #4 badges to existing React Site; deployed Version 5; 63 tests and data equality checks passed | Deployed; browser visual QA pending | Sites verified / local tests / production read-only checks |
 
 ## Update template for future entries
 
@@ -132,3 +133,24 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 - Badge verification: existing Version 4 source still renders group counts as `label (count)`; PR #4 numeric color badges were not deployed. Post-deployment visual verification is therefore not completed.
 - Required next action: reconcile GitHub main with the existing Sites-compatible application, port the badge change to React, then validate the unchanged project/D1 binding and immutable migration history before deployment.
 - Status sources: **GitHub verified / Sites verified / production API read-only verified**.
+
+
+### 2026-10-16 — Version 5: React port of colored group count badges
+- Authorization: user instructed to proceed with the proposed React port while preserving the existing Site and D1 database.
+- GitHub feature reference: merged PR #4, `c29db45dae9e9d0c0685b8171fcbb51dae7c9630`; GitHub main status reviewed at `704bd102d4b52a838a63de7213b3694a2e126667`.
+- Deployment method: updated the existing Sites React application based on Version 4; did **not** replace it with the incompatible legacy Express main source. No new Site was created.
+- Actual Sites source commit: `1ea52b12e736ef80d636e20d5d1ea5c0d3017096` (pushed to the existing Sites source repository).
+- Changed files: `frontend/src/TaskTable.tsx`, `frontend/src/styles.css`, `frontend/test/migration.test.tsx`, `test/react-ui.test.cjs`. No dependency, API, business-rule, database, migration or hosting-manifest changes.
+- Badge coverage: Weekly Task Carry Over / New This Week; Current Week Status Work in Progress (blue), Pending with Customer (orange), KIV (purple), Closed (green). Accessible labels and zero counts covered by React rendering tests.
+- Validation: **10 React tests + 53 API/D1 tests passed**; TypeScript check, browser-test-file syntax and production build passed. The tsx CLI IPC socket was unavailable, so the same React tests ran successfully via `TSX_TSCONFIG_PATH=frontend/tsconfig.json node --import tsx --test frontend/test/*.test.tsx`.
+- Browser limitation: required browser-control capability unavailable; no local browser server or browser acceptance suite was launched. Browser-test expectations were updated, but not executed. This is not full visual acceptance.
+- Sites version: **5**; saved version `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979~appgver_2a391d4c70708191bbc3c6c5213b833b`.
+- Deployment: `appgdep_6ad1a404205081918dab6591370d40c0`, **succeeded**, `2026-10-16T04:12:15.405251Z` / **2026-10-16 12:12:15 MYT**.
+- URL retained: https://task-tracker-jaron-migration.savoryboar128.chatgpt.site
+- Data preservation: read-only, paginated full-row comparison of live D1 `DB` before and after deployment found **32 tasks, 6 customers, app_sequence (task_id next_value=33), and app_revision identical in every field**. No production CRUD test, import, reset, migration or sequence allocation was performed.
+- Access and configuration: same project ID and DB binding; complete access policy unchanged; environment revision remains **0**. No configuration or audience mutation was requested or performed.
+- Production checks: root page and health endpoint returned HTTP 200; root references new JS. Served JS/CSS returned HTTP 200 and SHA-256 matched local production output exactly. CSS contains all six group badge color classes.
+- Served JS SHA-256: `815e9936938ff0bc61d5024b8db151b6114b9862e12c4306b1f4b9c0ef28790d`.
+- Served CSS SHA-256: `bf583736039621e3f7a72ee3c4bdab5d598e0d90d38f491e8b9a71c074db7423`.
+- Status sources: **Sites verified / production read-only verified / locally tested**. GitHub PR #4 CI remains separately GitHub verified.
+- Remaining follow-up: browser visual acceptance; separately reconcile the GitHub legacy main and Sites React source to avoid future incompatible deployments.
