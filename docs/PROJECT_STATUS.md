@@ -224,3 +224,5 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 - Release safety: per user's browser-before-deploy gate, no Sites source push/save/deploy, production CRUD, migration, seed, reset, sequence allocation, environment or access mutation. Historical data counts are not independently re-verified in this workflow. Full-row before/after production comparison is still required when deployment resumes.
 - Next: supported browser environment → inspect actual Version 6 rendering → candidate desktop/mobile click/keyboard/visual acceptance and screenshots → resolve failures → read-only production snapshot → deploy existing Site → full-row data/access comparison → record actual new version/deployment/source SHA. Keep PRD Open until completed.
 - Status sources: **Sites metadata verified / local source and tests verified / GitHub source synchronized; browser acceptance blocked**.
+
+- GitHub candidate traceability: draft [PR #6](https://github.com/jaronhoh/Task-Tracker/pull/6), source snapshot commit `ff5eb1001636a95b9e111b7ecb6d9a1985243d2b`; source exists on the PR branch, not merged main or deployed Sites.
