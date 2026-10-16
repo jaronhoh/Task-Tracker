@@ -158,6 +158,8 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
     assert.equal(await page.locator('.group-toggle[aria-expanded="false"]').count(),4);
     await page.locator('#clearSearchBtn').click();assert.equal(await page.locator('.group-toggle[aria-expanded="true"]').count(),3);
     await page.locator('[data-task-id="carry"]').press('Enter');await page.locator('#taskDialog').waitFor();await page.keyboard.press('Escape');
+    await page.locator('#taskDialog').waitFor({state:'hidden'});
+    await page.waitForFunction(()=>document.activeElement?.id==='editTaskBtn');
     const chrome=await page.locator('.view-tab').evaluateAll(ns=>ns.map(n=>{const s=getComputedStyle(n);return {top:s.borderTopWidth,left:s.borderLeftWidth,right:s.borderRightWidth,bg:s.backgroundColor,bottom:s.borderBottomColor}}));
     for(const s of chrome){assert.equal(s.top,'0px');assert.equal(s.left,'0px');assert.equal(s.right,'0px');assert.equal(s.bg,'rgba(0, 0, 0, 0)');}
     assert.equal(chrome[1].bottom,'rgb(37, 99, 235)');
