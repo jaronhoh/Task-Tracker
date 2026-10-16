@@ -244,3 +244,13 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 - User confirmed Tracker Link in **New and Edit Task** plus clickable Task Table icon; Status/Created/End same row in **both** forms; customer deletion prohibited if referenced by tasks; color dropdown must display swatches.
 - Added `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md`.
 - This is documentation only: no Sites code, schema, data, deployment or access changes. Version 7 remains latest accepted release.
+
+
+### 2026-10-16 — Task form and customer management candidate (not deployed)
+- Branch: `feat/task-form-customer-20261016`; based on the current `main` commit `38f5e6bded3b646400bed1935cf40e4bb2d00b67`.
+- Existing Sites baseline: Version 7, project `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979`, source commit `e54f6d43a7533e4be5b3280f0acb365d5cdeb94d`; URL and access unchanged.
+- Candidate source changes: optional Tracker Link with HTTP/HTTPS validation and safe table link; Status/Created/End same desktop row; server-side transactional Customer reference check and delete; accessible customer/color selectors showing swatches and HEX; nullable additive `tracker_link` D1 migration. No existing data, ID, revision, sequence, business rules, or export fields changed.
+- Automated checks: React model/render tests **13/13 passed**; API/D1/weekly tests **55/55 passed**; frontend TypeScript, Sites/Vinext build, and diff checks passed. Playwright browser test source was added and syntax-checked but **not executed**.
+- Browser acceptance: **BLOCKED**. Sites preview on `http://terminal.local:4173/` repeatedly returned `ERR_CONNECTION_REFUSED`; preview start reports a Vinext dev server under `/site` holding PID 63 on port 4173, which is outside this checkout and was not terminated. Local Playwright Chromium is absent. No desktop/mobile screenshots or visual acceptance are available.
+- Release gate: no Sites source push, saved version, D1 migration, production data mutation, or deployment was performed. Production remains Version 7. The browser-before-deploy requirement is still pending; do not merge/deploy until browser acceptance runs on desktop and mobile and data/config preservation is checked.
+- Sources: GitHub branch content and local tests verified; Sites metadata and preview error verified; browser acceptance and deployment not verified.
