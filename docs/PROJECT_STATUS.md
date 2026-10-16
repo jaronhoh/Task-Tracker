@@ -31,6 +31,10 @@
 
 **Next action:** use Work/Sites tooling to inspect and fix the actual React app; verify in browser, preserve full production data and settings, deploy existing Site, then update this file with verified evidence. **No fix or new deployment is claimed by this documentation update.**
 
+## Current correction attempt — browser gate blocked
+
+A React/D1 correction candidate is prepared and locally tested (66 tests passed), but **not accepted or deployed**. See the latest dated entry below. Production remains Version 6. Real-browser capability is unavailable; no screenshot/click/keyboard acceptance is claimed.
+
 ## Current status
 
 **Latest release: Version 6 — Accordion / line tabs / clickable status cards**, deployed **2026-10-16 14:47:27 MYT** (Sites verified). 65 local automated tests passed; production full-row data comparison passed. Browser interaction and mobile visual QA remain pending. Version 5 details below are historical.
@@ -205,3 +209,20 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 - User explicitly reports Version 6 UI issues remain unresolved; prior browser QA was never completed.
 - New requirements and acceptance gate: `docs/PRD_SITES_UI_CORRECTION_AND_ACCEPTANCE_2026-10-16.md`.
 - Current status: **Open, not accepted**; Sites UI correction and real-browser evidence pending. No Sites deployment or production mutation performed in this documentation-only update.
+
+### 2026-10-16 — Sites UI correction candidate; browser gate BLOCKED
+- Delivery state: **OPEN / NOT ACCEPTED / NOT DEPLOYED**. Production remains **Version 6**; no new saved version or deployment ID.
+- GitHub baseline read: `af71944cb34fb710c38643705938cba620a262e8`; canonical correction PRD and this handoff read. Existing open PR #2 targets the historical migration and was not merged. Latest returned Actions runs 38851682627 and 38851677365 failed on `3b89c396a92a67dafb3e5df907d6b8fcc2ae68ca`; they do not test this Sites candidate.
+- Sites verified: existing project `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979`, latest version 6, same live URL, custom owner-only audience, access policy revision 1. Opened existing source with supported Sites helper, baseline `28874794e28ddc0e2bfa6c698a7b33fbd37cca8b`.
+- Source diagnosis: Weekly summary cards lacked buttons/handlers; status re-click did not reset; all accordion states initialized true, with a regression that incorrectly required empty groups open. Unlayered universal border-color overrides Tailwind's layered transparent tab border, while triggers retain border width. Tab cascade diagnosis is static; actual production rendering is **not browser verified**.
+- Candidate: explicit borderless line tabs, full-card native buttons with aria-pressed and repeated-click reset, pre-filter counts, filtered groups/export, populated-open/empty-closed accordions and context resets. Existing business eligibility, API/D1, dependencies, migrations, manifest and runtime settings unchanged.
+- Local candidate source commit: `ef390b5ef15637233d56a801a6246fafd8e275b0`. This is **not a pushed/deployed Sites commit**. Existing deployed Sites Source Commit remains `28874794e28ddc0e2bfa6c698a7b33fbd37cca8b`.
+- Source sync: branch `fix/sites-ui-correction-20261016`, directory `sites/react-d1/`; 161 tracked UTF-8 source/config/test files (excluding package-lock.json and generated tsconfig.tsbuildinfo). Snapshot includes candidate report; separate `sites/README.md` describes provenance and limitations. GitHub snapshot SHA and Sites source SHA are distinct.
+- Executed validation: **13 React tests + 53 API/D1/weekly regressions = 66 passed**, frontend TypeScript noEmit, Sites production build, browser-test syntax, and whitespace checks passed. Local D1 tests do not write to production.
+- Browser evidence: **NONE**. Desktop/mobile screenshots, live click/keyboard/visual acceptance and rendered-page inspection remain unperformed. Added/revised Playwright acceptance source, but did **not** execute it.
+- Blocker: managed Linux environment; required `control-browser` skill/tool absent from capability discovery. Sites skill: “If `$control-browser` is unavailable, skip browser QA: do not start a preview server, install a browser, or improvise another browser-control path.” No alternative browser path or preview server was launched.
+- Release safety: per user's browser-before-deploy gate, no Sites source push/save/deploy, production CRUD, migration, seed, reset, sequence allocation, environment or access mutation. Historical data counts are not independently re-verified in this workflow. Full-row before/after production comparison is still required when deployment resumes.
+- Next: supported browser environment → inspect actual Version 6 rendering → candidate desktop/mobile click/keyboard/visual acceptance and screenshots → resolve failures → read-only production snapshot → deploy existing Site → full-row data/access comparison → record actual new version/deployment/source SHA. Keep PRD Open until completed.
+- Status sources: **Sites metadata verified / local source and tests verified / GitHub source synchronized; browser acceptance blocked**.
+
+- GitHub candidate traceability: draft [PR #6](https://github.com/jaronhoh/Task-Tracker/pull/6), source snapshot commit `ff5eb1001636a95b9e111b7ecb6d9a1985243d2b`; source exists on the PR branch, not merged main or deployed Sites.
