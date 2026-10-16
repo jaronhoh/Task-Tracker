@@ -1,0 +1,37 @@
+name: Sites React acceptance
+on:
+  pull_request:
+    paths:
+      - 'sites/**'
+      - '.github/workflows/sites-react-acceptance.yml'
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: sites/react-d1
+    env:
+      TASK_TRACKER_EVIDENCE_DIR: ${{ github.workspace }}/sites-evidence
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: sites/react-d1/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: node node_modules/typescript/bin/tsc -p frontend/tsconfig.json --noEmit
+      - run: node scripts/build-react.mjs
+      - run: TSX_TSCONFIG_PATH=frontend/tsconfig.json node --import tsx --test frontend/test/*.test.tsx
+      - run: npm test
+      - run: mkdir -p "$TASK_TRACKER_EVIDENCE_DIR"
+      - run: node --test test/react-ui.test.cjs 2>&1 | tee "$TASK_TRACKER_EVIDENCE_DIR/browser.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sites-browser-evidence
+          path: sites-evidence
