@@ -162,7 +162,7 @@ test('CR-009–011: timed Alerts, Manage Customers Add, inline Delete and mobile
     if(width>=768){assert.ok(Math.abs(bounds.input.y-bounds.color.y)<8,JSON.stringify(bounds));assert.ok(Math.abs(bounds.input.y-bounds.del.y)<8,'Delete aligns with the customer controls on desktop');}
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Manage Customers must not overflow on mobile');
     await page.clock.fastForward(2000);
-    const seedCustomer=page.locator('.customer-management-row').filter({has:page.locator(`input[value="CR${width} Customer"]`)}).locator('.customer-name-editor');await seedCustomer.fill(`CR${width} Renamed`);await seedCustomer.press('Tab');
+    const seedCustomer=page.locator('.customer-management-row').filter({has:page.locator(`input[value="CR${width} Customer"]`)}).locator('.customer-name-editor');await seedCustomer.fill(`CR${width} Renamed`);await page.keyboard.press('Tab');
     await page.getByText('Customer saved; linked Tasks updated.',{exact:true}).waitFor();
     assert.equal(await page.locator('#notification-region [data-slot="alert"]').count(),2,'rapid messages stack independently');
     await page.clock.fastForward(3000);await page.locator('#notification-region [data-slot="alert"]').waitFor({state:'visible'});
