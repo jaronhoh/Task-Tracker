@@ -24,7 +24,7 @@ test('PRD sample renders two independent lists, eight fields and matching cards'
   const { run, elements } = setup();
   run('renderTable()');
   const html = elements.tbody.innerHTML;
-  assert.match(html, /Carry Over \(1\)[\s\S]*TSK-0001[\s\S]*New This Week \(1\)[\s\S]*TSK-0002/);
+  assert.match(html, /Carry Over<\\/span><span class="group-count-badge group-count-carry-over">1<\\/span>[\\s\\S]*TSK-0001[\\s\\S]*New This Week<\\/span><span class="group-count-badge group-count-new-this-week">1<\\/span>[\\s\\S]*TSK-0002/);
   assert.equal((html.match(/data-task-id=/g) || []).length, 2);
   assert.equal((html.match(/<td>/g) || []).length, 16);
   assert.match(elements.summaryRow.innerHTML, /Overall Total<\/span><strong>2/);
@@ -47,7 +47,7 @@ test('search and empty groups keep cards and lists synchronized', () => {
   const { run, elements, element } = setup();
   element('globalSearch').value = 'TSK-0002';
   run('renderTable()');
-  assert.match(elements.tbody.innerHTML, /Carry Over \(0\)[\s\S]*No results found[\s\S]*New This Week \(1\)/);
+  assert.match(elements.tbody.innerHTML, /Carry Over<\\/span><span class="group-count-badge group-count-carry-over">0<\\/span>[\\s\\S]*No results found[\\s\\S]*New This Week<\\/span><span class="group-count-badge group-count-new-this-week">1<\\/span>/);
   assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0001/);
   element('globalSearch').value = 'no match';
   run('renderTable()');
@@ -61,7 +61,7 @@ test('editing status or Created recalculates group membership and selection', ()
   assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0001/);
   assert.equal(elements.editTaskBtn.disabled, true);
   run(`state.tasks[0].created = '2026-10-14T00:00:00+08:00'; renderTable()`);
-  assert.match(elements.tbody.innerHTML, /New This Week \(2\)/);
+  assert.match(elements.tbody.innerHTML, /New This Week<\\/span><span class="group-count-badge group-count-new-this-week">2<\\/span>/);
   assert.match(elements.tbody.innerHTML, /selected-row/);
   assert.equal(elements.editTaskBtn.disabled, false);
 });
