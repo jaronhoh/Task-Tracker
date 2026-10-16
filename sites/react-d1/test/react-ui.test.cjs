@@ -110,8 +110,8 @@ test('React UI: ordered blur saves, retry, Customer rename/color, logical delete
 
 test('Task form enhancements: Tracker Link, lifecycle row, swatches and guarded Customer delete', async () => harness(async ({browser,url,api}) => {
   const created=await api('/api/tasks',{customerName:'Linked Customer',taskTitle:'Linked task',trackerLink:'https://tracker.example/item/1'});
-  await api('/api/customers',{name:'Unused Customer'});
   for(const width of [1440,390]) {
+    await api('/api/customers',{name:`Unused Customer ${width}`});
     await api(`/api/tasks/${created.taskId}`,{trackerLink:'https://tracker.example/item/1'},'PATCH');
     const ctx=await browser.newContext({viewport:{width,height:900}}),page=await ctx.newPage();page.setDefaultTimeout(8000);page.on('dialog',d=>d.accept());
     await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
@@ -137,8 +137,8 @@ test('Task form enhancements: Tracker Link, lifecycle row, swatches and guarded 
     await colorButton.press('Escape');
     await page.locator('[aria-label="Delete Linked Customer"]').click();
     await page.locator('#manageCustomersError').filter({hasText:'referenced by 1 Task'}).waitFor();
-    await page.getByRole('button',{name:'Delete Unused Customer'}).click();
-    await page.waitForFunction(()=>!document.querySelector('.customer-management-row input')?.value.includes('Unused Customer'));
+    await page.getByRole('button',{name:`Delete Unused Customer ${width}`}).click();
+    await page.waitForFunction(width=>![...document.querySelectorAll('.customer-management-row input')].some(input=>input.value===`Unused Customer ${width}`),width);
     await ctx.close();
   }
 }));
