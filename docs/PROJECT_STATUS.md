@@ -12,48 +12,27 @@
 
 - Existing Sites URL, production D1 database, task/customer records, sequences, revisions, and access settings must remain unchanged unless explicitly requested.
 - PR #5 (legacy UI accordion / line tabs / clickable cards) **closed without merge** because it targeted Express.
-- **Sites UI request:** implemented and deployed as Version 6 (details below). Browser interaction and visual acceptance remain unverified.
+- **Sites UI request:** corrected, browser accepted and deployed as **Version 7**; see latest release evidence below.
 - Sites deployment/editing must use supported Sites/Work tooling; GitHub merges alone do not deploy the React/D1 Sites app.
 - Do not claim the above UI update is deployed until verified.
 
-## Active priority — Version 6 UI defects NOT accepted (user report, 2026-10-16)
+## Current status — Version 7 accepted
 
-**Status: OPEN / needs Sites React correction and real-browser acceptance.** The user reports Version 6 did **not** resolve the visible UI problems. A successful Sites deployment and 65 automated tests are not evidence that the actual UI passed visual or interaction acceptance. This overrides any earlier wording suggesting the UI request is fully complete.
+**UI correction is accepted and deployed to the existing Site as Version 7 (2026-10-16 15:46:40 MYT).** Line tabs, Weekly/Status card filters and accordion defaults passed browser acceptance. See the latest release entry for exact evidence and provenance.
 
-**Canonical PRD:** `docs/PRD_SITES_UI_CORRECTION_AND_ACCEPTANCE_2026-10-16.md` (GitHub main). Scope:
-- TabsList: no boxed/tab-button borders; line-style active underline.
-- Weekly Task cards: clickable Overall Total / Carry Over / New This Week filters with reset-on-reclick.
-- Current Week Status cards: clickable All / Work in Progress / Pending with Customer / KIV / Closed filters with reset-on-reclick.
-- Accordions: nonempty default expanded, empty default collapsed; independent accessible toggle.
-- Real-browser desktop/mobile screenshots and click/keyboard tests **required** before marking accepted.
-- Existing Sites React/D1 only. Do not deploy legacy Express/SQLite or PocketBase/PocketBay.
-- GitHub workflow: PRD + optional verified Sites React source sync + deployment/test/handoff update. Sites commit and GitHub commit are distinct.
-
-**Next action:** use Work/Sites tooling to inspect and fix the actual React app; verify in browser, preserve full production data and settings, deploy existing Site, then update this file with verified evidence. **No fix or new deployment is claimed by this documentation update.**
-
-## Current correction attempt — browser gate blocked
-
-A React/D1 correction candidate is prepared and locally tested (66 tests passed), but **not accepted or deployed**. See the latest dated entry below. Production remains Version 6. Real-browser capability is unavailable; no screenshot/click/keyboard acceptance is claimed.
-
-## Current status
-
-**Latest release: Version 6 — Accordion / line tabs / clickable status cards**, deployed **2026-10-16 14:47:27 MYT** (Sites verified). 65 local automated tests passed; production full-row data comparison passed. Browser interaction and mobile visual QA remain pending. Version 5 details below are historical.
-
-**Badge enhancement (PR #4): deployed to existing Sites as Version 5 on 2026-10-16 12:12:15 MYT (Sites verified).** Ported the badge UI to the existing React/D1 application. Production task/customer/sequence/revision rows are identical before and after deployment; URL and access policy preserved. GitHub main remains the legacy Express app; Sites source commit is recorded separately below.
-
-
-| Area | Status | Evidence / detail |
-| --- | --- | --- |
-| Closed This Week PRD | Completed | `docs/PRD_CLOSED_THIS_WEEK_VISIBILITY_2026-10-16.md` |
-| Implementation | Completed | `app/public/app.js` |
-| Regression tests | Passed | GitHub Actions Run #91, commit `4608faf` |
-| PR #3 | Merged | Squash merge commit `6b14576bbc0a7a886cf222f8e28bbdef2e1e00d0` |
-| Production Sites deployment | **Succeeded — Version 5** | Sites verified; source `1ea52b12e736ef80d636e20d5d1ea5c0d3017096` |
-| Post-deployment verification | **Data and assets passed; visual QA pending** | 32 tasks, 6 customers, sequence next=33 and revision unchanged; served JS/CSS hashes match build |
+| Item | Verified result |
+| --- | --- |
+| Production | Version 7; deployment succeeded |
+| Sites Source Commit | `e54f6d43a7533e4be5b3280f0acb365d5cdeb94d` |
+| Automated tests | 70 passed, including 4 real Chromium scenarios |
+| Visual/browser acceptance | Desktop 1440px + mobile 390px screenshots; native production click/keyboard checks passed |
+| Production data | 32 tasks, 6 customers, sequence next=33 and revision identical before/after |
+| URL/access | Existing URL, project ID, D1 DB and complete access policy preserved |
+| Source sync | React/D1 source in `sites/react-d1/`, PR #6 |
 
 **Production URL:** https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/
 
-**Evidence distinction:** Earlier Version 4 / 62-test release details below are historical user reports. Version 4 deployment metadata and Version 5 deployment, live database rows and served assets were independently verified in the 2026-10-16 release workflow. Local current-release validation totals 63 passing tests; browser visual verification remains outstanding.
+Earlier Version 6 and blocked-candidate entries below are historical and superseded by Version 7.
 
 ## Previous release: Version 4 — Closed This Week visibility
 
@@ -118,7 +97,7 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 
 ## Next actions
 
-- Version 6 deployed; browser interaction/mobile visual acceptance and a separately reviewed GitHub/Sites source reconciliation remain.
+- Version 7 accepted and deployed; React/D1 source and browser evidence synchronized separately from legacy Express.
 - For the next feature or bug fix: write/update PRD → create feature branch → implement → test (API + UI) → review PR → merge → deploy existing Site → verify data preservation → update this file.
 - If future checks reveal production discrepancies, open a new issue/PR and log it here.
 
@@ -126,6 +105,7 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 
 | Date (MYT) | Event | Status | Source |
 | --- | --- | --- | --- |
+| 2026-10-16 | Version 7 UI correction, 70 tests, desktop/mobile browser acceptance, production full-row equality | Accepted and deployed | Sites / GitHub CI / browser / production read-only verified |
 | 2026-10-16 | Closed This Week PRD, implementation, and regression tests added | Completed | GitHub verified |
 | 2026-10-16 | CI Run #91 passed including API and browser tests | Passed | GitHub verified |
 | 2026-10-16 | PR #3 squash-merged into `main` as `6b14576` | Merged | GitHub verified |
@@ -226,3 +206,23 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 - Status sources: **Sites metadata verified / local source and tests verified / GitHub source synchronized; browser acceptance blocked**.
 
 - GitHub candidate traceability: draft [PR #6](https://github.com/jaronhoh/Task-Tracker/pull/6), source snapshot commit `ff5eb1001636a95b9e111b7ecb6d9a1985243d2b`; source exists on the PR branch, not merged main or deployed Sites.
+
+### 2026-10-16 — Version 7: UI correction ACCEPTED and deployed
+- **Status: ACCEPTED / DEPLOYED / production browser verified.** This supersedes the earlier blocked candidate entry without erasing its history.
+- Sites version **7**, saved version `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979~appgver_b258d25c2ac08191b9798cf105c02d56`.
+- Deployment `appgdep_6ad1d64596908191aec76d6a6250e5ff`: **succeeded**, **2026-10-16 15:46:40 MYT** / `2026-10-16T07:46:40.503185+00:00`, environment revision **0**.
+- Actual pushed/deployed Sites **Source Commit: `e54f6d43a7533e4be5b3280f0acb365d5cdeb94d`**. GitHub PR/snapshot commits are distinct.
+- Existing URL retained: https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/
+- Root cause independently browser confirmed on Version 6: tab top/left/right borders were 1px gray, caused by unlayered universal border-color overriding layered border-transparent. Weekly cards had no buttons; empty New This Week was expanded; status re-click remained filtered (17 WIP rows).
+- Fix: explicit line-tab border geometry; clickable native Weekly/Status card buttons with aria-pressed, re-click-to-total and pre-filter counts; only selected groups render; populated-open/empty-closed accordions with independent native pointer/keyboard toggles and search/view context defaults.
+- Automated acceptance: **13 React + 53 API/D1/weekly + 4 Chromium scenarios = 70 passed**; TypeScript, React build and full local Sites/Vinext production build passed. Final CI [38869014957](https://github.com/jaronhoh/Task-Tracker/actions/runs/38869014957), tested GitHub head `097cfcc8d90ffb35fb67255bbab9ec13a61efbf9`; previous fully passing run 38868869142 also visually reviewed.
+- Chromium acceptance at **1440px and 390px** checks all 3 Weekly and 5 Status cards against exact task IDs, repeat reset, counts, zero-card/search states, accordion Enter/Space/click, tab keyboard navigation and one-line layout, row editing, sorting/pagination, save retry/customer/delete/restore in isolated D1, and exported XLSX readback. Six screenshots downloaded; desktop/mobile line tabs, selected cards and scroll layout visually inspected.
+- CI honesty: initial runs 38868591837 and 38868722290 had **3 pass/1 fail**, despite green jobs because tee swallowed the test exit code. They are NOT acceptance. Explicit bash/pipefail fixed the workflow. Keyboard tests now await activation and editor focus restoration. Final job logs independently confirm 4 pass/0 fail.
+- Browser access: native cloud browser successfully authenticated normally and inspected actual production before/after. Earlier inference that absent control-browser skill meant no usable browser was incorrect. Managed preview refused connections; local Chromium was missing, so candidate browser scenarios ran in GitHub Actions. No replacement preview infrastructure or production test fixtures were deployed.
+- Native production browser acceptance after deployment: Weekly counts **25/25/0**, all three filters and re-click resets passed; Status **25/17/1/3/4**, all five filters matched exact live task IDs and reset passed. Both Weekly + all four Status accordions passed Enter/Space. Search TSK-0002 yielded one row and counts 1/0/0/1/0. Opened/dismissed existing task editor without editing. Computed tabs now have **0px top/left/right**, transparent backgrounds and active blue bottom. Production desktop screenshot inspected.
+- Data preservation: read-only, paginated full-row DB comparison before/after found **32 tasks, 6 customers, app_sequence task_id next_value=33, and app_revision identical in every field**. No omitted/truncated rows/columns/values. No production CRUD, import, reset, schema migration, seed or ID allocation used in acceptance.
+- Configuration/access: same project ID, D1 `DB`, migrations, API/server and dependencies; entire access_policy unchanged (owner-only custom, revision 1). No environment or audience mutation.
+- Source sync: [PR #6](https://github.com/jaronhoh/Task-Tracker/pull/6), `sites/react-d1/`, current React/D1 source plus lockfile and tests. Only generated tsconfig.tsbuildinfo omitted. Independent source snapshot stays separate from historical root Express. GitHub docs/evidence are updated after deployment and therefore are not part of the immutable Sites Source Commit.
+- Evidence: `sites/evidence/2026-10-16/browser-evidence.zip` (six desktop/mobile PNGs + browser.log), `production-v7.jpg`, `production-browser.json`. Final artifact **12031594913**, SHA-256 **f17c39aa432843ccb4b9ab95c69b3a4452d5a40e3a7754d3e46d93558b133cb9**. Artifact: https://github.com/jaronhoh/Task-Tracker/actions/runs/38869014957/artifacts/12031594913
+- Export: all searched/card-filtered tasks in selected groups, independent of accordion collapse; All Data retains all filtered/sorted pages. Verified by XLSX readback; no silent export-scope change.
+- Status sources: **Sites verified / GitHub CI verified / Chromium browser verified / native production browser verified / full-row production read-only comparison verified**.

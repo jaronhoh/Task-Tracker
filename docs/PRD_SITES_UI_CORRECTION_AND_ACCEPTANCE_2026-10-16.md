@@ -1,7 +1,7 @@
 # PRD — Task Tracker Sites UI Correction & Release Acceptance
 
 **Date:** 2026-10-16  
-**Status:** Open — user-reported Version 6 UI defects; implementation and browser acceptance pending  
+**Status:** ACCEPTED — corrected and deployed as Sites Version 7; 70 tests, desktop/mobile and production browser acceptance passed  
 **Target:** Existing ChatGPT Sites React/D1 application only  
 **Reference:** Version 6 Sites deployment recorded at 2026-10-16 14:47:27 MYT. The user reports that the requested UI issues are **not resolved**. Do not treat deployment success or passing unit tests as acceptance.
 
@@ -81,3 +81,7 @@ This PRD supersedes any conflicting legacy Express UI PRD. The previous Express 
 - **User reported:** Version 6 did not resolve the visible UI problems.
 - **GitHub handoff record:** Version 6 deployment succeeded and 65 automated tests passed, but real-browser QA was **not verified**.
 - **Not yet proven:** the root cause of bordered tabs, nonfunctional cards, and accordion defaults; do not claim a fix until tested.
+
+## 7. Acceptance closure — 2026-10-16
+
+Sites Version 7 deployed at 15:46:40 MYT, Source Commit `e54f6d43a7533e4be5b3280f0acb365d5cdeb94d`. All required browser criteria passed in 1440px/390px Chromium, with screenshots and XLSX readback; native production filters, keyboard toggles, search and editor opening also verified. Full-row production data and complete access policy are unchanged. Final CI: https://github.com/jaronhoh/Task-Tracker/actions/runs/38869014957 . Evidence and deployment IDs are recorded in `PROJECT_STATUS.md` and `sites/evidence/2026-10-16/`. Earlier unresolved statements describe the Version 6 baseline.

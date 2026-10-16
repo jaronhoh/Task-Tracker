@@ -1,10 +1,13 @@
-# Existing Sites React/D1 source snapshot
+# Existing Sites React/D1 application
 
-This directory contains the existing Task Tracker React/Vinext/D1 source, separate from historical root Express code.
+The active production application source is mirrored under `react-d1/`, separately from historical root Express code.
 
-Baseline deployed Sites source: `28874794e28ddc0e2bfa6c698a7b33fbd37cca8b` (Version 6).
-Candidate local source commit: `ef390b5ef15637233d56a801a6246fafd8e275b0`, NOT pushed to Sites and NOT deployed. Browser acceptance is blocked; see `react-d1/docs/UI_CORRECTION_CANDIDATE_2026-10-16.md`.
+- Deployed Sites version: **7**, 2026-10-16 15:46:40 MYT.
+- Actual pushed Sites Source Commit: `e54f6d43a7533e4be5b3280f0acb365d5cdeb94d`.
+- Final browser CI GitHub commit: `097cfcc8d90ffb35fb67255bbab9ec13a61efbf9`, run 38869014957, **70 tests passed**.
+- Browser acceptance: 1440px/390px Chromium screenshots and pointer/keyboard tests plus native production browser verification.
+- Current source/config/tests and package lock are mirrored. Generated tsconfig.tsbuildinfo, credentials, runtime state, node_modules and production database rows are excluded. Post-deploy documentation/evidence updates are distinct from the immutable deployed Sites commit.
+- Evidence ZIP, production screenshot and native browser log: `evidence/2026-10-16/`.
+- Full release record: root `docs/PROJECT_STATUS.md`.
 
-161 tracked UTF-8 source/config/test files are mirrored. Generated `tsconfig.tsbuildinfo` and `package-lock.json` are excluded; this is a source snapshot, not a byte-identical repository backup or a deployable release archive. Production data, credentials, node_modules and runtime state are excluded. Nested historical assessment documents describe earlier migrations; the candidate report governs current acceptance status.
-
-The `.openai/hosting.json` preserves the existing project ID and D1 binding; never register a replacement Site or run production database migrations/seeding from this snapshot. Root GitHub source is not the Sites deployment source. Do not deploy until real-browser acceptance and production preservation checks pass.
+Preserve existing `.openai/hosting.json` project ID and D1 binding. Do not register a replacement Site, deploy historical root Express code, or seed/reset/migrate production data. The older candidate report is historical and superseded by the acceptance report.
