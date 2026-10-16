@@ -7,3 +7,17 @@
 .status-group-row{cursor:default!important}.status-group-row td{background:#eef3fb!important;color:#334155;font-size:12px;font-weight:750;padding:12px 10px!important;border-top:1px solid #dbe4f0}.status-group-row td span{display:inline-block}.status-group-row td strong{float:right;display:inline-flex;min-width:24px;justify-content:center;padding:2px 8px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:11px}.status-group-row:hover td{background:#eef3fb!important}
 
 #tasksTable thead th.sortable-header{cursor:pointer;user-select:none}#tasksTable thead th.sortable-header:hover{color:#2459d3!important}#tasksTable thead th.sortable-header[data-sort-direction="asc"]::after{content:" ↑";color:#2459d3}#tasksTable thead th.sortable-header[data-sort-direction="desc"]::after{content:" ↓";color:#2459d3}
+
+/* Group count badges — shadcn-inspired custom color pills (no framework dependency). */
+.status-group-row td .group-count-badge {
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-left:9px;min-width:24px;padding:2px 9px;border-radius:999px;
+  font-size:11px;font-weight:750;line-height:1.6;vertical-align:middle;
+  background:#e2e8f0;color:#334155;
+}
+.status-group-row td .group-count-work-in-progress {background:#dbeafe;color:#1d4ed8}
+.status-group-row td .group-count-pending-with-customer {background:#ffedd5;color:#9a3412}
+.status-group-row td .group-count-kiv {background:#f3e8ff;color:#7e22ce}
+.status-group-row td .group-count-closed {background:#dcfce7;color:#166534}
+.status-group-row td .group-count-carry-over {background:#ede9fe;color:#6d28d9}
+.status-group-row td .group-count-new-this-week {background:#dbeafe;color:#1d4ed8}
