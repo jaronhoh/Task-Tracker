@@ -9,6 +9,7 @@ const state = {
   tasks: [], customers: [], view: 'weekly', selectedId: null,
   displayedTasks: [], table: null, editQueue: Promise.resolve(), customerBeforeAdd: '',
   specialTimeFlow: false, ignoreStatusBlur: false,
+  statusFilter: 'All', collapsedGroups: new Set(),
   allSort: { field: 'taskId', direction: 'asc' }
 };
 
@@ -163,19 +164,27 @@ function renderSummary(tasks, groups) {
   } else {
     cards.push(['All Records', state.tasks.length], ['Displayed', tasks.length], ['Deleted', state.tasks.filter(t => t.status === 'Deleted').length]);
   }
-  summary.innerHTML = cards.map(([label, value]) =>
-    `<div class="summary-card"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`).join('');
+  summary.innerHTML = cards.map(([label, value]) => state.view === 'status'
+    ? `<button type="button" class="summary-card summary-filter ${state.statusFilter === (label === 'Overall Total' ? 'All' : label) ? 'is-selected' : ''}" data-status-filter="${escapeHtml(label === 'Overall Total' ? 'All' : label)}" aria-pressed="${state.statusFilter === (label === 'Overall Total' ? 'All' : label)}"><span>${escapeHtml(label === 'Overall Total' ? 'All' : label)}</span><strong>${value}</strong></button>`
+    : `<div class="summary-card"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`).join('');
 }
 
 function groupCountBadge(count, kind) {
   return `<span class="group-count-badge group-count-${escapeHtml(kind)}">${count}</span>`;
 }
 
+function accordionHeading(label, count, kind, extraClass = '') {
+  const collapsed = state.collapsedGroups.has(label);
+  return `<tr class="status-group-row accordion-group ${extraClass}"><td colspan="8"><button type="button" class="accordion-trigger" data-accordion-group="${escapeHtml(label)}" aria-expanded="${!collapsed}"><span class="accordion-chevron" aria-hidden="true">⌄</span><span>${escapeHtml(label)}</span>${groupCountBadge(count, kind)}</button></td></tr>`;
+}
+
 function renderTable() {
   const bounds = currentWeekBounds();
   const tasks = getDisplayedTasks(bounds);
   const groups = state.view === 'weekly' ? weeklyGroups(tasks, bounds) : null;
-  state.displayedTasks = tasks;
+  const filteredTasks = state.view === 'status' && state.statusFilter !== 'All'
+    ? tasks.filter(task => task.status === state.statusFilter) : tasks;
+  state.displayedTasks = filteredTasks;
   renderSummary(tasks, groups);
   if (state.table) {
     state.table.destroy();
@@ -183,28 +192,28 @@ function renderTable() {
   }
   if (state.view === 'weekly') {
     $('tasksTable').querySelector('tbody').innerHTML = groups.map(([label, items]) => {
-      const heading = `<tr class="status-group-row weekly-group-row"><td colspan="8"><span>${escapeHtml(label)}</span>${groupCountBadge(items.length, label === 'Carry Over' ? 'carry-over' : 'new-this-week')}</td></tr>`;
+      const heading = accordionHeading(label, items.length, label === 'Carry Over' ? 'carry-over' : 'new-this-week', 'weekly-group-row');
       const rows = items.map(task => `<tr data-task-id="${escapeHtml(task.taskId)}" class="${task.taskId === state.selectedId ? 'selected-row' : ''}">
         <td>${escapeHtml(task.taskId)}</td><td>${customerHtml(task)}</td><td>${escapeHtml(task.taskTitle)}</td>
         <td>${escapeHtml(task.taskDescription || '')}</td><td>${escapeHtml(task.note || '')}</td>
         <td>${escapeHtml(formatDateTime(task.created))}</td><td>${escapeHtml(formatDateTime(task.end))}</td>
         <td><span class="status-pill ${statusClass(task.status)}">${escapeHtml(task.status)}</span></td>
       </tr>`).join('');
-      return heading + (rows || '<tr class="weekly-empty-row"><td colspan="8">No results found</td></tr>');
+      return heading + (state.collapsedGroups.has(label) ? '' : (rows || '<tr class="weekly-empty-row"><td colspan="8">No results found</td></tr>'));
     }).join('');
   } else if (state.view === 'status') {
     const groups = ['Work in Progress', 'Pending with Customer', 'KIV', 'Closed'];
     const tbody = $('tasksTable').querySelector('tbody');
-    tbody.innerHTML = groups.map(status => {
+    tbody.innerHTML = groups.filter(status => state.statusFilter === 'All' || state.statusFilter === status).map(status => {
       const groupTasks = tasks.filter(task => task.status === status);
-      const heading = `<tr class="status-group-row"><td colspan="8"><span>${escapeHtml(status)}</span>${groupCountBadge(groupTasks.length, ({ "Work in Progress": "work-in-progress", "Pending with Customer": "pending-with-customer", "KIV": "kiv", "Closed": "closed" })[status])}</td></tr>`;
+      const heading = accordionHeading(status, groupTasks.length, ({ "Work in Progress": "work-in-progress", "Pending with Customer": "pending-with-customer", "KIV": "kiv", "Closed": "closed" })[status]);
       const rows = groupTasks.map(task => `<tr data-task-id="${escapeHtml(task.taskId)}" class="${task.taskId === state.selectedId ? 'selected-row' : ''}">
         <td>${escapeHtml(task.taskId)}</td><td>${customerHtml(task)}</td><td>${escapeHtml(task.taskTitle)}</td>
         <td>${escapeHtml(task.taskDescription || '')}</td><td>${escapeHtml(task.note || '')}</td>
         <td>${escapeHtml(formatDateTime(task.created))}</td><td>${escapeHtml(formatDateTime(task.end))}</td>
         <td><span class="status-pill ${statusClass(task.status)}">${escapeHtml(task.status)}</span></td>
       </tr>`).join('');
-      return heading + rows;
+      return heading + (state.collapsedGroups.has(status) ? '' : rows);
     }).join('');
     state.table = null;
   } else {
@@ -250,8 +259,8 @@ function renderTable() {
       header.setAttribute('aria-sort', 'none');
     }
   });
-  $('emptyState').hidden = tasks.length !== 0;
-  $('editTaskBtn').disabled = !state.selectedId || !tasks.some(t => t.taskId === state.selectedId);
+  $('emptyState').hidden = filteredTasks.length !== 0;
+  $('editTaskBtn').disabled = !state.selectedId || !filteredTasks.some(t => t.taskId === state.selectedId);
   $('editTimeBtn').hidden = state.view !== 'all';
   $('editTimeBtn').disabled = !state.selectedId || !tasks.some(t => t.taskId === state.selectedId);
 }
@@ -270,8 +279,10 @@ function selectedTask() {
 function setView(view) {
   state.view = view;
   state.selectedId = null;
+  state.statusFilter = 'All';
+  state.collapsedGroups.clear();
   $('globalSearch').value = '';
-  document.querySelectorAll('.view-tab').forEach(button => button.classList.toggle('active', button.dataset.view === view));
+  document.querySelectorAll('.view-tab').forEach(button => (button.classList.toggle('active', button.dataset.view === view), button.setAttribute('aria-selected', String(button.dataset.view === view))));
   renderTable();
 }
 
@@ -589,6 +600,22 @@ function exportExcel() {
 }
 
 function bindEvents() {
+  $('summaryRow').addEventListener('click', event => {
+    const card = event.target.closest('[data-status-filter]');
+    if (!card || state.view !== 'status') return;
+    const requested = card.dataset.statusFilter;
+    state.statusFilter = state.statusFilter === requested ? 'All' : requested;
+    state.selectedId = null;
+    renderTable();
+  });
+  $('tasksTable').querySelector('tbody').addEventListener('click', event => {
+    const trigger = event.target.closest('[data-accordion-group]');
+    if (!trigger) return;
+    const group = trigger.dataset.accordionGroup;
+    if (state.collapsedGroups.has(group)) state.collapsedGroups.delete(group);
+    else state.collapsedGroups.add(group);
+    renderTable();
+  });
   document.querySelectorAll('.view-tab').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
   $('newTaskBtn').addEventListener('click', openNewTask);
   $('manageCustomersBtn').addEventListener('click', openManageCustomers);
