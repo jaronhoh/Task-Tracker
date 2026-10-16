@@ -1,5 +1,10 @@
 name: Sites React acceptance
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'sites/**'
+      - '.github/workflows/sites-react-acceptance.yml'
   pull_request:
     paths:
       - 'sites/**'
@@ -30,7 +35,7 @@ jobs:
       - run: TSX_TSCONFIG_PATH=frontend/tsconfig.json node --import tsx --test frontend/test/*.test.tsx
       - run: npm test
       - run: mkdir -p "$TASK_TRACKER_EVIDENCE_DIR"
-      - run: node --test test/react-ui.test.cjs 2>&1 | tee "$TASK_TRACKER_EVIDENCE_DIR/browser.log"
+      - run: set -o pipefail; node --test test/react-ui.test.cjs 2>&1 | tee "$TASK_TRACKER_EVIDENCE_DIR/browser.log"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
