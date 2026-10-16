@@ -1,3 +1,19 @@
+# Latest release — CR-009–CR-011, Sites Version 9 (2026-10-16)
+
+**Status: deployed and verified on the existing Task Tracker Site.** This release supersedes the earlier “implementation pending” follow-up entry below.
+
+- Existing production Site: [Task Tracker](https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/), project `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979`; deployed Version **9**. Deployment `appgdep_6ad24bdd4f708191a8baedeec79fd0f6` succeeded; version `appgver_244551bc2ebc8191a65efa983d408b5f`. Existing URL, D1 `DB` binding, owner-only custom access policy and access revision 1 retained.
+- Sites source commit: `9bb52d0d362cf3a195307947f798cc64d5cc60d7`. React/D1 source synchronized under GitHub `sites/react-d1/`; latest GitHub main commit at browser acceptance: `77f6a760b9000a17136cd69a7f0de35be5613da4`.
+- CR-009: shadcn/ui Alert-style transient notifications stack at bottom-right, announce through a live region and auto-dismiss independently after 5 seconds.
+- CR-010: Manage Customers can add a customer with a selectable available color; successful addition refreshes the customer list and task customer selector.
+- CR-011: customer name, color and Delete controls align on the same desktop row and fit mobile; D1 transactional task-reference delete guard remains enforced.
+- Automated validation: **56/56 API/D1 tests**, React TypeScript check and production build passed; Playwright Chromium UI suite passed, including CR-009–CR-011 flows and referenced/unused customer deletion on **1440px desktop and 390px mobile**. CI: [run 38929017993](https://github.com/jaronhoh/Task-Tracker/actions/runs/38929017993), head `77f6a760b9000a17136cd69a7f0de35be5613da4`, success. Browser evidence artifact: [sites-browser-evidence](https://github.com/jaronhoh/Task-Tracker/actions/runs/38929017993/artifacts/12058007558).
+- Production browser: opened the live Version 9 site, confirmed API Connected and inspected Manage Customers with Add Customer and inline Delete controls in the desktop layout.
+- Production data: pre/post read-only full-row comparison identical for tasks (32), customers (6), `app_revision` (148), and `app_sequence.task_id.next_value` (33). No production CRUD, sequence allocation or schema change was used for acceptance.
+- Status sources: **Sites deployment metadata verified / GitHub CI and browser evidence verified / production browser inspected / production D1 read-only equality verified**.
+
+## Previous handoff
+
 # Task Tracker — Project Status & Handoff
 
 > **Single source of truth for project progress and cross-conversation handoff.**
