@@ -127,14 +127,13 @@ test('Task form enhancements: Tracker Link, lifecycle row, swatches and guarded 
     await page.getByText('trackerLink saved.',{exact:true}).waitFor();
     await page.locator('#taskDialog [data-close="taskDialog"]').click();
     const updated=await api(`/api/tasks/${created.taskId}`,undefined,'GET');assert.equal(updated.trackerLink,'https://tracker.example/item/2');
-    await page.locator('#manageCustomersBtn').click();
+    await page.locator('#manageCustomersBtn').click();await page.waitForFunction(()=>document.querySelectorAll('.customer-management-row').length>=2);
     const colorButton=page.getByRole('button',{name:'Customer Color for Linked Customer'});await colorButton.click();
     const options=page.getByRole('listbox',{name:'Colors for Linked Customer'});
     assert.ok(await options.getByRole('option',{name:'#F87171'}).count());
     const swatch=options.getByRole('option',{name:'#F87171'}).locator('span',{ });
     assert.equal(await swatch.evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(248, 113, 113)');
     await colorButton.press('Escape');
-    console.log('Manage Customers debug', await page.locator('.customer-management-row').evaluateAll(rows=>rows.map(row=>({inputs:[...row.querySelectorAll('input')].map(i=>i.value),buttons:[...row.querySelectorAll('button')].map(b=>({label:b.getAttribute('aria-label'),text:b.innerText}))}))));
     await page.getByRole('button',{name:'Delete Linked Customer'}).click();
     await page.locator('#manageCustomersError').filter({hasText:'referenced by 1 Task'}).waitFor();
     await page.getByRole('button',{name:'Delete Unused Customer'}).click();
@@ -149,7 +148,7 @@ test('CR-009–011: timed Alerts, Manage Customers Add, inline Delete and mobile
     await api('/api/customers',{name:`CR${width} Unused`});
     const ctx=await browser.newContext({viewport:{width,height:900}}),page=await ctx.newPage();
     await page.clock.install();page.setDefaultTimeout(8000);page.on('dialog',d=>d.accept());
-    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();await page.locator('#manageCustomersBtn').click();
+    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();await page.locator('#manageCustomersBtn').click();await page.waitForFunction(()=>document.querySelectorAll('.customer-management-row').length>=2);
     await page.getByRole('button',{name:'Add Customer',exact:true}).first().click();
     await page.locator('#manageNewCustomerName').fill(`CR${width} Added`);
     await page.getByRole('button',{name:'Customer Color',exact:true}).click();
