@@ -1,0 +1,64 @@
+@import "tailwindcss";
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: #f5f5f5;
+  --color-secondary-foreground: #171717;
+  --color-muted: #f5f5f5;
+  --color-muted-foreground: #737373;
+  --color-accent: #f5f5f5;
+  --color-accent-foreground: #171717;
+  --color-border: #e5e5e5;
+  --color-input: #e5e5e5;
+  --color-ring: #a3a3a3;
+  --color-destructive: #dc2626;
+  --color-card: white;
+  --color-card-foreground: #171717;
+}
+:root { --background: #fff; --foreground: #171717; --primary: #171717; --primary-foreground: #fff; font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: var(--foreground); background: #fafafa; }
+* { border-color: #e5e5e5; }
+body { margin: 0; min-width: 320px; }
+button, select { cursor: pointer; }
+select { border: 1px solid #e5e5e5; border-radius: 6px; padding: 8px 12px; background: white; min-width: 0; width: 100%; font-size: 14px; }
+label { display: grid; gap: 8px; font-size: 14px; font-weight: 500; }
+:focus-visible { outline: 2px solid #737373; outline-offset: 2px; }
+.selected-row { background: #f0f0f0 !important; box-shadow: inset 3px 0 #171717; }
+.status-pill { font-size: 11px; }
+.status-pill.wip { color: #15803d; background: #f0fdf4; }
+.status-pill.pending { color: #c2410c; background: #fff7ed; }
+.status-pill.kiv { color: #1d4ed8; background: #eff6ff; }
+.status-pill.closed { color: #b91c1c; background: #fef2f2; }
+.status-pill.deleted { color: #525252; background: #f5f5f5; }
+.color-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+/* Grid/flex children must be allowed to shrink around their own scroll containers. */
+main > * { min-width: 0; }
+
+/* Group heading counts mirror GitHub PR #4; row status pills are unchanged. */
+.group-count-badge { margin-left:9px; min-width:24px; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:750; line-height:1.6; vertical-align:middle; letter-spacing:normal; background:#e2e8f0; color:#334155; border-color:transparent; }
+.group-count-work-in-progress {background:#dbeafe;color:#1d4ed8}
+.group-count-pending-with-customer {background:#ffedd5;color:#9a3412}
+.group-count-kiv {background:#f3e8ff;color:#7e22ce}
+.group-count-closed {background:#dcfce7;color:#166534}
+.group-count-carry-over {background:#ede9fe;color:#6d28d9}
+.group-count-new-this-week {background:#dbeafe;color:#1d4ed8}
+
+/* Line tabs and accessible task group/status controls. */
+.line-tabs { border-bottom: 1px solid var(--border); border-radius: 0; padding: 0; height: auto; }
+.line-tabs .view-tab { padding: .85rem 1rem; border-radius: 0; }
+.line-tabs .view-tab::after { bottom: 0; background: #2563eb; }
+.line-tabs .view-tab[data-state=active] { color: #2563eb; }
+.group-toggle { display: flex; width: 100%; align-items: center; gap: .5rem; text-align: left; cursor: pointer; }
+.group-toggle:focus-visible, .status-filter-button:focus-visible { outline: 2px solid #2563eb; outline-offset: -2px; }
+.status-filter-button { width: 100%; height: 100%; text-align: left; padding: 1.25rem; cursor: pointer; border-radius: inherit; }
+.status-filter-button:hover { background: #eff6ff; }
+.status-filter-selected { border-color: #2563eb; background: #eff6ff; box-shadow: 0 0 0 1px #2563eb; }
+
+/* Explicit view-tab geometry avoids inherited trigger button chrome and clipping. */
+.line-tabs[data-slot="tabs-list"] { display:flex; flex-wrap:nowrap; height:auto; background:transparent; border-radius:0; padding:0; border-bottom:1px solid #e5e5e5; }
+.line-tabs .view-tab[data-slot="tabs-trigger"] { height:auto; flex:0 0 auto; border:0; border-bottom:2px solid transparent; border-radius:0; background:transparent; box-shadow:none; padding:.85rem 1rem; }
+.line-tabs .view-tab[data-state="active"] { color:#2563eb; background:transparent; border-bottom-color:#2563eb; box-shadow:none; }
+.line-tabs .view-tab::after { content:none; }
+.line-tabs .view-tab:focus-visible { outline:2px solid #2563eb; outline-offset:-4px; box-shadow:none; }
