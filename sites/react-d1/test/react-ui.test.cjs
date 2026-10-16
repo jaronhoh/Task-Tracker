@@ -142,6 +142,42 @@ test('Task form enhancements: Tracker Link, lifecycle row, swatches and guarded 
   }
 }));
 
+test('CR-009–011: timed Alerts, Manage Customers Add, inline Delete and mobile fit', async () => harness(async ({browser,url,api}) => {
+  for (const width of [1440,390]) {
+    const taskRecord=await api('/api/tasks',{customerName:`CR${width} Customer`,taskTitle:'Referenced customer'});
+    await api('/api/customers',{name:`CR${width} Unused`});
+    const ctx=await browser.newContext({viewport:{width,height:900}}),page=await ctx.newPage();
+    await page.clock.install();page.setDefaultTimeout(8000);page.on('dialog',d=>d.accept());
+    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();await page.locator('#manageCustomersBtn').click();
+    await page.getByRole('button',{name:'Add Customer',exact:true}).first().click();
+    await page.locator('#manageNewCustomerName').fill(`CR${width} Added`);
+    await page.getByRole('button',{name:'Customer Color',exact:true}).click();
+    const colorList=page.getByRole('listbox',{name:'Available customer colors'});
+    const option=colorList.getByRole('option').first();const chosen=await option.locator('code').innerText();await option.click();
+    await page.locator('.managed-customer-add').getByRole('button',{name:'Add Customer',exact:true}).click();
+    await page.getByText(`Customer CR${width} Added added.`,{exact:true}).waitFor();
+    assert.equal((await api('/api/customers',undefined,'GET')).find(c=>c.name===`CR${width} Added`).color,chosen);
+    const addedRow=page.locator('.customer-management-row').filter({has:page.locator(`input[value="CR${width} Added"]`)});
+    const bounds=await addedRow.evaluate(row=>{const input=row.querySelector('.customer-name-editor').getBoundingClientRect();const color=row.querySelector('button[aria-label^="Customer Color for"]').getBoundingClientRect();const del=row.querySelector('button[aria-label^="Delete "]').getBoundingClientRect();return {input:{x:input.x,y:input.y,width:input.width,height:input.height},color:{x:color.x,y:color.y,width:color.width,height:color.height},del:{x:del.x,y:del.y,width:del.width,height:del.height},row:{width:row.getBoundingClientRect().width}}});
+    if(width>=768){assert.ok(Math.abs(bounds.input.y-bounds.color.y)<2);assert.ok(Math.abs(bounds.input.y-bounds.del.y)<2,'Delete aligns with the customer controls on desktop');}
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Manage Customers must not overflow on mobile');
+    await page.clock.fastForward(2000);
+    await page.locator('.customer-name-editor').first().fill(`CR${width} Renamed`);await page.locator('.customer-name-editor').first().press('Tab');
+    await page.getByText('Customer saved; linked Tasks updated.',{exact:true}).waitFor();
+    assert.equal(await page.locator('#notification-region [data-slot="alert"]').count(),2,'rapid messages stack independently');
+    await page.clock.fastForward(3000);await page.locator('#notification-region [data-slot="alert"]').waitFor({state:'visible'});
+    assert.equal(await page.locator('#notification-region [data-slot="alert"]').count(),1,'first notification expires at five seconds');
+    await page.clock.fastForward(2000);await page.locator('#notification-region [data-slot="alert"]').waitFor({state:'hidden'});
+    await page.locator('#manageCustomersDialog [data-close="manageCustomersDialog"]').click();
+    await page.locator('#newTaskBtn').click();await page.locator('#taskDialog').waitFor();
+    await page.getByRole('button',{name:'Customer Name'}).click();
+    await page.getByRole('option',{name:new RegExp(`CR${width} Added`)}).waitFor();
+    if(process.env.TASK_TRACKER_EVIDENCE_DIR)await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`cr009-011-${width}.png`),fullPage:true});
+    await ctx.close();
+    assert.ok(taskRecord.taskId);
+  }
+}));
+
 // Release acceptance: run only in an environment with supported browser QA.
 test('Sites correction: all cards, repeated clicks, accordions, export and line tabs', async () => harness(async ({browser,url,temp}) => {
   const fixture=[task('carry','2026-10-09T10:00:00','Work in Progress'),task('new','2026-10-13T10:00:00','KIV'),task('closed','2026-10-09T10:00:00','Closed')];
