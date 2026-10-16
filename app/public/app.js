@@ -97,7 +97,9 @@ function getViewTasks(bounds = currentWeekBounds()) {
   const { start, end } = bounds;
   const weekly = state.tasks.filter(task => {
     const created = Date.parse(task.created);
-    return (created < start && ACTIVE.has(task.status)) ||
+    const closedThisWeek = task.status === 'Closed' && task.end &&
+      Date.parse(task.end) >= start && Date.parse(task.end) < end;
+    return (created < start && (ACTIVE.has(task.status) || closedThisWeek)) ||
       (created >= start && created < end && task.status !== 'Deleted');
   });
   if (state.view === 'weekly' || state.view === 'status') return weekly;
@@ -141,7 +143,9 @@ function escapeHtml(value) {
 
 function weeklyGroups(tasks, bounds = currentWeekBounds()) {
   return [
-    ['Carry Over', tasks.filter(t => Date.parse(t.created) < bounds.start && ACTIVE.has(t.status))],
+    ['Carry Over', tasks.filter(t => Date.parse(t.created) < bounds.start &&
+      (ACTIVE.has(t.status) || (t.status === 'Closed' && t.end &&
+        Date.parse(t.end) >= bounds.start && Date.parse(t.end) < bounds.end)))],
     ['New This Week', tasks.filter(t => Date.parse(t.created) >= bounds.start && Date.parse(t.created) < bounds.end && t.status !== 'Deleted')]
   ];
 }
