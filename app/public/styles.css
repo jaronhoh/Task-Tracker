@@ -21,3 +21,20 @@
 .status-group-row td .group-count-closed {background:#dcfce7;color:#166534}
 .status-group-row td .group-count-carry-over {background:#ede9fe;color:#6d28d9}
 .status-group-row td .group-count-new-this-week {background:#dbeafe;color:#1d4ed8}
+
+/* Underline TabsList: single row, horizontal scroll on narrow screens. */
+.view-tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;gap:0;white-space:nowrap}
+.view-tab{flex:0 0 auto;border-bottom:2px solid transparent;transition:color .15s,border-color .15s}
+.view-tab.active,.view-tab[aria-selected="true"]{color:#1d4ed8;border-bottom-color:#2563eb}
+.view-tab:focus-visible,.accordion-trigger:focus-visible,.summary-filter:focus-visible{outline:3px solid #93c5fd;outline-offset:-3px}
+/* Accessible group-by accordions. */
+.accordion-group td{padding:0!important}
+.accordion-trigger{width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;border:0;background:transparent;color:inherit;font:inherit;font-weight:750;text-align:left;cursor:pointer}
+.accordion-trigger:hover{background:#e0eafb}
+.accordion-chevron{display:inline-block;transition:transform .15s;font-size:18px}
+.accordion-trigger[aria-expanded="false"] .accordion-chevron{transform:rotate(-90deg)}
+.accordion-trigger .group-count-badge{margin-left:auto}
+/* Status cards are keyboard-accessible single-select filters. */
+.summary-filter{font:inherit;text-align:left;cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s}
+.summary-filter:hover{border-color:#93c5fd;background:#f8fbff}
+.summary-filter.is-selected{border-color:#2563eb;background:#eff6ff;box-shadow:0 0 0 1px #2563eb}
