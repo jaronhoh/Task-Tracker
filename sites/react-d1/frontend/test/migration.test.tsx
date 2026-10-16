@@ -1,3 +1,4 @@
+import React from 'react'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -8,11 +9,11 @@ import { weekBounds, viewTasks, groupsFor, exportRows, epoch, toInput, type Task
 const bounds=weekBounds(new Date('2026-10-15T12:00:00Z'))
 const fixture:Task[]=[{taskId:'TSK-0001',customerName:'Customer A',taskTitle:'Earlier',taskDescription:'Description',note:'Note',created:'2026-10-09T10:00:00+08:00',end:null,status:'Work in Progress'},{taskId:'TSK-0002',customerName:'Customer B',taskTitle:'New',taskDescription:'Description',note:'Note',created:'2026-10-13T10:00:00+08:00',end:null,status:'KIV'}]
 function markup(tasks:Task[],view:'weekly'|'status'='weekly',selected:string|null=null){return renderToStaticMarkup(<TaskTable tasks={tasks} groups={groupsFor(tasks,view,bounds)} view={view} customers={[]} selected={selected} onSelect={()=>{}} onEdit={()=>{}} onOrdered={()=>{}}/>)}
-test('migrated PRD sample renders two independent lists, eight fields, matching group totals',()=>{
+test('migrated PRD sample renders two independent lists, eight data fields plus tracker link, matching group totals',()=>{
   const tasks=viewTasks(fixture,'weekly','',bounds),html=markup(tasks)
   assert.match(html,/Carry Over: 1 tasks[\s\S]*TSK-0001[\s\S]*New This Week: 1 tasks[\s\S]*TSK-0002/)
   assert.equal((html.match(/data-task-id=/g)||[]).length,2)
-  assert.equal((html.match(/<td /g)||[]).length,18)
+  assert.equal((html.match(/<td /g)||[]).length,20)
   assert.equal(groupsFor(tasks,'weekly',bounds).reduce((n,[,t])=>n+t.length,0),tasks.length)
 })
 test('Malaysia Monday boundaries, historical terminal and future exclusions in React model',()=>{
