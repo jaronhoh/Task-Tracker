@@ -88,7 +88,9 @@ test('tasks closed this week remain in weekly groups and Closed status', () => {
   assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0003/);
   assert.match(elements.summaryRow.innerHTML, /Overall Total<\/span><strong>2/);
   run("state.view = 'status'; renderTable()");
-  assert.match(elements.tbody.innerHTML, /Closed[\\s\\S]*TSK-0001[\\s\\S]*TSK-0002/);
+  assert.ok(elements.tbody.innerHTML.includes('<span>Closed</span><strong>2</strong>'));
+  assert.ok(elements.tbody.innerHTML.includes('data-task-id="TSK-0001"'));
+  assert.ok(elements.tbody.innerHTML.includes('data-task-id="TSK-0002"'));
   assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0003/);
   assert.match(elements.summaryRow.innerHTML, /Closed<\/span><strong>2/);
 });
