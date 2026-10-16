@@ -108,6 +108,40 @@ test('React UI: ordered blur saves, retry, Customer rename/color, logical delete
   await ctx.close();
 }));
 
+test('Task form enhancements: Tracker Link, lifecycle row, swatches and guarded Customer delete', async () => harness(async ({browser,url,api}) => {
+  const created=await api('/api/tasks',{customerName:'Linked Customer',taskTitle:'Linked task',trackerLink:'https://tracker.example/item/1'});
+  await api('/api/customers',{name:'Unused Customer'});
+  for(const width of [1440,390]) {
+    const ctx=await browser.newContext({viewport:{width,height:900}}),page=await ctx.newPage();page.setDefaultTimeout(8000);page.on('dialog',d=>d.accept());
+    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+    await page.locator('[data-view="all"]').click();
+    const link=page.getByRole('link',{name:`Open Tracker Link for ${created.taskId}`});
+    assert.equal(await link.getAttribute('href'),'https://tracker.example/item/1');assert.equal(await link.getAttribute('target'),'_blank');assert.equal(await link.getAttribute('rel'),'noopener noreferrer');
+    await page.locator(`[data-task-id="${created.taskId}"]`).dblclick();await page.locator('#taskDialog').waitFor();
+    assert.equal(await page.locator('#trackerLink').inputValue(),'https://tracker.example/item/1');
+    const row=page.locator('[data-testid="task-lifecycle-row"]');
+    if(width>=640){const tops=await row.locator('label').evaluateAll(ns=>ns.map(n=>n.getBoundingClientRect().top));assert.ok(tops.every(y=>y===tops[0]),'Status / Created / End share one desktop row');}
+    await page.locator('#trackerLink').fill('javascript:alert(1)');await page.locator('#trackerLink').press('Tab');
+    assert.match(await page.locator('#taskDialogError').innerText(),/HTTP or HTTPS/);
+    await page.locator('#trackerLink').fill('https://tracker.example/item/2');await page.locator('#trackerLink').press('Tab');
+    await page.getByText('trackerLink saved.',{exact:true}).waitFor();
+    await page.locator('#taskDialog [data-close="taskDialog"]').click();
+    const updated=await api(`/api/tasks/${created.taskId}`,undefined,'GET');assert.equal(updated.trackerLink,'https://tracker.example/item/2');
+    await page.locator('#manageCustomersBtn').click();
+    const colorButton=page.getByRole('button',{name:'Customer Color for Linked Customer'});await colorButton.click();
+    const options=page.getByRole('listbox',{name:'Colors for Linked Customer'});
+    assert.ok(await options.getByRole('option',{name:'#F87171'}).count());
+    const swatch=options.getByRole('option',{name:'#F87171'}).locator('span',{ });
+    assert.equal(await swatch.evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(248, 113, 113)');
+    await colorButton.press('Escape');
+    await page.getByRole('button',{name:'Delete Linked Customer'}).click();
+    await page.locator('#manageCustomersError').filter({hasText:'referenced by 1 Task'}).waitFor();
+    await page.getByRole('button',{name:'Delete Unused Customer'}).click();
+    await page.waitForFunction(()=>!document.querySelector('.customer-management-row input')?.value.includes('Unused Customer'));
+    await ctx.close();
+  }
+}));
+
 // Release acceptance: run only in an environment with supported browser QA.
 test('Sites correction: all cards, repeated clicks, accordions, export and line tabs', async () => harness(async ({browser,url,temp}) => {
   const fixture=[task('carry','2026-10-09T10:00:00','Work in Progress'),task('new','2026-10-13T10:00:00','KIV'),task('closed','2026-10-09T10:00:00','Closed')];
