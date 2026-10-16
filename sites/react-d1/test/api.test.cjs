@@ -157,6 +157,21 @@ test('Customer rename updates all Task references', async () => {
   assert.equal(tasks.body.find(t => t.taskId === second.taskId).customerName, 'QA Alpha Renamed');
 });
 
+test('Manage Customers can create a customer with an available predefined color atomically', async () => {
+  await resetDb();
+  await createTask();
+  const created = await request(app).post('/api/customers').send({ name: 'Chosen Color Customer', color: '#4ADE80' });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.color, '#4ADE80');
+  const duplicateColor = await request(app).post('/api/customers').send({ name: 'Duplicate Color Customer', color: '#F87171' });
+  assert.equal(duplicateColor.status, 400);
+  assert.equal(duplicateColor.body.error.code, 'CUSTOMER_COLOR_EXISTS');
+  const invalidColor = await request(app).post('/api/customers').send({ name: 'Invalid Color Customer', color: '#000000' });
+  assert.equal(invalidColor.status, 400);
+  const names = (await request(app).get('/api/customers')).body.map(c => c.name);
+  assert.deepEqual(names.sort(), ['Chosen Color Customer', 'QA Alpha']);
+});
+
 test('Customer colors are unique and only predefined colors can be assigned', async () => {
   await createTask();
   const response = await request(app).post('/api/customers').send({ name: 'QA Beta' });
