@@ -84,11 +84,11 @@ test('tasks closed this week remain in weekly groups and Closed status', () => {
   ]; renderTable()`);
   assert.match(elements.tbody.innerHTML, /Carry Over \\(1\\)[\\s\\S]*TSK-0001[\\s\\S]*New This Week \\(1\\)[\\s\\S]*TSK-0002/);
   assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0003/);
-  assert.match(elements.summaryRow.innerHTML, /Overall Total<\\/span><strong>2/);
+  assert.match(elements.summaryRow.innerHTML, /Overall Total<\/span><strong>2/);
   run("state.view = 'status'; renderTable()");
   assert.match(elements.tbody.innerHTML, /Closed[\\s\\S]*TSK-0001[\\s\\S]*TSK-0002/);
   assert.doesNotMatch(elements.tbody.innerHTML, /TSK-0003/);
-  assert.match(elements.summaryRow.innerHTML, /Closed<\\/span><strong>2/);
+  assert.match(elements.summaryRow.innerHTML, /Closed<\/span><strong>2/);
 });
 
 test('closed End uses Malaysia Monday inclusive/exclusive bounds', () => {
