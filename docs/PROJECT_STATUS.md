@@ -12,11 +12,13 @@
 
 - Existing Sites URL, production D1 database, task/customer records, sequences, revisions, and access settings must remain unchanged unless explicitly requested.
 - PR #5 (legacy UI accordion / line tabs / clickable cards) **closed without merge** because it targeted Express.
-- **Outstanding Sites UI request:** replace group-by headings with accessible accordions; switch view tabs to a line-style TabsList; make summary cards clickable filters for All / Work in Progress / Pending with Customer / KIV / Closed. Implement directly in the existing Sites React app, verify in browser, then record deployed version and data-integrity evidence.
+- **Sites UI request:** implemented and deployed as Version 6 (details below). Browser interaction and visual acceptance remain unverified.
 - Sites deployment/editing must use supported Sites/Work tooling; GitHub merges alone do not deploy the React/D1 Sites app.
 - Do not claim the above UI update is deployed until verified.
 
 ## Current status
+
+**Latest release: Version 6 — Accordion / line tabs / clickable status cards**, deployed **2026-10-16 14:47:27 MYT** (Sites verified). 65 local automated tests passed; production full-row data comparison passed. Browser interaction and mobile visual QA remain pending. Version 5 details below are historical.
 
 **Badge enhancement (PR #4): deployed to existing Sites as Version 5 on 2026-10-16 12:12:15 MYT (Sites verified).** Ported the badge UI to the existing React/D1 application. Production task/customer/sequence/revision rows are identical before and after deployment; URL and access policy preserved. GitHub main remains the legacy Express app; Sites source commit is recorded separately below.
 
@@ -97,7 +99,7 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 
 ## Next actions
 
-- Version 5 deployed; optional browser visual acceptance and a separately reviewed GitHub/Sites source reconciliation remain.
+- Version 6 deployed; browser interaction/mobile visual acceptance and a separately reviewed GitHub/Sites source reconciliation remain.
 - For the next feature or bug fix: write/update PRD → create feature branch → implement → test (API + UI) → review PR → merge → deploy existing Site → verify data preservation → update this file.
 - If future checks reveal production discrepancies, open a new issue/PR and log it here.
 
@@ -164,3 +166,22 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 - Served CSS SHA-256: `bf583736039621e3f7a72ee3c4bdab5d598e0d90d38f491e8b9a71c074db7423`.
 - Status sources: **Sites verified / production read-only verified / locally tested**. GitHub PR #4 CI remains separately GitHub verified.
 - Remaining follow-up: browser visual acceptance; separately reconcile the GitHub legacy main and Sites React source to avoid future incompatible deployments.
+
+
+### 2026-10-16 — Version 6: Accordion, line tabs and clickable status cards
+- Baseline: existing Sites Version 5, source `1ea52b12e736ef80d636e20d5d1ea5c0d3017096`; GitHub PROJECT_STATUS.md read before implementation.
+- Architecture: edited only the existing React/D1 Site; no new Site/database, PocketBase/PocketBay, or Express deployment. Existing project `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979` and D1 binding `DB` retained.
+- UI: Weekly Task two groups and Current Week Status four groups now have keyboard-operable accordion buttons, default expanded, preserving colored count badges. Three tabs use line style with blue selected underline and horizontal overflow. Current Week Status offers All / Work in Progress / Pending with Customer / KIV / Closed buttons with selected styling; filtering is immediate and counts use the searched weekly scope before status filtering. All restores that scope.
+- Scope: five files under frontend only. No API, business eligibility rules, database schema, migration history, dependency, environment or hosting changes.
+- Local validation: **12 React rendering/model tests + 53 API/D1/weekly regression tests = 65 passed**; TypeScript check and production build passed. Added coverage for default-expanded accordion headers, each status filter, All reset, empty search and independent counts.
+- Actual Sites source commit: `28874794e28ddc0e2bfa6c698a7b33fbd37cca8b` (existing Sites source repository; distinct from legacy GitHub main).
+- Sites saved version: **6**, `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979~appgver_126ea02cfc1081919d65e1a9a46fe7dd`.
+- Deployment: `appgdep_6ad1c864229c8191888d6d155bf039d8`, **succeeded**, **2026-10-16 14:47:27 MYT** / `2026-10-16T06:47:27.334110+00:00`; environment revision **0**.
+- URL retained: https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/
+- Production data verification: read-only paginated full-row comparison before/after deployment found **32 tasks, 6 customers, app_sequence (task_id next_value=33), and app_revision identical in every field**. All pages were read without reported truncation. No production writes or sequence allocations were used for testing.
+- Access verification: complete access_policy unchanged, including revision 1 and owner-only custom audience. No access mutations performed.
+- Production availability: root and /api/health HTTP 200; root references new JS asset `index-CTQHzS3o.js`.
+- **Not verified:** browser click/keyboard interaction, live accordion collapse/expand, selected-card appearance, tab underline rendering, and mobile horizontal scrolling. The Sites skill requires the control-browser capability for managed-environment browser QA; it is unavailable here, so no preview server or browser acceptance suite was launched. Rendering/model tests and delivered source do not substitute for full browser acceptance.
+- Status sources: **Sites verified / production read-only verified / locally tested**. GitHub stores this delivery record; legacy main remains distinct from the Sites application.
+
+- Production asset verification: served JS `index-CTQHzS3o.js` and CSS `index-B6L4GzT7.css` both HTTP 200; SHA-256 equals local production build for both files.
