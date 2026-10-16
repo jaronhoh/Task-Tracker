@@ -16,6 +16,21 @@
 - Sites deployment/editing must use supported Sites/Work tooling; GitHub merges alone do not deploy the React/D1 Sites app.
 - Do not claim the above UI update is deployed until verified.
 
+## Active priority — Version 6 UI defects NOT accepted (user report, 2026-10-16)
+
+**Status: OPEN / needs Sites React correction and real-browser acceptance.** The user reports Version 6 did **not** resolve the visible UI problems. A successful Sites deployment and 65 automated tests are not evidence that the actual UI passed visual or interaction acceptance. This overrides any earlier wording suggesting the UI request is fully complete.
+
+**Canonical PRD:** `docs/PRD_SITES_UI_CORRECTION_AND_ACCEPTANCE_2026-10-16.md` (GitHub main). Scope:
+- TabsList: no boxed/tab-button borders; line-style active underline.
+- Weekly Task cards: clickable Overall Total / Carry Over / New This Week filters with reset-on-reclick.
+- Current Week Status cards: clickable All / Work in Progress / Pending with Customer / KIV / Closed filters with reset-on-reclick.
+- Accordions: nonempty default expanded, empty default collapsed; independent accessible toggle.
+- Real-browser desktop/mobile screenshots and click/keyboard tests **required** before marking accepted.
+- Existing Sites React/D1 only. Do not deploy legacy Express/SQLite or PocketBase/PocketBay.
+- GitHub workflow: PRD + optional verified Sites React source sync + deployment/test/handoff update. Sites commit and GitHub commit are distinct.
+
+**Next action:** use Work/Sites tooling to inspect and fix the actual React app; verify in browser, preserve full production data and settings, deploy existing Site, then update this file with verified evidence. **No fix or new deployment is claimed by this documentation update.**
+
 ## Current status
 
 **Latest release: Version 6 — Accordion / line tabs / clickable status cards**, deployed **2026-10-16 14:47:27 MYT** (Sites verified). 65 local automated tests passed; production full-row data comparison passed. Browser interaction and mobile visual QA remain pending. Version 5 details below are historical.
@@ -185,3 +200,8 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 - Status sources: **Sites verified / production read-only verified / locally tested**. GitHub stores this delivery record; legacy main remains distinct from the Sites application.
 
 - Production asset verification: served JS `index-CTQHzS3o.js` and CSS `index-B6L4GzT7.css` both HTTP 200; SHA-256 equals local production build for both files.
+
+### 2026-10-16 — UI defect report / PRD revision (GitHub verified)
+- User explicitly reports Version 6 UI issues remain unresolved; prior browser QA was never completed.
+- New requirements and acceptance gate: `docs/PRD_SITES_UI_CORRECTION_AND_ACCEPTANCE_2026-10-16.md`.
+- Current status: **Open, not accepted**; Sites UI correction and real-browser evidence pending. No Sites deployment or production mutation performed in this documentation-only update.
