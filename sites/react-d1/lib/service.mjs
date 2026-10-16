@@ -3,11 +3,15 @@ const {HttpError, normalizeCustomerName,cleanRequiredString,cleanOptionalString,
 const has=(o,k)=>Object.hasOwn(o,k);
 function task(s,id) { const t=s.tasks.find(t=>t.task_id===id); if(!t) throw new HttpError(404,`Task ${id} was not found.`,'TASK_NOT_FOUND'); return t; }
 function customer(s,name) { return s.customers.find(c=>c.normalized_name===normalizeCustomerName(name)); }
-function addCustomer(s,name) {
+function addCustomer(s,name,requestedColor) {
   const cleaned=cleanRequiredString(name,'Customer Name',100), normalized=normalizeCustomerName(cleaned);
   if(customer(s,cleaned)) throw new HttpError(400,'Customer Name already exists.','CUSTOMER_EXISTS');
-  const color=CUSTOMER_COLORS.find(color=>!s.customers.some(c=>c.color.toUpperCase()===color));
+  const color=requestedColor===undefined
+    ? CUSTOMER_COLORS.find(color=>!s.customers.some(c=>c.color.toUpperCase()===color))
+    : String(requestedColor).toUpperCase();
+  if(requestedColor!==undefined&&!CUSTOMER_COLORS.includes(color)) throw new HttpError(400,'Color must be one of the 16 predefined colors.');
   if(!color) throw new HttpError(400,'All 16 Customer colors are in use.','CUSTOMER_COLORS_EXHAUSTED');
+  if(s.customers.some(c=>c.color.toUpperCase()===color)) throw new HttpError(400,'Color is already assigned to another Customer.','CUSTOMER_COLOR_EXISTS');
   const c={name:cleaned,normalized_name:normalized,color}; s.customers.push(c); return c;
 }
 function cleanTrackerLink(value) {
@@ -22,7 +26,7 @@ export async function operate(repo,method,path,body={}) {
   if(path==='/api/health' && method==='GET') return {status:'ok',timeZone:'Malaysia Time (UTC+08:00)'};
   if(path==='/api/tasks' && method==='GET') return (await repo.snapshot()).tasks.map(rowToTask);
   if(path==='/api/customers' && method==='GET') return (await repo.snapshot()).customers.map(({name,color})=>({name,color}));
-  if(path==='/api/customers' && method==='POST') return repo.transact(s=>{const c=addCustomer(s,body.name);return {name:c.name,normalizedName:c.normalized_name,color:c.color};});
+  if(path==='/api/customers' && method==='POST') return repo.transact(s=>{const c=addCustomer(s,body.name,has(body,'color')?body.color:undefined);return {name:c.name,normalizedName:c.normalized_name,color:c.color};});
   const cd=path.match(/^\/api\/customers\/([^/]+)$/);
   if(cd && method==='DELETE') return repo.transact(s=>{
     const c=customer(s,decodeURIComponent(cd[1]));
