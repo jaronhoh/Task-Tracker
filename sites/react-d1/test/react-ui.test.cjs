@@ -128,14 +128,13 @@ test('Task form enhancements: Tracker Link, lifecycle row, swatches and guarded 
     await page.locator('#taskDialog [data-close="taskDialog"]').click();
     const updated=await api(`/api/tasks/${created.taskId}`,undefined,'GET');assert.equal(updated.trackerLink,'https://tracker.example/item/2');
     await page.locator('#manageCustomersBtn').click();await page.waitForFunction(()=>document.querySelectorAll('.customer-management-row').length>=2);
-    console.log('guard customer rows',await page.locator('.customer-management-row').evaluateAll(rows=>rows.map(row=>({name:row.querySelector('.customer-name-editor')?.value,buttons:[...row.querySelectorAll('button')].map(b=>b.getAttribute('aria-label'))}))));
     const colorButton=page.getByRole('button',{name:'Customer Color for Linked Customer'});await colorButton.click();
     const options=page.getByRole('listbox',{name:'Colors for Linked Customer'});
     assert.ok(await options.getByRole('option',{name:'#F87171'}).count());
     const swatch=options.getByRole('option',{name:'#F87171'}).locator('span',{ });
     assert.equal(await swatch.evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(248, 113, 113)');
     await colorButton.press('Escape');
-    await page.getByRole('button',{name:'Delete Linked Customer'}).click();
+    await page.locator('[aria-label="Delete Linked Customer"]').click();
     await page.locator('#manageCustomersError').filter({hasText:'referenced by 1 Task'}).waitFor();
     await page.getByRole('button',{name:'Delete Unused Customer'}).click();
     await page.waitForFunction(()=>!document.querySelector('.customer-management-row input')?.value.includes('Unused Customer'));
@@ -163,7 +162,7 @@ test('CR-009–011: timed Alerts, Manage Customers Add, inline Delete and mobile
     if(width>=768){assert.ok(Math.abs(bounds.input.y-bounds.color.y)<8,JSON.stringify(bounds));assert.ok(Math.abs(bounds.input.y-bounds.del.y)<8,'Delete aligns with the customer controls on desktop');}
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Manage Customers must not overflow on mobile');
     await page.clock.fastForward(2000);
-    await page.locator('.customer-name-editor').first().fill(`CR${width} Renamed`);await page.locator('.customer-name-editor').first().press('Tab');
+    const seedCustomer=page.locator('.customer-management-row').filter({has:page.locator(`input[value="CR${width} Customer"]`)}).locator('.customer-name-editor');await seedCustomer.fill(`CR${width} Renamed`);await seedCustomer.press('Tab');
     await page.getByText('Customer saved; linked Tasks updated.',{exact:true}).waitFor();
     assert.equal(await page.locator('#notification-region [data-slot="alert"]').count(),2,'rapid messages stack independently');
     await page.clock.fastForward(3000);await page.locator('#notification-region [data-slot="alert"]').waitFor({state:'visible'});
