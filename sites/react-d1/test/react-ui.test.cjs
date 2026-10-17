@@ -43,7 +43,7 @@ test('React UI: weekly totals, boundaries, search, timezone independence, mobile
     assert.deepEqual(await page.locator('.weekly-group-row .group-count-badge').allTextContents(),['2','1']);
     assert.deepEqual(await page.locator('.weekly-group-row .group-count-badge').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-label'))),['Carry Over: 2 tasks','New This Week: 1 tasks']);
     assert.equal(await page.locator('[data-task-id]').count(),3);
-    if(process.env.TASK_TRACKER_SCREENSHOT && timezoneId==='Asia/Kuala_Lumpur')await page.screenshot({path:process.env.TASK_TRACKER_SCREENSHOT,fullPage:true});
+    if(process.env.TASK_TRACKER_SCREENSHOT && timezoneId==='Asia/Kuala_Lumpur')await page.screenshot({path:process.env.TASK_TRACKER_SCREENSHOT,fullPage:true,animations:'disabled'});
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'mobile page should not overflow');
     await page.locator('[data-task-id="TSK-0001"]').focus();assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('data-task-id')),'TSK-0001');await page.locator('[data-task-id="TSK-0001"]').press('Enter');await page.locator('#taskDialog').waitFor();
     assert.equal(await page.locator('#taskCreated').inputValue(),'09/10/2026, 10:00');
@@ -155,7 +155,7 @@ test('CR-009–011: timed Alerts, Manage Customers Add, inline Delete and mobile
     await page.locator('#newTaskBtn').click();await page.locator('#taskDialog').waitFor();
     await page.getByRole('button',{name:'Customer Name'}).click();
     await page.getByRole('option',{name:new RegExp(`CR${width} Added`)}).waitFor();
-    if(process.env.TASK_TRACKER_EVIDENCE_DIR)await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`cr009-011-${width}.png`),fullPage:true});
+    if(process.env.TASK_TRACKER_EVIDENCE_DIR)await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`cr009-011-${width}.png`),fullPage:true,animations:'disabled'});
     await ctx.close();
     assert.ok(taskRecord.taskId);
   }
@@ -177,7 +177,7 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
       assert.equal(await card(label).getAttribute('aria-pressed'),'true');
       assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','2','1']);
       console.log(JSON.stringify({width,view:'weekly',card:label,ids:await ids()}));
-      if(process.env.TASK_TRACKER_EVIDENCE_DIR&&label==='New This Week')await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`weekly-${width}.png`),fullPage:true});
+      if(process.env.TASK_TRACKER_EVIDENCE_DIR&&label==='New This Week')await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`weekly-${width}.png`),fullPage:true,animations:'disabled'});
       if(label!=='Overall Total'){await card(label).click();assert.deepEqual(await ids(),['carry','closed','new']);}
     }
     for(const toggle of await page.locator('.group-toggle').all()){
@@ -196,7 +196,7 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
       assert.equal(await card(label).getAttribute('aria-pressed'),'true');
       assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','1','0','1','1']);
       console.log(JSON.stringify({width,view:'status',card:label,ids:await ids()}));
-      if(process.env.TASK_TRACKER_EVIDENCE_DIR&&label==='KIV')await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`status-${width}.png`),fullPage:true});
+      if(process.env.TASK_TRACKER_EVIDENCE_DIR&&label==='KIV')await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`status-${width}.png`),fullPage:true,animations:'disabled'});
       if(label!=='All'){await card(label).click();assert.deepEqual(await ids(),['carry','closed','new']);}
     }
     for(const toggle of await page.locator('.group-toggle').all()){
@@ -220,7 +220,93 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
     await page.locator('[data-view="status"][aria-selected="true"]').waitFor();
     assert.equal(await page.locator('[data-view="status"]').getAttribute('aria-selected'),'true');
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-    if(process.env.TASK_TRACKER_EVIDENCE_DIR)await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`correction-${width}.png`),fullPage:true});
+    if(process.env.TASK_TRACKER_EVIDENCE_DIR)await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`correction-${width}.png`),fullPage:true,animations:'disabled'});
     await ctx.close();
   }
+}));
+
+test('CR-012: real Chromium theme acceptance, persistence, OS preference, surfaces and preserved state at 1440/390px', async () => harness(async ({browser,url,api}) => {
+  await api('/api/customers',{name:'Customer A',color:'#F87171'});
+  await api('/api/tasks',{customerName:'Customer A',taskTitle:'Theme acceptance task',taskDescription:'A stable task',note:'Preserve colors'});
+  const evidence=process.env.TASK_TRACKER_EVIDENCE_DIR;
+  if(evidence)fs.mkdirSync(evidence,{recursive:true});
+  for(const width of [1440,390]) {
+    const ctx=await browser.newContext({viewport:{width,height:1000},colorScheme:'dark'}), page=await ctx.newPage();
+    page.setDefaultTimeout(8000);
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+    const theme=()=>page.locator('html').getAttribute('data-theme');
+    const toggle=page.locator('#themeToggle');
+    assert.equal(await theme(),'dark');assert.equal(await toggle.getAttribute('aria-label'),'Switch to light mode');
+    assert.equal(await toggle.locator('svg.lucide-sun').count(),1);
+    await page.emulateMedia({colorScheme:'light'});await page.waitForFunction(()=>document.documentElement.dataset.theme==='light');
+    assert.equal(await toggle.locator('svg.lucide-moon').count(),1);
+    await page.locator('#globalSearch').fill('retain search');
+    await toggle.focus();await toggle.press('Enter');assert.equal(await theme(),'dark');
+    assert.equal(await page.locator('#globalSearch').inputValue(),'retain search');
+    assert.equal(await page.evaluate(()=>localStorage.getItem('task-tracker-theme')),'dark');
+    await page.reload();await page.locator('#healthBadge.ok').waitFor();assert.equal(await theme(),'dark');
+    await page.emulateMedia({colorScheme:'light'});assert.equal(await theme(),'dark');
+    await toggle.press('Space');assert.equal(await theme(),'light');
+    await page.reload();await page.locator('#healthBadge.ok').waitFor();assert.equal(await theme(),'light');
+    await page.emulateMedia({colorScheme:'dark'});assert.equal(await theme(),'light');
+    const box=await toggle.boundingBox();assert.ok(box.x+box.width<=width&&box.y<100,'toggle visible at top right');
+    const peer=await ctx.newPage();await peer.goto(url);await peer.locator('#healthBadge.ok').waitFor();
+    for(const mode of ['light','dark']) {
+      if(await theme()!==mode)await toggle.click();
+      assert.equal(await theme(),mode);
+      const bg=await page.locator('header').evaluate(n=>getComputedStyle(n).backgroundColor);
+      assert.equal(bg,mode==='dark'?'rgb(24, 24, 27)':'rgb(255, 255, 255)');
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no page overflow');
+      for(const view of ['weekly','status','all']) {
+        await page.locator(`[data-view="${view}"]`).click();
+        await page.waitForFunction(v=>document.querySelector(`[data-view="${v}"]`).getAttribute('data-state')==='active',view);
+        if(evidence)await page.screenshot({path:path.join(evidence,`theme-${mode}-${width}-${view}.png`),fullPage:true,animations:'disabled'});
+      }
+      await page.locator('#newTaskBtn').click();await page.locator('#taskTitle').fill('Unsaved theme draft');
+      const other=mode==='dark'?'light':'dark';
+      if(await peer.locator('html').getAttribute('data-theme')!==other)await peer.locator('#themeToggle').click();
+      await page.waitForFunction(expected=>document.documentElement.dataset.theme===expected,other);
+      assert.equal(await page.locator('#taskTitle').inputValue(),'Unsaved theme draft');
+      await peer.locator('#themeToggle').click();await page.waitForFunction(expected=>document.documentElement.dataset.theme===expected,mode);
+      await page.locator('button[aria-label="Customer Name"]').click();
+      await page.getByRole('listbox',{name:'Customers',exact:true}).waitFor();
+      assert.equal(await page.getByRole('listbox',{name:'Customers',exact:true}).evaluate(n=>getComputedStyle(n).backgroundColor),bg);
+      const swatches=await page.getByRole('listbox',{name:'Customers',exact:true}).locator('[style]').evaluateAll(nodes=>nodes.map(n=>n.style.backgroundColor));
+      assert.deepEqual(swatches,['rgb(248, 113, 113)']);
+      if(evidence)await page.screenshot({path:path.join(evidence,`theme-${mode}-${width}-new-dropdown.png`),fullPage:true,animations:'disabled'});
+      await page.keyboard.press('Escape');await page.keyboard.press('Escape');
+      await page.locator('#taskDialog').waitFor({state:'hidden'});
+      await page.locator('[data-task-id]').first().dblclick();await page.locator('#taskDialog').waitFor();
+      if(evidence)await page.screenshot({path:path.join(evidence,`theme-${mode}-${width}-edit.png`),fullPage:true,animations:'disabled'});
+      await page.keyboard.press('Escape');
+      await page.locator('#manageCustomersBtn').click();
+      const colorButton=page.locator('[aria-label^="Customer Color for"]').first();await colorButton.click();
+      if(evidence)await page.screenshot({path:path.join(evidence,`theme-${mode}-${width}-customer-colors.png`),fullPage:true,animations:'disabled'});
+      await page.keyboard.press('Escape');await page.keyboard.press('Escape');
+      await page.locator('#manageCustomersDialog').waitFor({state:'hidden'});
+      // Generate a controlled API failure only in this isolated local test database.
+      await page.route('**/api/tasks',r=>r.request().method()==='POST'?r.fulfill({status:500,json:{error:'Theme alert acceptance'}}):r.continue());
+      await page.locator('#newTaskBtn').click();await page.locator('button[aria-label="Customer Name"]').click();
+      await page.getByRole('option',{name:/Customer A/}).click();await page.locator('#taskTitle').fill('Alert test');
+      await page.getByRole('button',{name:'Create Task',exact:true}).click();await page.locator('#taskDialogError').waitFor();
+      assert.equal(await page.locator('#taskDialogError').evaluate(n=>getComputedStyle(n).backgroundColor),mode==='dark'?'rgb(59, 25, 30)':'rgb(254, 242, 242)');
+      if(evidence)await page.screenshot({path:path.join(evidence,`theme-${mode}-${width}-alert.png`),fullPage:true,animations:'disabled'});
+      await page.unroute('**/api/tasks');await page.getByRole('button',{name:'Create Task',exact:true}).click();
+      await page.locator('.notification-success').waitFor();
+      assert.equal(await page.locator('.notification-success').evaluate(n=>getComputedStyle(n).backgroundColor),mode==='dark'?'rgb(16, 43, 32)':'rgb(240, 253, 244)');
+      if(evidence)await page.screenshot({path:path.join(evidence,`theme-${mode}-${width}-success.png`),fullPage:true,animations:'disabled'});
+      await page.locator('.notification-dismiss').click();
+      await page.route('**/api/health',r=>r.fulfill({status:500,json:{error:'Theme error alert'}}));
+      await page.reload();await page.locator('.notification-error').waitFor();
+      assert.equal(await page.locator('.notification-error').evaluate(n=>getComputedStyle(n).backgroundColor),mode==='dark'?'rgb(59, 25, 30)':'rgb(254, 242, 242)');
+      if(evidence)await page.screenshot({path:path.join(evidence,`theme-${mode}-${width}-error.png`),fullPage:true,animations:'disabled'});
+      await page.unroute('**/api/health');await page.reload();await page.locator('#healthBadge.ok').waitFor();
+    }
+    assert.deepEqual(errors,[]);await ctx.close();
+  }
+  const blocked=await browser.newContext({colorScheme:'dark'}),p=await blocked.newPage();
+  await p.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new DOMException('Blocked','SecurityError')}})});
+  await p.goto(url);await p.locator('#healthBadge.ok').waitFor();assert.equal(await p.locator('html').getAttribute('data-theme'),'dark');
+  await p.locator('#themeToggle').click();assert.equal(await p.locator('html').getAttribute('data-theme'),'light');await blocked.close();
 }));
