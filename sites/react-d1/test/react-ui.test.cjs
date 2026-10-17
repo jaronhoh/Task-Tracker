@@ -310,3 +310,74 @@ test('CR-012: real Chromium theme acceptance, persistence, OS preference, surfac
   await p.goto(url);await p.locator('#healthBadge.ok').waitFor();assert.equal(await p.locator('html').getAttribute('data-theme'),'dark');
   await p.locator('#themeToggle').click();assert.equal(await p.locator('html').getAttribute('data-theme'),'light');await blocked.close();
 }));
+
+test('CR-013/014: single-row customer summaries, exact filtered counts, colors, overflow and keyboard in both themes', async()=>harness(async({browser,url})=>{
+  const customers=Array.from({length:16},(_,i)=>({name:i<3?['JXM','MMM','VSTEC'][i]:`Customer ${String(i).padStart(2,'0')}`,color:['#F87171','#60A5FA','#4ADE80'][i%3]}));
+  const fixture=customers.flatMap((c,i)=>Array.from({length:i===0?3:1},(_,j)=>({...task(`C${i}-${j}`,'2026-10-09T10:00:00','Work in Progress'),customerName:c.name})))
+    .concat([{...task('missing','2026-10-09T10:00:00','Work in Progress'),customerName:'Missing'}, {...task('blank','2026-10-09T10:00:00','Work in Progress'),customerName:''}, {...task('new','2026-10-13T10:00:00','KIV'),customerName:'MMM'}, {...task('pending','2026-10-09T10:00:00','Pending with Customer'),customerName:'JXM'}]);
+  const evidence=process.env.TASK_TRACKER_EVIDENCE_DIR;if(evidence)fs.mkdirSync(evidence,{recursive:true});
+  for(const width of [1440,390])for(const mode of ['light','dark']) {
+    const ctx=await browser.newContext({viewport:{width,height:1000},colorScheme:mode}),page=await ctx.newPage();page.setDefaultTimeout(8000);
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.clock.setFixedTime(new Date('2026-10-15T04:00:00Z'));
+    let live=fixture;
+    await page.route('**/api/tasks',r=>r.fulfill({json:live}));
+    await page.route('**/api/customers',r=>r.fulfill({json:customers}));
+    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+    const verify=async()=>{
+      const groups=await page.locator('.status-group-row').evaluateAll(nodes=>nodes.map(n=>{
+        const header=n.querySelector('.group-header'),toggle=n.querySelector('.group-toggle'),summary=n.querySelector('.customer-summary');
+        const badges=[...n.querySelectorAll('.customer-count-badge')];
+        const rect=header.getBoundingClientRect(),control=toggle.getBoundingClientRect();
+        let next=n.nextElementSibling;const rows=[];while(next&&!next.classList.contains('status-group-row')){if(next.dataset.taskId)rows.push({id:next.dataset.taskId,customer:next.children[1].textContent});next=next.nextElementSibling;}
+        return {label:toggle.querySelector('span').textContent,total:+n.querySelector('.group-count-badge').textContent,expanded:toggle.getAttribute('aria-expanded')==='true',rows,badges:badges.map(b=>({name:b.dataset.customer,count:+b.dataset.count,color:b.querySelector('.color-dot').style.backgroundColor})),rect:{left:rect.left,right:rect.right,height:rect.height},controlRight:control.right,summary:summary?{width:summary.clientWidth,scrollWidth:summary.scrollWidth,overflow:getComputedStyle(summary).overflowX,wrap:getComputedStyle(summary).whiteSpace}:null,ys:badges.map(b=>b.getBoundingClientRect().top)};
+      }));
+      for(const g of groups){
+        assert.equal(g.badges.reduce((n,b)=>n+b.count,0),g.total,g.label+' counts');
+        assert.ok(g.rect.left>=0&&g.rect.right<=width,g.label+' header inside viewport');
+        assert.ok(g.rect.height<55,'header stays compact on one line');
+        assert.ok(g.controlRight<=width,'toggle remains visible');
+        assert.ok(g.ys.every(y=>Math.abs(y-g.ys[0])<1),'all badges on one row');
+        if(g.summary){assert.equal(g.summary.wrap,'nowrap');assert.equal(g.summary.overflow,'auto');assert.ok(g.summary.width>0);}
+        if(g.expanded){const expected={};for(const row of g.rows){const name=customers.some(c=>c.name===row.customer)?row.customer:'Unassigned';expected[name]=(expected[name]||0)+1;}assert.deepEqual(Object.fromEntries(g.badges.map(b=>[b.name,b.count])),expected);}
+        for(const b of g.badges){const c=customers.find(c=>c.name===b.name);if(c){const rgb=c.color==='#F87171'?'rgb(248, 113, 113)':c.color==='#60A5FA'?'rgb(96, 165, 250)':'rgb(74, 222, 128)';assert.equal(b.color,rgb);}}
+      }
+      const style=await page.locator('.line-tabs').evaluate(n=>{const s=getComputedStyle(n);return {border:s.borderBottomWidth,shadow:s.boxShadow}});
+      assert.equal(style.border,'0px');assert.equal(style.shadow,'none');
+      await page.waitForFunction(expected=>getComputedStyle(document.querySelector('.view-tab[data-state="active"]')).borderBottomColor===expected,mode==='light'?'rgb(37, 99, 235)':'rgb(147, 197, 253)');
+      const active=page.locator('.view-tab[data-state="active"]');assert.equal(await active.evaluate(n=>getComputedStyle(n).borderBottomWidth),'2px');
+      assert.equal(await active.evaluate(n=>getComputedStyle(n).borderBottomColor),mode==='light'?'rgb(37, 99, 235)':'rgb(147, 197, 253)');
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+      return groups;
+    };
+    for(const view of ['weekly','status']) {
+      await page.locator(`[data-view="${view}"]`).click();await verify();
+      const first=page.locator('.group-toggle').first();const summaryText=await page.locator('.customer-summary').first().textContent();
+      await first.click();assert.equal(await first.getAttribute('aria-expanded'),'false');
+      assert.equal(await page.locator('.customer-summary').first().textContent(),summaryText);await verify();
+      if(evidence)await page.screenshot({path:path.join(evidence,`cr013-014-${mode}-${width}-${view}-collapsed.png`),fullPage:true,animations:'disabled'});
+      await first.press('Enter');assert.equal(await first.getAttribute('aria-expanded'),'true');
+      await first.press('Space');assert.equal(await first.getAttribute('aria-expanded'),'false');await first.click();
+      const summary=page.locator('.customer-summary').first();
+      const overflow=await summary.evaluate(n=>n.scrollWidth>n.clientWidth);assert.ok(overflow,'many customers overflow');
+      await summary.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('.customer-summary').scrollLeft>0);
+      assert.ok(await summary.evaluate(n=>n.scrollLeft>0),'keyboard horizontal scroll works');
+      await verify();
+      if(evidence)await page.screenshot({path:path.join(evidence,`cr013-014-${mode}-${width}-${view}.png`),fullPage:true,animations:'disabled'});
+      await page.locator('#globalSearch').fill('JXM');await page.locator('#searchBtn').click();
+      const searched=await verify();assert.ok(searched.every(g=>g.badges.every(b=>b.name==='JXM')));
+      await page.locator('#clearSearchBtn').click();await verify();
+    }
+    const card=page.locator('#summaryRow').getByRole('button',{name:/^Work in Progress\s/});await card.click();const filtered=await verify();assert.equal(filtered.length,1);
+    assert.equal(filtered[0].label,'Work in Progress');assert.equal(filtered[0].badges.find(b=>b.name==='Unassigned').count,2);
+    await card.click();await verify();
+    await page.locator('#globalSearch').fill('nothing matches');await page.locator('#searchBtn').click();assert.ok((await verify()).every(g=>g.total===0&&g.badges.length===0));
+    await page.locator('#clearSearchBtn').click();
+    await page.locator('[data-view="weekly"]').click();await page.locator('[data-view="weekly"]').press('ArrowRight');
+    await page.locator('[data-view="status"][aria-selected="true"]').waitFor();await verify();
+    await page.locator('[data-view="all"]').click();assert.equal(await page.locator('.customer-summary').count(),0);
+    // Refreshed task/customer responses must recompute, using no production writes.
+    live=fixture.slice(0,1);await page.reload();await page.locator('#healthBadge.ok').waitFor();const refreshed=await verify();assert.equal(refreshed.reduce((n,g)=>n+g.total,0),1);
+    assert.deepEqual(errors,[]);console.log(JSON.stringify({release:'CR-013/014',width,mode,result:'passed'}));await ctx.close();
+  }
+}));

@@ -138,3 +138,16 @@ test('weekly and status cards toggle, retain pre-filter counts and export only s
     assert.equal(scope.flatMap(([,rows])=>rows).length,fixture.length)
   }
 })
+
+test('customer breakdown conserves filtered group totals, handles unresolved customers and sorts deterministically',async()=>{
+  const {customerSummary}=await import('../src/lib/customer-summary')
+  const customers=[{name:'JXM',color:'#F87171'},{name:'MMM',color:'#60A5FA'}]
+  const rows=['MMM','JXM','JXM','','Missing'].map((customerName,i)=>({...fixture[0],taskId:String(i),customerName}))
+  assert.deepEqual(customerSummary(rows,customers),[{name:'JXM',count:2,color:'#F87171'},{name:'Unassigned',count:2,color:undefined},{name:'MMM',count:1,color:'#60A5FA'}])
+  assert.equal(customerSummary(rows.slice(0,1),customers)[0].count,1)
+  assert.deepEqual(customerSummary([],customers),[])
+  const html=renderToStaticMarkup(<TaskTable tasks={rows} groups={[["Work in Progress",rows]]} view="status" customers={customers} selected={null} onSelect={()=>{}} onEdit={()=>{}} onOrdered={()=>{}}/>);
+  assert.match(html,/data-customer="JXM" data-count="2"/)
+  assert.match(html,/data-customer="Unassigned" data-count="2"/)
+  assert.match(html,/role="region" aria-label="Work in Progress customer task counts; scroll horizontally for more" tabindex="0"/)
+})
