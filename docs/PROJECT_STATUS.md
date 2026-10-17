@@ -1,3 +1,12 @@
+# Approved next requirements — CR-013 / CR-014 (2026-10-17)
+
+**Evidence:** user annotated screenshot, Dark Mode Current Week Status. **Baseline:** Sites Version 10 (latest recorded deployed release). **Status:** PRD committed; implementation, browser QA and Sites deployment pending.
+
+- **CR-013:** remove full-width gray divider under TabsList, retain only active-tab blue underline.
+- **CR-014:** each Accordion header shows per-customer task-count badges (e.g. JXM 10 / MMM 1 / VSTEC 6 are illustration only), derived from that group's filtered task rows. Sum of badges equals Accordion total; handle unassigned tasks.
+- **PRD:** `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md` §8.
+- **Next:** implement in existing Sites React/D1 and `sites/react-d1/` mirror; desktop/mobile Light/Dark browser tests, no D1 mutation, deploy same Site, update this file with evidence.
+
 # Latest release — CR-012 Light / Dark Mode, Sites Version 10 (2026-10-17)
 
 **Development Status: ACCEPTED / MERGED / DEPLOYED / production browser verified.** This entry supersedes the implementation-pending CR-012 record below.
@@ -324,3 +333,8 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 - User requested Dark Mode / Light Mode selection at top-right using Moon/Sun icons.
 - Added CR-012 and acceptance criteria to `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md`.
 - Documentation only; no Sites code, data, tests, configuration or deployment changed. Latest deployed baseline remains Version 9.
+
+### 2026-10-17 — CR-013/014 UI requirements (GitHub verified)
+- User screenshot shows unwanted full-width line beneath TabsList and requests customer-name/task-count breakdown within each Accordion header.
+- Updated PRD §8 with exact scope, counting rules, accessibility and acceptance criteria.
+- Documentation-only change; Sites Version 10 remains production baseline; no React implementation or deployment performed by this update.
