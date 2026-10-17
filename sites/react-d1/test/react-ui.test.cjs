@@ -344,6 +344,7 @@ test('CR-013/014: single-row customer summaries, exact filtered counts, colors, 
       }
       const style=await page.locator('.line-tabs').evaluate(n=>{const s=getComputedStyle(n);return {border:s.borderBottomWidth,shadow:s.boxShadow}});
       assert.equal(style.border,'0px');assert.equal(style.shadow,'none');
+      await page.waitForFunction(expected=>getComputedStyle(document.querySelector('.view-tab[data-state="active"]')).borderBottomColor===expected,mode==='light'?'rgb(37, 99, 235)':'rgb(147, 197, 253)');
       const active=page.locator('.view-tab[data-state="active"]');assert.equal(await active.evaluate(n=>getComputedStyle(n).borderBottomWidth),'2px');
       assert.equal(await active.evaluate(n=>getComputedStyle(n).borderBottomColor),mode==='light'?'rgb(37, 99, 235)':'rgb(147, 197, 253)');
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
