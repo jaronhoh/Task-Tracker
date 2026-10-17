@@ -1,9 +1,9 @@
 # PRD — Task Form & Customer Management Enhancements
 
 **Date:** 2026-10-16 (MYT)  
-**Status:** CR-005–CR-011 deployed by Sites Version 9 per verified project handoff; CR-012 approved, implementation pending  
+**Status:** CR-005–CR-012 deployed by Sites Version 10 per project handoff; CR-013–CR-014 approved, implementation pending  
 **Product:** Existing Task Tracker ChatGPT Sites React/D1 (not legacy Express)  
-**Baseline:** Sites Version 9, as recorded in `docs/PROJECT_STATUS.md`
+**Baseline:** Sites Version 10, as recorded in `docs/PROJECT_STATUS.md`
 
 ## 1. Objective
 Improve New Task and Edit Task workflows, allow safe customer removal, and make customer colors visually identifiable.
@@ -153,3 +153,34 @@ Improve New Task and Edit Task workflows, allow safe customer removal, and make 
 - Existing ChatGPT Sites React/D1 application only; GitHub source mirror `sites/react-d1/`; do not touch legacy Express/PocketBase.
 - Use theme-aware CSS tokens/classes and components rather than isolated hard-coded black backgrounds.
 - Verify the real browser before marking accepted. Record GitHub PR/merge, Sites source commit, deployment ID/version and before/after data checks in `docs/PROJECT_STATUS.md`.
+
+## 8. Screenshot-driven UI changes — 2026-10-17
+
+**Evidence:** User-provided screenshot of Dark Mode / Current Week Status, with annotated tab divider and accordion header area. **Requirements approved; code and deployment pending.**
+
+### CR-013 — Remove full-width line beneath TabsList
+- Remove the full-width horizontal gray divider/border spanning the page beneath `Weekly Task`, `Current Week Status` and `Show All Data`.
+- Retain the short blue underline **only under the active tab**, as well as active text emphasis and keyboard focus indicator.
+- Preserve existing tabs' navigation, accessibility, mobile horizontal scroll and business filtering behavior.
+- Apply consistently in Light and Dark Mode; ensure no unintended border/shadow/pseudo-element recreates the full-width line.
+- **AC-CR-013-01:** Desktop and mobile screenshots of each theme show no full-width tab divider, but active tab has a short blue underline.
+- **AC-CR-013-02:** Clicking or keyboard-switching tabs continues to work with visible active/focus state.
+
+### CR-014 — Customer task-count breakdown in every Accordion header
+- Display a compact **Customer Name + Count** breakdown **within each Accordion header**, alongside/below its existing group title and total count, visible even while the Accordion is collapsed.
+- Example display only (not actual production counts): `Work in Progress 17` with badges `JXM 10`, `MMM 1`, `VSTEC 6`.
+- Calculate customer counts from the **exact task collection represented by that Accordion after existing search, weekly/status scope and applicable filters**. Count tasks, not distinct customers; never use hard-coded examples.
+- The sum of customer badge counts **must equal** the existing Accordion task total for that group; if tasks have no resolvable customer, show a clear `Unassigned` bucket rather than dropping counts.
+- Show only buckets with nonzero count; order deterministically (e.g. count descending, then customer name) to avoid jitter.
+- Recompute on search, status/card filters, tab changes and data refresh. Respect existing accordion expansion/default rules, keyboard interactions, status grouping, pagination and export semantics.
+- Use existing customer colors for badge dots/accents and ensure sufficient contrast in Light/Dark themes; do not alter stored customer colors.
+- Keep header readable at desktop and mobile widths: badges may wrap, but must not cover the expand/collapse affordance or table columns.
+- **AC-CR-014-01:** Each nonempty Accordion header shows all relevant customer-name/count badges without expanding it; their sum equals the group's total.
+- **AC-CR-014-02:** Search/filter/tab changes update counts correctly; expanding/collapsing does not change counts or task rows.
+- **AC-CR-014-03:** Desktop (1440px) and mobile (390px) screenshots verify spacing, no overflow, correct customer color and Dark/Light readability.
+- **AC-CR-014-04:** Browser interaction, keyboard accessibility and existing weekly/status regression tests pass.
+
+### Implementation and release constraints
+- Modify **existing** ChatGPT Sites React/D1 only, with GitHub mirror under `sites/react-d1/`. Do not modify/deploy historical Express code.
+- No D1 migration is needed for these display-only requirements; preserve existing Site URL, project, D1 rows, task/customer IDs, app sequence/revision, access settings and secrets.
+- Run automated tests and real browser desktop/mobile acceptance, record screenshots and production read-only data comparisons. Update `docs/PROJECT_STATUS.md` with actual GitHub/Sites commits, version, deployment and acceptance evidence; do not claim PRD commit is a deployment.
