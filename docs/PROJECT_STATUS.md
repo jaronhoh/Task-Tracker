@@ -1,3 +1,11 @@
+## Approved next requirement — CR-012 Light/Dark theme (2026-10-17)
+
+- **PRD:** `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md` §7.
+- Top-right Sun/Moon toggle; instantaneous theme switch; manual preference persists locally, otherwise follow OS theme.
+- Theme all Sites React views including tables, cards, task forms, Manage Customers, dropdowns, dialogs and transient alerts; preserve customer colors and accessibility.
+- **Status: PRD committed to GitHub; code, browser tests and Sites deployment NOT started by this change.**
+- **Production baseline: Version 9**. Next: implement in `sites/react-d1/`, synchronize GitHub and existing Sites source, perform desktop/mobile browser acceptance, deploy existing Site and update handoff with evidence.
+
 # Latest release — CR-009–CR-011, Sites Version 9 (2026-10-16)
 
 **Status: deployed and verified on the existing Task Tracker Site.** This release supersedes the earlier “implementation pending” follow-up entry below.
@@ -293,3 +301,8 @@ At the **start** of every new ChatGPT / Codex conversation working on Task Track
 - User requested shadcn/ui Alert-styled bottom-right notifications that disappear after 5 seconds, Add Customer inside Manage Customers, and same-row Delete buttons.
 - Updated `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md` §6 with acceptance criteria, mobile/accessibility and safety constraints.
 - Documentation-only GitHub update; **no new Sites implementation, testing, deployment or production data changes**. Version 8 remains latest deployed baseline.
+
+### 2026-10-17 — CR-012 theme toggle PRD (GitHub verified)
+- User requested Dark Mode / Light Mode selection at top-right using Moon/Sun icons.
+- Added CR-012 and acceptance criteria to `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md`.
+- Documentation only; no Sites code, data, tests, configuration or deployment changed. Latest deployed baseline remains Version 9.
