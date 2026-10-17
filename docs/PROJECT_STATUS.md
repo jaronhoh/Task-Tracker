@@ -1,11 +1,26 @@
-# Approved next requirements — CR-013 / CR-014 (2026-10-17)
+# Latest release — CR-013 / CR-014, Sites Version 11 (2026-10-17)
 
-**Evidence:** user annotated screenshot, Dark Mode Current Week Status. **Baseline:** Sites Version 10 (latest recorded deployed release). **Status:** PRD committed; implementation, browser QA and Sites deployment pending.
+**Status: IMPLEMENTED / TESTED / REVIEWED / MERGED / DEPLOYED / production browser verified.**
 
-- **CR-013:** remove full-width gray divider under TabsList, retain only active-tab blue underline.
-- **CR-014:** each Accordion header shows **single-row, non-wrapping** per-customer task-count badges (e.g. JXM 10 / MMM 1 / VSTEC 6 are illustration only), derived from that group's filtered task rows. Sum of badges equals Accordion total; handle unassigned tasks.
-- **PRD:** `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md` §8.
-- **Next:** implement in existing Sites React/D1 and `sites/react-d1/` mirror; desktop/mobile Light/Dark browser tests, no D1 mutation, deploy same Site, update this file with evidence.
+- Existing Site: https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/
+- Sites Version **11**, project `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979`.
+- Sites **Source Commit: `26653c37071a4641473495f4fa8928bae2ee67fe`**.
+- Saved version: `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979~appgver_d89ad357944081918d32ce35b1880506`.
+- Deployment: `appgdep_6ad3238ddc308191900f5df43ec309c2`, **succeeded**, 2026-10-17 **15:28:41 MYT** / `2026-10-17T07:28:41.030702+00:00`, environment revision **0**.
+- GitHub implementation [PR #10](https://github.com/jaronhoh/Task-Tracker/pull/10), squash-merged into main as `aaef4770335b6c5424fd367a52856dbbc994c77a`; tested PR head `222457dc12bab24190aa808f7bd2991109bdc010`. GitHub and Sites commits are distinct. Code mirror: `sites/react-d1/`.
+- CR-013: full-width gray TabsList divider removed in both themes; active-tab short blue underline, focus indication, tab navigation and filters retained.
+- CR-014: every grouped header shows its existing label/total and customer-name/task-count badges on **one non-wrapping row**, including while collapsed. Counts use that exact group's filtered task collection, sort by count then name, retain existing customer color dots, and include an Unassigned bucket for unresolved customers. Only nonzero buckets display. The summary scrolls independently by pointer/touch/keyboard within the visible table viewport; toggle remains visible.
+- Scope: only React frontend and its tests changed. No API, business eligibility, export, pagination, schema/migration, dependency, hosting, environment, access or production D1 writes.
+- Automated results: **14 React/model + 56 API/D1/weekly + 8 real Chromium scenarios = 78 passed, 0 failed**. Frontend TypeScript, React production build, full Sites/Vinext build and whitespace checks passed.
+- Browser gate: [CI 39013525276](https://github.com/jaronhoh/Task-Tracker/actions/runs/39013525276), success. Real Chromium tested **1440px / 390px × Light / Dark**, Weekly/Status headers, per-customer counts against actual rows, Unassigned conservation, overflow/one-line geometry, ArrowRight scrolling, Enter/Space collapse/expand, tab keyboard navigation, search, status filters, no-results, refreshed data and existing UI regressions. **16 CR-013/014 screenshots** generated, plus existing regression screenshots.
+- First CI run 39013384982 was **7 browser pass / 1 fail**, not acceptance. The new test read a tab's intermediate animated border color. It now waits for the final computed color while retaining the strict assertion; product code was unchanged by that test-only correction.
+- Review: implementing-agent self-review submitted on PR #10 (review ID 5556835689); all five changed files and Light/Dark desktop/mobile screenshots inspected. This is not represented as independent human approval.
+- Production real browser after deployment: existing authenticated page loaded Version 11; divider computed **0px**, active underline retained; four status groups matched exact task IDs and customer totals. Collapse preserves summaries; Enter/Space works; search TSK-0002 gives only KIV/VSTECS **1**; each status card and repeated-click reset, Weekly (25 Carry Over / 0 New This Week), keyboard tab switching and All Data verified. Native production screenshots are desktop; the exact 1440/390 theme matrix was executed in Chromium CI before deployment.
+- Actual production status counts at verification: **WIP 17 = JXM 10 + VSTECS 5 + MySelf 2; Pending 1 = MMM 1; KIV 3 = VSTECS 3; Closed 4 = JXM 3 + MySelf 1**. PRD examples are not hard-coded.
+- Production preservation: complete paginated read-only **before/after full-row equality** for **32 tasks, 6 customers, app_sequence next_value=33 and app_revision=149** (including its token). No omitted rows/columns or truncated values. Entire access_policy unchanged, owner-only custom audience revision 1. Same project, URL, D1 binding and configuration. No production test CRUD, migration, seed, reset or sequence allocation.
+- Evidence: committed screenshots/log under [docs/evidence/cr013-cr014-v11](evidence/cr013-cr014-v11/README.md), including 4 desktop/mobile Light/Dark collapsed views, Version 10 baseline, Version 11 production Light/Dark and production interaction JSON. Full [CI artifact 12093917062](https://github.com/jaronhoh/Task-Tracker/actions/runs/39013525276/artifacts/12093917062), SHA-256 `c60dd712ca39847a4704e231be07aa2a1b047c73f394e2616b385d7ee6e4f92c`.
+- Rollback: redeploy saved Version 10 if required; no D1 rollback/migration is needed for this frontend-only release.
+- Source of completion: GitHub merge **and** successful native Sites deployment **and** live production browser verification; GitHub update alone was not treated as deployment.
 
 # Latest release — CR-012 Light / Dark Mode, Sites Version 10 (2026-10-17)
 

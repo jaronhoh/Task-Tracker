@@ -1,0 +1,78 @@
+TAP version 13
+# Subtest: React UI: weekly totals, boundaries, search, timezone independence, mobile and keyboard focus
+ok 1 - React UI: weekly totals, boundaries, search, timezone independence, mobile and keyboard focus
+  ---
+  duration_ms: 2566.694041
+  type: 'test'
+  ...
+# Subtest: React UI: TanStack sorting/pagination/reset and full filtered single-sheet Excel export
+ok 2 - React UI: TanStack sorting/pagination/reset and full filtered single-sheet Excel export
+  ---
+  duration_ms: 1736.315469
+  type: 'test'
+  ...
+# Subtest: React UI: ordered blur saves, retry, Customer rename/color, logical delete and restore
+ok 3 - React UI: ordered blur saves, retry, Customer rename/color, logical delete and restore
+  ---
+  duration_ms: 2430.358476
+  type: 'test'
+  ...
+# Subtest: Customer deletion guard remains active on desktop and mobile
+ok 4 - Customer deletion guard remains active on desktop and mobile
+  ---
+  duration_ms: 1725.515343
+  type: 'test'
+  ...
+# Subtest: CR-009–011: timed Alerts, Manage Customers Add, inline Delete and mobile fit
+ok 5 - CR-009–011: timed Alerts, Manage Customers Add, inline Delete and mobile fit
+  ---
+  duration_ms: 2826.337625
+  type: 'test'
+  ...
+# {"width":1440,"view":"weekly","card":"Overall Total","ids":["carry","closed","new"]}
+# {"width":1440,"view":"weekly","card":"Carry Over","ids":["carry","closed"]}
+# {"width":1440,"view":"weekly","card":"New This Week","ids":["new"]}
+# {"width":1440,"view":"status","card":"All","ids":["carry","closed","new"]}
+# {"width":1440,"view":"status","card":"Work in Progress","ids":["carry"]}
+# {"width":1440,"view":"status","card":"Pending with Customer","ids":[]}
+# {"width":1440,"view":"status","card":"KIV","ids":["new"]}
+# {"width":1440,"view":"status","card":"Closed","ids":["closed"]}
+# {"width":390,"view":"weekly","card":"Overall Total","ids":["carry","closed","new"]}
+# {"width":390,"view":"weekly","card":"Carry Over","ids":["carry","closed"]}
+# {"width":390,"view":"weekly","card":"New This Week","ids":["new"]}
+# {"width":390,"view":"status","card":"All","ids":["carry","closed","new"]}
+# {"width":390,"view":"status","card":"Work in Progress","ids":["carry"]}
+# {"width":390,"view":"status","card":"Pending with Customer","ids":[]}
+# {"width":390,"view":"status","card":"KIV","ids":["new"]}
+# {"width":390,"view":"status","card":"Closed","ids":["closed"]}
+# Subtest: Sites correction: all cards, repeated clicks, accordions, export and line tabs
+ok 6 - Sites correction: all cards, repeated clicks, accordions, export and line tabs
+  ---
+  duration_ms: 5812.030421
+  type: 'test'
+  ...
+# Subtest: CR-012: real Chromium theme acceptance, persistence, OS preference, surfaces and preserved state at 1440/390px
+ok 7 - CR-012: real Chromium theme acceptance, persistence, OS preference, surfaces and preserved state at 1440/390px
+  ---
+  duration_ms: 11133.221691
+  type: 'test'
+  ...
+# {"release":"CR-013/014","width":1440,"mode":"light","result":"passed"}
+# {"release":"CR-013/014","width":1440,"mode":"dark","result":"passed"}
+# {"release":"CR-013/014","width":390,"mode":"light","result":"passed"}
+# {"release":"CR-013/014","width":390,"mode":"dark","result":"passed"}
+# Subtest: CR-013/014: single-row customer summaries, exact filtered counts, colors, overflow and keyboard in both themes
+ok 8 - CR-013/014: single-row customer summaries, exact filtered counts, colors, overflow and keyboard in both themes
+  ---
+  duration_ms: 12862.524189
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 41630.696708
