@@ -1,9 +1,9 @@
 # PRD — Task Form & Customer Management Enhancements
 
 **Date:** 2026-10-16 (MYT)  
-**Status:** CR-005–CR-008 deployed in Sites Version 8 (browser QA skipped); CR-009–CR-011 approved and pending implementation  
+**Status:** CR-005–CR-011 deployed by Sites Version 9 per verified project handoff; CR-012 approved, implementation pending  
 **Product:** Existing Task Tracker ChatGPT Sites React/D1 (not legacy Express)  
-**Baseline:** Sites Version 8, as recorded in `docs/PROJECT_STATUS.md`
+**Baseline:** Sites Version 9, as recorded in `docs/PROJECT_STATUS.md`
 
 ## 1. Objective
 Improve New Task and Edit Task workflows, allow safe customer removal, and make customer colors visually identifiable.
@@ -125,3 +125,31 @@ Improve New Task and Edit Task workflows, allow safe customer removal, and make 
 - Preserve existing Site URL, project, D1 data, task/customer identifiers, sequence, revision, access policy and config, except user-authorized new customer data created during production use.
 - Sync code and tests to GitHub, record distinct GitHub and Sites source commits, and update `docs/PROJECT_STATUS.md` with test, deploy and verification evidence.
 - **Current state:** documentation approved/updated only; no claim of CR-009–CR-011 implementation or deployment.
+
+## 7. CR-012 — Light Mode / Dark Mode toggle (2026-10-17)
+
+**Status:** User-requested and approved requirement; **not implemented or deployed by this documentation change**.
+
+### Functional behavior
+- Add a theme toggle in the **top-right corner** of the Task Tracker application header, accessible on desktop and mobile.
+- Use **Sun** and **Moon** icons (prefer existing icon library, e.g. lucide-react, if available).
+- When Light Mode is active, show a Moon icon as the action to enable Dark Mode. When Dark Mode is active, show a Sun icon as the action to enable Light Mode. Provide clear accessible labels/tooltips (e.g. `Switch to dark mode`, `Switch to light mode`).
+- Clicking toggles the application between Light and Dark **immediately without reload or navigation**.
+- Persist the explicit user preference locally so refresh/revisit preserves it; when no explicit preference exists, initialize from the device's `prefers-color-scheme`. Do not write theme choice to D1 or modify task/customer data.
+- The active theme must cover all application views and interactive surfaces: navigation tabs, cards, tables, accordions, New/Edit Task forms, Manage Customers, inputs, dropdowns, buttons, dialogs and CR-009 transient Alerts.
+- Preserve meaningful existing customer color swatches/badges in both themes; ensure sufficient foreground/background contrast and visible focus indicators.
+- Avoid initial light-theme flash on dark-theme preference when practical; avoid hydration mismatch and preserve keyboard accessibility.
+- On narrow screens, keep the theme toggle visible in the header without overlapping title/navigation.
+
+### Acceptance criteria
+- **AC-CR-012-01:** Top-right toggle displays the correct Sun/Moon icon and accessible action label for the current theme.
+- **AC-CR-012-02:** Toggle updates theme instantly, without losing search, filter, form data, or task selection.
+- **AC-CR-012-03:** Refresh/reopen retains a manually chosen theme; first visit without preference follows OS theme.
+- **AC-CR-012-04:** Real browser desktop (1440px) and mobile (390px) screenshots confirm legibility and correct colors in both modes across all key views, dropdowns, dialogs and alerts.
+- **AC-CR-012-05:** Keyboard focus/activation works, icons have accessible labels, and customer color indicators remain recognizable.
+- **AC-CR-012-06:** Automated UI tests and production regression tests pass; D1 rows, task/customer records, sequence, revision, URL, access policy and configuration unchanged.
+
+### Delivery constraints
+- Existing ChatGPT Sites React/D1 application only; GitHub source mirror `sites/react-d1/`; do not touch legacy Express/PocketBase.
+- Use theme-aware CSS tokens/classes and components rather than isolated hard-coded black backgrounds.
+- Verify the real browser before marking accepted. Record GitHub PR/merge, Sites source commit, deployment ID/version and before/after data checks in `docs/PROJECT_STATUS.md`.
