@@ -3,7 +3,7 @@
 **Evidence:** user annotated screenshot, Dark Mode Current Week Status. **Baseline:** Sites Version 10 (latest recorded deployed release). **Status:** PRD committed; implementation, browser QA and Sites deployment pending.
 
 - **CR-013:** remove full-width gray divider under TabsList, retain only active-tab blue underline.
-- **CR-014:** each Accordion header shows per-customer task-count badges (e.g. JXM 10 / MMM 1 / VSTEC 6 are illustration only), derived from that group's filtered task rows. Sum of badges equals Accordion total; handle unassigned tasks.
+- **CR-014:** each Accordion header shows **single-row, non-wrapping** per-customer task-count badges (e.g. JXM 10 / MMM 1 / VSTEC 6 are illustration only), derived from that group's filtered task rows. Sum of badges equals Accordion total; handle unassigned tasks.
 - **PRD:** `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md` §8.
 - **Next:** implement in existing Sites React/D1 and `sites/react-d1/` mirror; desktop/mobile Light/Dark browser tests, no D1 mutation, deploy same Site, update this file with evidence.
 
