@@ -167,17 +167,17 @@ Improve New Task and Edit Task workflows, allow safe customer removal, and make 
 - **AC-CR-013-02:** Clicking or keyboard-switching tabs continues to work with visible active/focus state.
 
 ### CR-014 — Customer task-count breakdown in every Accordion header
-- Display a compact **Customer Name + Count** breakdown **within each Accordion header**, alongside/below its existing group title and total count, visible even while the Accordion is collapsed.
+- Display a compact **Customer Name + Count** breakdown **within each Accordion header**, on the **same single horizontal header row** as its existing group title and total count, visible even while the Accordion is collapsed. Do not add a second row.
 - Example display only (not actual production counts): `Work in Progress 17` with badges `JXM 10`, `MMM 1`, `VSTEC 6`.
 - Calculate customer counts from the **exact task collection represented by that Accordion after existing search, weekly/status scope and applicable filters**. Count tasks, not distinct customers; never use hard-coded examples.
 - The sum of customer badge counts **must equal** the existing Accordion task total for that group; if tasks have no resolvable customer, show a clear `Unassigned` bucket rather than dropping counts.
 - Show only buckets with nonzero count; order deterministically (e.g. count descending, then customer name) to avoid jitter.
 - Recompute on search, status/card filters, tab changes and data refresh. Respect existing accordion expansion/default rules, keyboard interactions, status grouping, pagination and export semantics.
 - Use existing customer colors for badge dots/accents and ensure sufficient contrast in Light/Dark themes; do not alter stored customer colors.
-- Keep header readable at desktop and mobile widths: badges may wrap, but must not cover the expand/collapse affordance or table columns.
+- Keep header readable at desktop and mobile widths: the header must remain **one row with no badge wrapping**. Use compact spacing and a horizontally scrollable or clipped badge region with an accessible overflow affordance when the list is too long; never obscure the expand/collapse affordance or table columns.
 - **AC-CR-014-01:** Each nonempty Accordion header shows all relevant customer-name/count badges without expanding it; their sum equals the group's total.
 - **AC-CR-014-02:** Search/filter/tab changes update counts correctly; expanding/collapsing does not change counts or task rows.
-- **AC-CR-014-03:** Desktop (1440px) and mobile (390px) screenshots verify spacing, no overflow, correct customer color and Dark/Light readability.
+- **AC-CR-014-03:** Desktop (1440px) and mobile (390px) screenshots verify a single-row header, controlled horizontal overflow of badges without wrapping, correct customer color and Dark/Light readability.
 - **AC-CR-014-04:** Browser interaction, keyboard accessibility and existing weekly/status regression tests pass.
 
 ### Implementation and release constraints
