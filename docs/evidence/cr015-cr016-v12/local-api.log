@@ -1,0 +1,137 @@
+✔ health endpoint reports Malaysia time zone (470.582ms)
+✔ GET tasks returns a direct JSON array (22.405ms)
+✔ POST creates Task, auto-creates Customer and assigns KIV by default (56.924708ms)
+✔ Tracker Link validates and persists for create/read/update; rejects unsafe schemes (106.691083ms)
+✔ Customer delete is blocked server-side for all task references and allowed when unused (88.512875ms)
+✔ P0-014 PASS: PATCH unknown Customer returns 400 and performs no partial update (45.996958ms)
+✔ Active Task write corrects invalid non-null End to null (59.103958ms)
+✔ Active to Closed sets End to server Malaysia time (53.669167ms)
+✔ DELETE is logical and can be read back (54.287042ms)
+✔ future Created blocks Active to Closed with no partial update (43.603666ms)
+✔ allocated Task ID is not reused after failed create (47.039167ms)
+✔ Customer rename updates all Task references (73.503375ms)
+✔ Manage Customers can create a customer with an available predefined color atomically (71.006417ms)
+✔ Customer colors are unique and only predefined colors can be assigned (47.439417ms)
+✔ Edit Time saves status and End atomically and validates order (44.220083ms)
+✔ terminal status transitions refresh End and restoring Active clears End (54.415083ms)
+✔ POST can create terminal Task and generates End on server (26.25825ms)
+✔ PATCH omitted optional fields preserves values; null and empty string clear them (42.625708ms)
+✔ required fields and maximum lengths are validated (52.92675ms)
+✔ Customer matching trims spaces and ignores case on Task creation (43.02475ms)
+✔ Customer color pool permits 16 unique colors and rejects the 17th (154.511084ms)
+✔ Edit Time rejects future Created terminal transition without partial writes (36.9315ms)
+✔ Edit Time restoring terminal Task to Active clears End automatically (38.59775ms)
+(node:26767) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 listening listeners added to [Server]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26767) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Server]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(node:26767) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 close listeners added to [Server]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+✔ concurrent Task creation allocates unique permanent IDs (1703.369083ms)
+✔ concurrent case-insensitive Customer creation allows only one canonical Customer (33.674042ms)
+Error: D1_ERROR: injected rename failure: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_TRIGGER)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Repository.transact (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/db/repository.mjs:39:25)
+    at async execute (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/lib/handler.mjs:27:18)
+    at async Server.<anonymous> (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/test/runtime.mjs:21:20) {
+  [cause]: Error: injected rename failure: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_TRIGGER)
+      at D1DatabaseSessionAlwaysPrimary._sendOrThrow (cloudflare-internal:d1-api:140:24)
+      at async cloudflare-internal:d1-api:90:27
+      at async #fetch (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4373:18)
+      at async ProxyServer.fetch (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4277:14) {
+    [cause]: undefined
+  }
+}
+✔ Customer rename rolls back when linked Task update fails (66.302ms)
+✔ concurrent PATCH operations preserve both independent field changes (69.144542ms)
+✔ invalid JSON returns HTTP 400 instead of an internal server error (11.627333ms)
+✔ empty JSON body returns validation error instead of HTTP 500 (29.819ms)
+Error: D1_ERROR: injected task insert failure: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_TRIGGER)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Repository.transact (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/db/repository.mjs:39:25)
+    at async execute (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/lib/handler.mjs:27:18)
+    at async Server.<anonymous> (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/test/runtime.mjs:21:20) {
+  [cause]: Error: injected task insert failure: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_TRIGGER)
+      at D1DatabaseSessionAlwaysPrimary._sendOrThrow (cloudflare-internal:d1-api:140:24)
+      at async cloudflare-internal:d1-api:90:27
+      at async #fetch (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4373:18)
+      at async ProxyServer.fetch (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4277:14) {
+    [cause]: undefined
+  }
+}
+✔ Task creation rolls back auto-created Customer when Task insert fails (63.648625ms)
+✔ Customer rename collision is rejected without changing linked Tasks (60.944375ms)
+✔ DELETE rejects future Created and preserves the entire Task (45.581709ms)
+✔ Edit Time rejects Created later than existing End without partial update (46.067667ms)
+✔ Edit Time canonicalizes UTC input to Malaysia UTC+8 without changing the instant (39.883333ms)
+✔ P0-001 PASS: Active KIV with invalid End is repaired on a valid write (45.338167ms)
+✔ P0-002 PASS: all three Active statuses clear invalid End on write (129.742125ms)
+✔ P0-003 PASS: Closed with NULL End is repaired using current Malaysia time (44.30525ms)
+✔ P0-004 PASS: Deleted with NULL End is repaired without physical deletion (43.049834ms)
+✔ P0-005 PASS: future Created rejects repair of Closed/Deleted NULL End without partial writes (70.638875ms)
+✔ P0-006 PASS: future Created blocks Active to Closed and Active to Deleted (71.560375ms)
+Error: D1_ERROR: P0-007 injected failure: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_TRIGGER)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Repository.transact (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/db/repository.mjs:39:25)
+    at async execute (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/lib/handler.mjs:27:18) {
+  [cause]: Error: P0-007 injected failure: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_TRIGGER)
+      at D1DatabaseSessionAlwaysPrimary._sendOrThrow (cloudflare-internal:d1-api:140:24)
+      at async cloudflare-internal:d1-api:90:27
+      at async #fetch (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4373:18)
+      at async ProxyServer.fetch (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4277:14) {
+    [cause]: undefined
+  }
+}
+✔ P0-007 PASS: database failure after End repair calculation rolls back all Task fields (48.597292ms)
+✔ P0-008: concurrent same-Task PATCH writes apply in observed server receive order (58.680542ms)
+(node:26767) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 listening listeners added to [Server]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(node:26767) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Server]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(node:26767) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 close listeners added to [Server]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+✔ P0-010: concurrent Customer creation preserves normalized-name and color uniqueness (516.562542ms)
+Error: D1_ERROR: P0-011 injected linked Task update failure: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_TRIGGER)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Repository.transact (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/db/repository.mjs:39:25)
+    at async execute (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/lib/handler.mjs:27:18)
+    at async Server.<anonymous> (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/test/runtime.mjs:21:20) {
+  [cause]: Error: P0-011 injected linked Task update failure: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_TRIGGER)
+      at D1DatabaseSessionAlwaysPrimary._sendOrThrow (cloudflare-internal:d1-api:140:24)
+      at async cloudflare-internal:d1-api:90:27
+      at async #fetch (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4373:18)
+      at async ProxyServer.fetch (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4277:14) {
+    [cause]: undefined
+  }
+}
+✔ P0-011: Customer rename failure rolls back Customer and two linked Tasks (77.407541ms)
+(node:26767) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 listening listeners added to [Server]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(node:26767) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 error listeners added to [Server]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+Error: D1_ERROR: P0-012 injected insert failure: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_TRIGGER)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Repository.transact (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/db/repository.mjs:39:25)
+    at async execute (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/lib/handler.mjs:27:18)
+    at async Server.<anonymous> (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/test/runtime.mjs:21:20) {
+  [cause]: Error: P0-012 injected insert failure: SQLITE_CONSTRAINT (extended: SQLITE_CONSTRAINT_TRIGGER)
+      at D1DatabaseSessionAlwaysPrimary._sendOrThrow (cloudflare-internal:d1-api:140:24)
+      at async cloudflare-internal:d1-api:90:27
+      at async #fetch (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4373:18)
+      at async ProxyServer.fetch (file:///Users/jaron/.codex/.chatgpt-projects/g-p-6aa55c27903c8191be11f3c733136510/task-tracker-site/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4277:14) {
+    [cause]: undefined
+  }
+}
+✔ P0-012: concurrent IDs stay unique and an allocated ID is not reused after insert failure (586.160916ms)
+✔ P0-013: exhausted color pool blocks Task POST auto-Customer creation atomically (187.849916ms)
+✔ P0-016: future Created blocks terminal PATCH and logical DELETE without partial changes (37.145541ms)
+✔ independent repository instances preserve parallel field changes in D1 (499.938208ms)
+✔ disk-backed D1 retains tasks, customers and ID sequence after runtime restart (389.408875ms)
+✔ PRD sample renders two independent lists, eight fields and matching cards (35.106375ms)
+✔ Malaysia Monday boundaries, historical terminal tasks and future tasks (1.831417ms)
+✔ search and empty groups keep cards and lists synchronized (0.821459ms)
+✔ editing status or Created recalculates group membership and selection (0.74725ms)
+✔ Current Week Status retains four groups, scope and counts (1.336ms)
+✔ tasks closed this week remain in weekly groups and Closed status (1.171625ms)
+✔ closed End uses Malaysia Monday inclusive/exclusive bounds (0.54425ms)
+ℹ tests 56
+ℹ suites 0
+ℹ pass 56
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6027.976333

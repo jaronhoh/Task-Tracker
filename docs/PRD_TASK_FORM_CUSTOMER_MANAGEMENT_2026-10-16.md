@@ -188,7 +188,7 @@ Improve New Task and Edit Task workflows, allow safe customer removal, and make 
 
 ## 9. Approved UI enhancements — 2026-10-18 (CR-015 / CR-016)
 
-**Status:** User explicitly approved requirements (option A). **Requirements only; no implementation, browser acceptance, GitHub merge or Sites deployment has occurred as part of this update.** Current deployed baseline per project status: Sites Version 11.
+**Release status (2026-10-18):** User-approved CR-015/016 implemented, tested, self-reviewed, merged and deployed on the existing Sites project as **Version 12**. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [release evidence](evidence/cr015-cr016-v12/README.md) for exact GitHub/Sites SHAs, deployment, real Chromium acceptance and complete read-only production preservation checks. The requirements below remain the approved scope; the pre-release baseline was Version 11.
 
 ### CR-015 — Separator between customer name and task count in Accordion group headers
 - In **every** existing customer/count summary badge within Weekly Task and Current Week Status group headers, display `Customer Name | Task Count`, e.g. `JXM | 10`, with visually comfortable spacing on both sides of the vertical separator.

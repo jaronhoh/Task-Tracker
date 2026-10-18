@@ -1,0 +1,60 @@
+{
+  "project_id": "appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979",
+  "version": 12,
+  "verified_at": "2026-10-18T10:30:38Z",
+  "tables": {
+    "app_revision": {
+      "equal": true,
+      "complete": true,
+      "rows": 1,
+      "columns": [
+        "id",
+        "revision",
+        "token"
+      ]
+    },
+    "app_sequence": {
+      "equal": true,
+      "complete": true,
+      "rows": 1,
+      "columns": [
+        "sequence_name",
+        "next_value"
+      ]
+    },
+    "customers": {
+      "equal": true,
+      "complete": true,
+      "rows": 6,
+      "columns": [
+        "name",
+        "normalized_name",
+        "color"
+      ]
+    },
+    "tasks": {
+      "equal": true,
+      "complete": true,
+      "rows": 32,
+      "columns": [
+        "task_id",
+        "customer_name",
+        "task_title",
+        "task_description",
+        "note",
+        "created",
+        "end",
+        "status",
+        "tracker_link"
+      ]
+    }
+  },
+  "sequence_next_value": 33,
+  "revision": 150,
+  "revision_token_compared": true,
+  "access_policy_equal": true,
+  "access_policy_revision": 1,
+  "environment_equal": true,
+  "environment_revision": 0,
+  "production_test_crud": false
+}

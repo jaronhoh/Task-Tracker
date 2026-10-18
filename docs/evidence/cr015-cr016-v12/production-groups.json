@@ -1,0 +1,72 @@
+[
+  {
+    "actual": {
+      "JXM": 10,
+      "MySelf": 2,
+      "VSTECS": 5
+    },
+    "badges": [
+      {
+        "count": 10,
+        "name": "JXM",
+        "separator": true
+      },
+      {
+        "count": 5,
+        "name": "VSTECS",
+        "separator": true
+      },
+      {
+        "count": 2,
+        "name": "MySelf",
+        "separator": true
+      }
+    ],
+    "label": "Work in Progress: 17 tasks"
+  },
+  {
+    "actual": {
+      "MMM": 1
+    },
+    "badges": [
+      {
+        "count": 1,
+        "name": "MMM",
+        "separator": true
+      }
+    ],
+    "label": "Pending with Customer: 1 tasks"
+  },
+  {
+    "actual": {
+      "VSTECS": 3
+    },
+    "badges": [
+      {
+        "count": 3,
+        "name": "VSTECS",
+        "separator": true
+      }
+    ],
+    "label": "KIV: 3 tasks"
+  },
+  {
+    "actual": {
+      "JXM": 3,
+      "MySelf": 1
+    },
+    "badges": [
+      {
+        "count": 3,
+        "name": "JXM",
+        "separator": true
+      },
+      {
+        "count": 1,
+        "name": "MySelf",
+        "separator": true
+      }
+    ],
+    "label": "Closed: 4 tasks"
+  }
+]

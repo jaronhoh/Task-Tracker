@@ -1,0 +1,22 @@
+✔ migrated PRD sample renders two independent lists, eight data fields plus tracker link, matching group totals (25.727167ms)
+✔ Malaysia Monday boundaries, historical terminal and future exclusions in React model (0.772125ms)
+✔ search and empty groups retain synchronized counts and full search field scope (6.346917ms)
+✔ editing status or Created recalculates membership and preserves selected row (5.136459ms)
+✔ Current Week Status retains four groups and same scope/counts (4.395375ms)
+✔ save queue applies in order and recovers after a failed request (12.486375ms)
+✔ export keeps all filtered records and group semantics; input time is browser-independent (0.381125ms)
+✔ 6b14576 closed-this-week eligibility, rendered groups, search and export agree (10.324333ms)
+✔ closed End includes Malaysia Monday start, excludes next Monday and missing End (0.1485ms)
+✔ colored group badges expose exact live counts including zero in both views (8.219416ms)
+✔ accordion headers are keyboard buttons and only populated groups start expanded (4.914292ms)
+✔ status filters select every status, All restores scope, search counts remain independent (2.633417ms)
+✔ weekly and status cards toggle, retain pre-filter counts and export only selected groups (2.01675ms)
+✔ customer breakdown conserves filtered group totals, handles unresolved customers and sorts deterministically (4.030875ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 844.081667
