@@ -10,12 +10,12 @@ export function colorOption(color:string):Option {
 export function SearchPicker({id,label,listLabel=label,value,options,onChange,disabled=false,placeholder='Select…',actions=[],up=false}:{id?:string;label:string;listLabel?:string;value:string;options:Option[];onChange:(value:string)=>void;disabled?:boolean;placeholder?:string;actions?:Action[];up?:boolean}) {
   const uid=useId(),listId=`${uid}-options`
   const root=useRef<HTMLDivElement>(null),trigger=useRef<HTMLButtonElement>(null),input=useRef<HTMLInputElement>(null)
-  const [open,setOpen]=useState(false),[query,setQuery]=useState(''),[active,setActive]=useState(0)
+  const [open,setOpen]=useState(false),[query,setQuery]=useState(''),[active,setActive]=useState(0),[above,setAbove]=useState(up)
   const filtered=options.filter(o=>(o.searchText??o.label).toLocaleLowerCase().includes(query.toLocaleLowerCase()))
   const selected=options.find(o=>o.value===value)
   const activeOption=filtered[active]
   function close(restore=true){setOpen(false);if(restore)trigger.current?.focus()}
-  function show(){if(disabled)return;setQuery('');setActive(Math.max(0,options.findIndex(o=>o.value===value&&!o.disabled)));setOpen(true)}
+  function show(){if(disabled)return;const rect=root.current?.getBoundingClientRect(),dialog=root.current?.closest('[role=dialog]')?.getBoundingClientRect();if(rect){const bottom=Math.min(window.innerHeight,dialog?.bottom??window.innerHeight),top=Math.max(0,dialog?.top??0);setAbove(up||(bottom-rect.bottom<260&&rect.top-top>bottom-rect.bottom))}setQuery('');setActive(Math.max(0,options.findIndex(o=>o.value===value&&!o.disabled)));setOpen(true)}
   function choose(option:Option){if(option.disabled)return;close();onChange(option.value)}
   function move(direction:number){for(let n=1;n<=filtered.length;n++){const next=(active+direction*n+filtered.length)%filtered.length;if(!filtered[next].disabled){setActive(next);break}}}
   useEffect(()=>{if(open)input.current?.focus()},[open])
@@ -25,7 +25,7 @@ export function SearchPicker({id,label,listLabel=label,value,options,onChange,di
     <button ref={trigger} id={id} type="button" aria-label={label} aria-haspopup="listbox" aria-expanded={open} aria-controls={open?listId:undefined} disabled={disabled} className="flex min-h-9 w-full items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 text-left" onClick={()=>open?close():show()}>
       <span className="inline-flex min-w-0 items-center gap-2">{selected?.color&&<span className="size-3 shrink-0 rounded-full border" style={{backgroundColor:selected.color}} aria-hidden="true"/>}<span className={selected?'truncate':'text-muted-foreground'}>{selected?.label??placeholder}</span></span><ChevronDown className="size-4 shrink-0" aria-hidden="true"/>
     </button>
-    {open&&<div className={`absolute ${up?'bottom-full mb-1':'top-full mt-1'} z-50 w-full min-w-40 rounded-md border bg-card p-1 shadow-lg`}>
+    {open&&<div className={`absolute ${above?'bottom-full mb-1':'top-full mt-1'} z-50 w-full min-w-40 rounded-md border bg-card p-1 shadow-lg`}>
       <input ref={input} type="text" role="combobox" aria-label={`Search ${label}`} aria-autocomplete="list" aria-expanded="true" aria-controls={listId} aria-activedescendant={activeOption&&!activeOption.disabled?`${uid}-${active}`:undefined} placeholder="Search…" className="mb-1 w-full rounded border bg-card px-2 py-2 text-sm" value={query} onChange={e=>{setQuery(e.target.value);setActive(0)}}/>
       <div id={listId} role="listbox" aria-label={listLabel} className="max-h-40 overflow-y-auto overscroll-contain bg-card">
         {filtered.map((option,index)=><button id={`${uid}-${index}`} data-option-index={index} key={option.value} type="button" role="option" tabIndex={-1} aria-selected={option.value===value} disabled={option.disabled} className={`flex w-full items-center gap-2 rounded px-2 py-2 text-left hover:bg-muted disabled:opacity-50 ${index===active?'bg-muted':''}`} onMouseDown={e=>e.preventDefault()} onMouseEnter={()=>setActive(index)} onClick={()=>choose(option)}>{option.color&&<span className="size-3 shrink-0 rounded-full border" style={{backgroundColor:option.color}} aria-hidden="true"/>}<span className="flex-1">{option.color?<code>{option.label}</code>:option.label}</span>{option.disabled&&<span className="text-xs">In use</span>}{option.value===value&&<Check className="size-4" aria-label="Selected"/>}</button>)}
