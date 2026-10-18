@@ -1,3 +1,12 @@
+# Approved next requirements — CR-015 / CR-016 (2026-10-18, MYT)
+
+- **Status: USER APPROVED / PRD UPDATED ON FEATURE BRANCH; implementation, tests, merge and Sites deployment NOT performed by this documentation change.** Latest recorded production remains **Sites Version 11** (2026-10-17). Version 12 is a proposed release target, not a deployed version.
+- PRD: `docs/PRD_TASK_FORM_CUSTOMER_MANAGEMENT_2026-10-16.md` §9 (CR-015, CR-016); branch `docs/cr015-cr016-dropdown-search-20261018` pending PR and merge.
+- CR-015: display spaced `Customer Name | Count` in all Accordion group customer badges; preserve customer color dots, counts, one-line scrolling and collapse/filter behavior.
+- CR-016: all existing data-selection dropdowns get instantaneous case-insensitive substring keyword filtering, clear/reset and no-results feedback, with keyboard/touch and theme support. Existing Add Customer, Manage Customers and Add Data/New Task actions remain independent, visible and fully functional even when no option matches; no new actions are invented.
+- Scope: Sites React presentation and tests only; no D1/schema, business rules, production data, ID sequence/revision, access, or Site URL changes authorized.
+- Next: implement approved PRD, test real Chromium desktop/mobile in both themes plus existing regressions, review/merge, separately deploy existing Sites project after safety checks, verify production and append deployment evidence here.
+
 # Latest release — CR-013 / CR-014, Sites Version 11 (2026-10-17)
 
 **Status: IMPLEMENTED / TESTED / REVIEWED / MERGED / DEPLOYED / production browser verified.**
