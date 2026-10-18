@@ -74,7 +74,7 @@ test('React UI: TanStack sorting/pagination/reset and full filtered single-sheet
   assert.equal(download.suggestedFilename(),'TaskTracker_ShowAllData_20261016.xlsx');
   const file=path.join(temp,'all.xlsx');await download.saveAs(file);const book=XLSX.readFile(file);
   assert.deepEqual(book.SheetNames,['Tasks']);const rows=XLSX.utils.sheet_to_json(book.Sheets.Tasks,{header:1});assert.equal(rows.length,62);assert.equal(rows[1][0],'TSK-0061');
-  await page.locator('#pageSize').selectOption('50');assert.equal(await page.locator('[data-task-id]').count(),50);
+  await page.locator('#pageSize').click();await page.getByRole('option',{name:'50',exact:true}).click();assert.equal(await page.locator('[data-task-id]').count(),50);
   await page.getByRole('button',{name:'Next page',exact:true}).click();await page.locator('[data-task-id="TSK-0011"]').waitFor();
   await page.locator('#globalSearch').fill('TSK-0001');await page.locator('#searchBtn').click();await page.locator('[data-task-id="TSK-0001"]').waitFor();assert.equal(await page.locator('[data-task-id]').count(),1);
   assert.equal(await page.getByRole('button',{name:'Next page',exact:true}).isDisabled(),true);
@@ -102,7 +102,7 @@ test('React UI: ordered blur saves, retry, Customer rename/color, logical delete
   const fresh=await api(`/api/tasks/${original.taskId}`,undefined,'GET');assert.equal(fresh.customerName,'Renamed Customer');
   assert.equal((await api('/api/customers',undefined,'GET'))[0].color,'#FB923C');
   await api(`/api/tasks/${original.taskId}`,undefined,'DELETE');await page.reload();await page.locator('#healthBadge.ok').waitFor();assert.equal(await page.locator('[data-task-id]').count(),0);
-  await page.locator('[data-view="all"]').click();await page.locator(`[data-task-id="${original.taskId}"]`).dblclick();await page.locator('#taskStatus').selectOption('KIV');await page.locator('#taskStatus').press('Tab');await page.getByText('Status saved.',{exact:true}).waitFor();
+  await page.locator('[data-view="all"]').click();await page.locator(`[data-task-id="${original.taskId}"]`).dblclick();await page.locator('#taskStatus').click();await page.getByRole('option',{name:'KIV',exact:true}).click();await page.locator('#taskStatus').press('Tab');await page.getByText('Status saved.',{exact:true}).waitFor();
   await page.locator('#taskDialog [data-close="taskDialog"]').click();await page.locator('[data-view="weekly"]').click();await page.locator(`[data-task-id="${original.taskId}"]`).waitFor();
   const restored=await api(`/api/tasks/${original.taskId}`,undefined,'GET');assert.equal(restored.status,'KIV');assert.equal(restored.end,null);
   await ctx.close();
@@ -379,5 +379,41 @@ test('CR-013/014: single-row customer summaries, exact filtered counts, colors, 
     // Refreshed task/customer responses must recompute, using no production writes.
     live=fixture.slice(0,1);await page.reload();await page.locator('#healthBadge.ok').waitFor();const refreshed=await verify();assert.equal(refreshed.reduce((n,g)=>n+g.total,0),1);
     assert.deepEqual(errors,[]);console.log(JSON.stringify({release:'CR-013/014',width,mode,result:'passed'}));await ctx.close();
+  }
+}));
+
+test('CR-015/016: keyword selectors preserve draft, footer actions, saves, RGB, keyboard and mobile themes', async()=>harness(async({browser,url,api})=>{
+  await api('/api/customers',{name:'VSTECS',color:'#F87171'});
+  await api('/api/customers',{name:'User Testing',color:'#FB923C'});
+  await api('/api/tasks',{customerName:'VSTECS',taskTitle:'Existing searchable task'});
+  for(const width of [1440,390])for(const mode of ['light','dark']) {
+    const ctx=await browser.newContext({viewport:{width,height:1000},colorScheme:mode,isMobile:width===390,hasTouch:width===390}),page=await ctx.newPage();
+    page.setDefaultTimeout(8000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+    const shot=async label=>{if(process.env.TASK_TRACKER_EVIDENCE_DIR)await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`cr015-016-${width}-${mode}-${label}.png`),fullPage:true,animations:'disabled'})};
+    await page.locator('[data-view="status"]').click();
+    const badge=page.locator('.customer-count-badge').first();assert.match(await badge.innerText(),/\|/);assert.equal(await badge.locator('[aria-hidden="true"]').last().innerText(),'|');
+    const toggle=page.getByRole('button',{name:/^KIV: /});await toggle.press('Enter');assert.equal(await toggle.getAttribute('aria-expanded'),'false');assert.equal(await badge.isVisible(),true);await shot('headers-collapsed');await toggle.press('Space');
+    await page.locator('#newTaskBtn').click();await page.locator('#taskTitle').fill(`Draft ${width} ${mode}`);await page.locator('#taskNote').fill('Preserved note');
+    await page.locator('#customerName').click();const search=page.getByRole('combobox',{name:'Search Customer Name'});await search.fill('sE');
+    assert.deepEqual(await page.getByRole('listbox',{name:'Customers',exact:true}).getByRole('option').allTextContents(),['User Testing']);
+    // Mixed-case interior substring, plus clearing restores original order and all choices.
+    await search.fill('te');assert.deepEqual(await page.getByRole('listbox',{name:'Customers',exact:true}).getByRole('option').allTextContents(),['User Testing','VSTECS']);
+    await search.fill('zz-no-match');await page.getByText('No results found',{exact:true}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'＋ Add Customer',exact:true}).isVisible(),true);await shot('customer-empty-footer');
+    await page.getByRole('button',{name:'＋ Add Customer',exact:true}).click();await page.locator('#newCustomerName').fill(`Added ${width} ${mode}`);await page.locator('#customerForm').getByRole('button',{name:'Add Customer',exact:true}).click();
+    await page.locator('#customerDialog').waitFor({state:'hidden'});assert.equal(await page.locator('#taskTitle').inputValue(),`Draft ${width} ${mode}`);assert.equal(await page.locator('#taskNote').inputValue(),'Preserved note');assert.match(await page.locator('#customerName').innerText(),/Added/);
+    await page.locator('#customerName').click();await search.fill('stEc');await search.press('Enter');assert.match(await page.locator('#customerName').innerText(),/VSTECS/);
+    await page.locator('#taskStatus').click();const status=page.getByRole('combobox',{name:'Search Status'});await status.fill('gReSS');assert.equal(await page.getByRole('option').count(),1);await status.press('Enter');assert.match(await page.locator('#taskStatus').innerText(),/Work in Progress/);
+    await page.locator('#taskStatus').click();await status.fill('nope');await page.getByText('No results found',{exact:true}).waitFor();await status.fill('');assert.equal(await page.getByRole('option').count(),5);await status.press('ArrowDown');await status.press('Escape');assert.equal(await page.locator('#taskDialog').isVisible(),true);assert.match(await page.locator('#taskStatus').innerText(),/Work in Progress/);await shot('status-search');
+    await page.getByRole('button',{name:'Create Task',exact:true}).click();await page.locator('#taskDialog').waitFor({state:'hidden'});
+    const saved=(await api('/api/tasks',undefined,'GET')).find(t=>t.taskTitle===`Draft ${width} ${mode}`);assert.equal(saved.customerName,'VSTECS');assert.equal(saved.status,'Work in Progress');
+    await page.locator(`[data-task-id="${saved.taskId}"]`).dblclick();await page.locator('#customerName').click();await search.fill('zz-no-match');await search.press('Escape');assert.equal((await api(`/api/tasks/${saved.taskId}`,undefined,'GET')).customerName,'VSTECS');
+    await page.locator('#taskStatus').click();await status.fill('lose');page.once('dialog',d=>d.accept());await status.press('Enter');await page.locator('#timeDialog').waitFor();await page.locator('#timeStatus').click();const timeStatus=page.getByRole('combobox',{name:'Search Status'});await timeStatus.fill('lete');assert.equal(await page.getByRole('option').count(),1);await timeStatus.press('Enter');assert.equal((await api(`/api/tasks/${saved.taskId}`,undefined,'GET')).status,'Work in Progress');await page.locator('#timeDialog').getByRole('button',{name:'Cancel',exact:true}).click();await page.locator('#timeDialog').waitFor({state:'hidden'});
+    await page.locator('#taskStatus').click();await status.fill('kiv');await status.press('Enter');await page.getByText('Status saved.',{exact:true}).waitFor();assert.equal((await api(`/api/tasks/${saved.taskId}`,undefined,'GET')).status,'KIV');await page.keyboard.press('Escape');await page.locator('#taskDialog').waitFor({state:'hidden'});
+    while(await page.locator('.notification-dismiss').count())await page.locator('.notification-dismiss').first().click();await page.locator('#manageCustomersBtn').click();await page.getByRole('button',{name:'Customer Color for VSTECS',exact:true}).click();const color=page.getByRole('combobox',{name:'Search Customer Color for VSTECS'});await color.fill('rGb(248, 113');assert.equal(await page.getByRole('option').count(),1);assert.match(await page.getByRole('option').innerText(),/#F87171/);const optionBox=await page.getByRole('option').boundingBox();assert.ok(optionBox.y>=0&&optionBox.y+optionBox.height<=1000,'color result fits viewport');await shot('color-rgb');await color.fill('b923');assert.equal(await page.getByRole('option').isDisabled(),true);await color.press('Enter');assert.equal((await api('/api/customers',undefined,'GET')).find(c=>c.name==='VSTECS').color,'#F87171');await color.press('Escape');
+    await page.locator('#manageAddCustomerBtn').click();await page.getByRole('button',{name:'Customer Color',exact:true}).click();const addColor=page.getByRole('combobox',{name:'Search Customer Color',exact:true});await addColor.fill('zz-no-match');await page.getByText('No results found',{exact:true}).waitFor();await addColor.fill('');assert.ok(await page.getByRole('option').count()>0);await addColor.press('ArrowDown');await addColor.press('Enter');assert.equal(await page.locator('.managed-customer-add').isVisible(),true);await page.locator('.managed-customer-add').getByRole('button',{name:'Cancel',exact:true}).click();await page.locator('#manageCustomersDialog [data-close="manageCustomersDialog"]').last().click();
+    await page.locator('[data-view="all"]').click();await page.locator('#pageSize').click();await page.getByRole('combobox',{name:'Search Rows per page'}).fill('50');await page.getByRole('option',{name:'50',exact:true}).click();assert.equal(await page.locator('#pageSize').innerText(),'50');
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);console.log(JSON.stringify({release:'CR-015/016',width,mode,result:'passed'}));await ctx.close();
   }
 }));
