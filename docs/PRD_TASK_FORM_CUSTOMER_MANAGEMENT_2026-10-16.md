@@ -184,3 +184,31 @@ Improve New Task and Edit Task workflows, allow safe customer removal, and make 
 - Modify **existing** ChatGPT Sites React/D1 only, with GitHub mirror under `sites/react-d1/`. Do not modify/deploy historical Express code.
 - No D1 migration is needed for these display-only requirements; preserve existing Site URL, project, D1 rows, task/customer IDs, app sequence/revision, access settings and secrets.
 - Run automated tests and real browser desktop/mobile acceptance, record screenshots and production read-only data comparisons. Update `docs/PROJECT_STATUS.md` with actual GitHub/Sites commits, version, deployment and acceptance evidence; do not claim PRD commit is a deployment.
+
+
+## 9. Approved UI enhancements — 2026-10-18 (CR-015 / CR-016)
+
+**Status:** User explicitly approved requirements (option A). **Requirements only; no implementation, browser acceptance, GitHub merge or Sites deployment has occurred as part of this update.** Current deployed baseline per project status: Sites Version 11.
+
+### CR-015 — Separator between customer name and task count in Accordion group headers
+- In **every** existing customer/count summary badge within Weekly Task and Current Week Status group headers, display `Customer Name | Task Count`, e.g. `JXM | 10`, with visually comfortable spacing on both sides of the vertical separator.
+- Retain each badge's existing customer color dot, real filtered counts, Unassigned bucket, ordering, single-line non-wrapping header, independent horizontal scrolling, collapsed visibility, group expand/collapse control, and keyboard behavior.
+- Do not change group totals, task membership, filters, responsive layout, or any API/D1 data.
+- **AC-CR-015-01:** All customer summary badges, including Unassigned where applicable, render a spaced `|` separator; actual group counts and badge totals remain identical to Version 11.
+- **AC-CR-015-02:** Light/Dark desktop 1440px and mobile 390px screenshots confirm legible spacing without wrapping, clipping the toggle or breaking horizontal/keyboard scrolling; expanded and collapsed groups work.
+
+### CR-016 — Searchable keyword filtering for existing data-selection dropdowns
+- Every existing **data-option selection dropdown** supports an editable keyword input and live, client-side, case-insensitive **substring** matching (not prefix-only). Example: `SE` can match `VSTECS` and `User Testing` when those values exist. Do not hardcode example data.
+- Apply to all existing New Task / Edit Task selectors (including Customer and Status), Manage Customers' color selectors and other existing data-selection dropdowns as applicable. Search existing color option textual HEX/RGB labels while preserving colored swatches and original stored values. Pure command/action menus are not required to become searchable unless they contain data choices.
+- Filter options as typing occurs without a submit step; clearing search restores the complete list. Provide `No results found` when no option matches. Matching must not mutate saved selections until an option is chosen.
+- Preserve initial selected values, placeholder, validation, form draft/state, create/edit/save behavior, customer creation refresh, original option order, theme, focus, keyboard interactions (Arrow keys/Enter/Escape), and usable touch/mobile interaction. Opening/closing the menu must not accidentally submit a form.
+- Keep **existing** special actions such as `Add Customer`, `Manage Customers`, and `Add Data / New Task` visible and available as independently actionable footer/command controls, **outside the filtered option results**, including for zero matches. Do not invent actions in dropdowns that do not currently provide them. Existing actions keep their exact behavior and permissions.
+- **AC-CR-016-01:** Search by interior substring with mixed case returns only matching data choices; clearing shows all; empty result displays clear feedback.
+- **AC-CR-016-02:** Customer, Status and Color dropdowns (including selected color swatches/HEX-RGB labels) retain correct selection, save/reopen, validation and keyboard/touch operation; user-entered keyword alone does not save or alter data.
+- **AC-CR-016-03:** Existing Add Customer / Manage Customers / Add Data actions stay present when filtering or showing no results, and still operate correctly; customer creation refreshes list without losing current unsaved task inputs.
+- **AC-CR-016-04:** Real Chromium browser tests and screenshots at 1440px/390px in both Light/Dark themes; TypeScript, build, existing React/API/D1/weekly regressions and tab/group/filter/export behavior pass.
+
+### Release and safety constraints
+- Only the existing ChatGPT Sites React/D1 application, mirrored under `sites/react-d1/`; do not touch the legacy Express application or introduce PocketBase/PocketBay.
+- No new D1 schema or mutation is required for the approved UI behavior. Preserve all production tasks/customers, IDs, app sequence/revision, owner-only access policy, existing Site URL, secrets and configuration.
+- Work through implementation, regression tests, CI, review/merge and **separate** existing-Site deployment and native production browser verification. Record GitHub and Sites commits/versions independently and read-only compare all production D1 rows and access settings before/after. Do not label Version 12 deployed until Sites confirms it.
