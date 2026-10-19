@@ -1,3 +1,37 @@
+# CR-020 / CR-021 — Sites Version 15 production release VERIFIED (2026-10-19 MYT)
+
+**Status: DEPLOYED AND LIVE-VERIFIED.** This entry supersedes the two pending-deployment handoff snapshots immediately below it; those notes and all earlier release history are retained.
+
+## Actual release
+- Existing Site only: project `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979`; production URL unchanged: https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/.
+- Published Sites **Version 15**, saved version `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979~appgver_4824a5cb7d588191abbce69bdc92d7cc`.
+- Native deployment ID `appgdep_6ad5d3b71428819185184f8875ab56e5`; status **succeeded**; native publish response timestamp **2026-10-19 16:24:47.590637 MYT (UTC+8)** / `2026-10-19T08:24:47.590637+00:00`.
+- Sites source commit: `251d602ee3c01f561017aba66ab2101a6e745241`. Archive SHA-256: `599FC7CED7B152266771744FE7F145AEF39400393F52ADE44F2D984727CCF9F7`.
+- GitHub `main` at deployment verification: `20427344e30e6e0852e9555b42668d1ff6e17d2a`; CR-020/021 implementation merge: `bfbd80eab3c9f626134407a73cabcf2bddc8a6ed` (PR #18). This status update is a documentation-only commit after the release.
+- Environment revision remained 0; production D1 binding remains `DB`; no schema change or migration was run. No rollback required; Version 14 remains saved as the prior rollback candidate (`...~appgver_e9372632ffc48191b5ede4511b1d4728`).
+
+## Production UI verification
+- Live desktop page showed the CR-020 date heading as `date | hours`; Accordion expanded and collapsed successfully.
+- Log Time had exactly five headers: Time (Start–End), Task Title, Customer, Activity, Spend. No Actions column or row Edit/Delete controls were present.
+- Single click selected a row; double click and keyboard Enter each opened Edit Log Time. Search and Clear worked. Today / This Week / Show All Data controls were present.
+- Light and Dark theme switching both rendered correctly; page was restored to Light. The live page was also checked at an approximately 400 CSS-pixel mobile-width viewport: summary cards wrapped, search controls remained usable, the date separator remained visible, and the five-column table remained horizontally scrollable. CI separately covered exact 390px Chromium viewport in both themes.
+- Production Auto Save and Save Time writes were intentionally not exercised. Their successful behavior is supported by the isolated CI run recorded below: 92 passed, 0 failed, including dialog, keyboard, auto-save and save-time coverage. No production record was changed to test writes.
+
+## Production D1 / access integrity
+A complete read-only snapshot was taken immediately before and after deployment. Every column and every row field compared identical (order-independent); no rows or columns were omitted or truncated.
+
+| Table | Before = After rows | Columns | Comparison |
+| --- | ---: | ---: | --- |
+| tasks | 32 | 9 | identical |
+| customers | 6 | 3 | identical |
+| log_time | 2 | 13 | identical |
+| app_sequence | 1 | 2 | identical; next_value 33 |
+| app_revision | 1 | 3 | identical; revision 171 |
+
+Site URL, project ID and `DB` binding stayed unchanged. Access remained custom owner-only: one owner account, zero groups, zero external visitors; access-policy revision stayed 1. No production writes, deletes, reset, seed, or migration were performed.
+
+---
+
 # CR-020 / CR-021 — Log Time compact UI merged, Sites release PENDING (2026-10-19 MYT)
 
 **Status: IMPLEMENTED / AUTOMATED TESTS PASSED / GITHUB PR MERGED; NEW SITES DEPLOYMENT AND LIVE PRODUCTION VERIFICATION NOT PERFORMED.** The latest verified production remains **Sites Version 14**, recorded below. GitHub merge is not a Sites release.
