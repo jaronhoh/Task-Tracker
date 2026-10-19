@@ -449,7 +449,7 @@ test('CR-017 to CR-019: Log Time Search/Clear, double-click/Enter editing, edit 
       await page.waitForFunction(()=>document.getElementById('logAutoSaveStatus')?.textContent?.startsWith('Saved'))
       const stored=(await api('/api/log-time',undefined,'GET')).find(l=>l.id===first.id);
       assert.equal(stored.note,'FindMe changed');
-      assert.equal(stored.startTime,'09:00');
+      assert.equal(stored.startTime,width===1440?'09:00':'14:00');
       if(width===1440){
       await page.locator('#logDate').fill('2026-10-13');
       await page.locator('#logStart').fill('14:00');
