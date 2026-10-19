@@ -419,3 +419,59 @@ test('CR-015/016: keyword selectors preserve draft, footer actions, saves, RGB, 
 }));
 
 
+
+test('CR-017 to CR-019: Log Time Search/Clear, double-click/Enter editing, edit Auto Save and atomic Save Time', async()=>harness(async({browser,url,api})=>{
+  const task=await api('/api/tasks',{customerName:'CR17 Customer',taskTitle:'Log UX Task',taskDescription:'Initial description',note:'Initial note'});
+  const first=await api('/api/log-time',{taskId:task.taskId,customerName:'CR17 Customer',taskTitle:'Log UX Task',taskDescription:'Initial description',note:'FindMe Original',trackerLink:null,activity:'Design',date:'2026-10-12',startTime:'09:00',endTime:'10:00'});
+  const second=await api('/api/log-time',{taskId:task.taskId,customerName:'CR17 Customer',taskTitle:'Log UX Task',taskDescription:'Another description',note:'Different note',trackerLink:null,activity:'Testing',date:'2026-10-12',startTime:'11:00',endTime:'11:30'});
+  for(const width of [1440,390]){
+    const ctx=await browser.newContext({viewport:{width,height:844},timezoneId:'Asia/Kuala_Lumpur'}),page=await ctx.newPage();
+    try{
+      await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+      await page.getByRole('tab',{name:'Log Time',exact:true}).click();
+      await page.getByRole('tab',{name:'Show All Data',exact:true}).click();
+      const row=page.locator('tr[data-log-id="'+first.id+'"]');
+      await row.waitFor();assert.equal(await page.locator('tr[data-log-id]').count(),2);
+      await page.locator('#logGlobalSearch').fill('findme');
+      await page.locator('#logSearchBtn').click();
+      assert.equal(await page.locator('tr[data-log-id]').count(),1);
+      assert.equal(await page.locator('[data-log-summary="Total"]').innerText(),'2');
+      await page.locator('#logGlobalSearch').fill('nothing-in-notes');
+      await page.locator('#logGlobalSearch').press('Enter');
+      await page.getByText('No results found',{exact:true}).waitFor();
+      await page.locator('#logClearSearchBtn').click();
+      await row.waitFor();assert.equal(await page.locator('tr[data-log-id]').count(),2);
+      await row.click();assert.equal(await row.getAttribute('aria-selected'),'true');
+      await row.dblclick();await page.locator('#logDialog').waitFor();
+      assert.equal(await page.locator('#logNote').inputValue(),width===1440?'FindMe Original':'FindMe changed');
+      await page.locator('#logNote').fill('FindMe changed');
+      await page.locator('#logDescription').click();
+      await page.waitForFunction(()=>document.getElementById('logAutoSaveStatus')?.textContent?.startsWith('Saved'))
+      const stored=(await api('/api/log-time',undefined,'GET')).find(l=>l.id===first.id);
+      assert.equal(stored.note,'FindMe changed');
+      assert.equal(stored.startTime,width===1440?'09:00':'14:00');
+      if(width===1440){
+      await page.locator('#logDate').fill('2026-10-13');
+      await page.locator('#logStart').fill('14:00');
+      await page.locator('#logEnd').fill('15:15');
+      const before=(await api('/api/log-time',undefined,'GET')).find(l=>l.id===first.id);
+      assert.equal(before.date,'2026-10-12');assert.equal(before.startTime,'09:00');
+      await page.locator('#saveLogTimeChanges').click();
+      await page.waitForFunction(()=>document.getElementById('logAutoSaveStatus')?.textContent?.startsWith('Saved'))
+      const after=(await api('/api/log-time',undefined,'GET')).find(l=>l.id===first.id);
+      assert.equal(after.date,'2026-10-13');assert.equal(after.startTime,'14:00');assert.equal(after.endTime,'15:15');assert.equal(after.durationMinutes,75);
+      const actual=(await api('/api/tasks',undefined,'GET')).find(t=>t.taskId===task.taskId);
+      assert.equal(actual.timeSpentMinutes,105);
+      }
+      await page.locator('#logDialog').getByRole('button',{name:'Close',exact:true}).last().click();
+      await page.locator('#logDialog').waitFor({state:'hidden'});
+      await page.getByRole('tab',{name:'Show All Data',exact:true}).click();
+      await page.locator('tr[data-log-id="'+second.id+'"]').focus();
+      await page.locator('tr[data-log-id="'+second.id+'"]').press('Enter');
+      await page.locator('#logDialog').waitFor();
+      assert.equal(await page.locator('#logNote').inputValue(),'Different note');
+      await page.keyboard.press('Escape');await page.locator('#logDialog').waitFor({state:'hidden'});
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page must not overflow at '+width);
+    }finally{await ctx.close()}
+  }
+}));
