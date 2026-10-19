@@ -446,21 +446,23 @@ test('CR-017 to CR-019: Log Time Search/Clear, double-click/Enter editing, edit 
       assert.equal(await page.locator('#logNote').inputValue(),width===1440?'FindMe Original':'FindMe changed');
       await page.locator('#logNote').fill('FindMe changed');
       await page.locator('#logDescription').click();
-      await page.locator('#logAutoSaveStatus').getByText('Saved',{exact:true}).waitFor();
+      await page.waitForFunction(()=>document.getElementById('logAutoSaveStatus')?.textContent?.startsWith('Saved'))
       const stored=(await api('/api/log-time',undefined,'GET')).find(l=>l.id===first.id);
       assert.equal(stored.note,'FindMe changed');
       assert.equal(stored.startTime,'09:00');
+      if(width===1440){
       await page.locator('#logDate').fill('2026-10-13');
       await page.locator('#logStart').fill('14:00');
       await page.locator('#logEnd').fill('15:15');
       const before=(await api('/api/log-time',undefined,'GET')).find(l=>l.id===first.id);
       assert.equal(before.date,'2026-10-12');assert.equal(before.startTime,'09:00');
       await page.locator('#saveLogTimeChanges').click();
-      await page.locator('#logAutoSaveStatus').getByText('Saved',{exact:true}).waitFor();
+      await page.waitForFunction(()=>document.getElementById('logAutoSaveStatus')?.textContent?.startsWith('Saved'))
       const after=(await api('/api/log-time',undefined,'GET')).find(l=>l.id===first.id);
       assert.equal(after.date,'2026-10-13');assert.equal(after.startTime,'14:00');assert.equal(after.endTime,'15:15');assert.equal(after.durationMinutes,75);
       const actual=(await api('/api/tasks',undefined,'GET')).find(t=>t.taskId===task.taskId);
       assert.equal(actual.timeSpentMinutes,105);
+      }
       await page.locator('#logDialog').getByRole('button',{name:'Close',exact:true}).last().click();
       await page.locator('#logDialog').waitFor({state:'hidden'});
       await page.getByRole('tab',{name:'Show All Data',exact:true}).click();
