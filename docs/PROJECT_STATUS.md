@@ -1,3 +1,49 @@
+# CR-017 / CR-018 / CR-019 — Sites Version 14 deployed (2026-10-19 MYT)
+
+**Status: DEPLOYED; production non-mutating interaction checks and full-row D1 preservation VERIFIED.** This entry supersedes the pending-publication entries below; historical records are retained. Successful mutation acceptance is verified in isolated D1/Chromium CI, not by modifying production records.
+
+## Actual release
+- Existing production Site: https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/ ; project `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979`. No new Site created.
+- Actual Sites **Version 14**; saved version `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979~appgver_e9372632ffc48191b5ede4511b1d4728`.
+- Actual Deployment ID: `appgdep_6ad5c38537f8819192d25ae6a7221b86`; native status **succeeded**; completion timestamp **2026-10-19 15:15:43.041304 MYT (UTC+8)** / `2026-10-19T07:15:43.041304+00:00`; environment revision 0.
+- Sites source commit: `8fca9b22ae254f6ceafd7d272fc777b8bc82a8ba`; release archive SHA-256 `4ef057477ac30dafa576f51ec1f37731fd0b326625363a2a38ff69a106196d99`.
+- GitHub source: `main` at `92fbb347a64f95c35811670fd1f3f0c020bda4d3`, including approved implementation commit `1b0fc57db3464e93aff70d56aed2349fec5826d5` ([PR #17](https://github.com/jaronhoh/Task-Tracker/pull/17)). Compare confirms the only commit after implementation was the status-document update. All **175 tracked files** under `sites/react-d1/` matched GitHub blob hashes exactly before packaging; the existing Sites-only generated `tsconfig.tsbuildinfo` was retained. Source push and archive packaging completed through the Sites workflow before native owner-private publication.
+- No server business-rule, migration, schema, dependency, hosting manifest, environment, or access-policy changes. Existing migration files were unchanged; no reset, seed, reimport, manual migration reapplication, or production API mutation was performed.
+
+## Validation evidence
+| Check | Actual result |
+|---|---|
+| Local API/D1/weekly/Log Time tests | **62 passed, 0 failed**, isolated test database |
+| Local React/model tests | **16 passed, 0 failed**; TSX loader used after CLI IPC pipe was unavailable |
+| TypeScript and production build | Passed frontend TypeScript check and full Sites/Vinext build |
+| Chromium acceptance | [CI run 39213478284](https://github.com/jaronhoh/Task-Tracker/actions/runs/39213478284), job `117931881246`, verified completed/success at tested PR head `a0de627e3699e77b793ac6f4f664301ae0865ec7`; logs show **14 passed, 0 failed**, including named CR-017–019 Search/Clear, double-click/Enter, Auto Save and atomic Save Time acceptance |
+| Production Search Bar | Authenticated actual Version 14: Today search `JXM` returns one row and date subtotal **3.50h** while dashboard remains **2 / 3.75h / 3.75h**; Clear restores both rows and **3.75h** date subtotal. This Week unmatched search shows **No results found**; switching Show All Data clears search and restores both records |
+| Production Double Click / Enter | Double-click existing `Task/Tracker update` row opens **Edit Log Time**; selecting row then Enter also opens existing dialog; original values displayed |
+| Production Auto Save | Leaving unchanged Description triggers **Saved** status (no-change branch; no database write). Successful changed-field persistence and queued/stale-editor behavior were exercised in isolated CI, **not production** |
+| Production Save Time | Initially disabled; editing End from `09:15` to `08:59` shows **Time changes not saved** and enables Save Time. Clicking Save Time rejects with **End Time must be later than Start Time on the same Date. Use HH:mm.** Draft restored to `09:15`; button disabled again; dialog closed without write. Successful atomic Date/Start/End persistence is covered by isolated CI, **not production** |
+| Theme/layout | Actual desktop production Light/Dark inspected; original Light/Today restored. Mobile acceptance relies on existing CI; no new live mobile session was run |
+| Source whitespace | Git diff check reported an existing CRLF/blank-line trailing-whitespace warning in GitHub source `test/react-ui.test.cjs:421`; retained exact approved source bytes, no runtime impact asserted from that warning |
+
+## Production data, configuration and access preservation
+Read every page of every user table through native read-only Sites database tools before deployment and after live interaction checks. Both snapshots were complete: no omitted rows/columns or truncated values. Compared **every field of every row**, independent of row order.
+
+| Table | Before | After | Result |
+|---|---:|---:|---|
+| `tasks` | 32 | 32 | All rows, IDs and field values unchanged |
+| `customers` | 6 | 6 | All rows and field values unchanged |
+| `log_time` | 2 | 2 | All rows, UUIDs, timestamps, times and field values unchanged |
+| `app_sequence` | 1 | 1 | Entire row unchanged; task next value **33** |
+| `app_revision` | 1 | 1 | Entire row/token unchanged; revision **170** |
+
+- Same project, Site URL and hosting manifest; native database overview still reports existing binding **DB** and the same five user tables. The database overview does not expose a physical D1 identifier; no database replacement operation was requested or performed.
+- Entire native access policy compared equal: **custom, owner-only**, sole owner unchanged, no editors/groups/external visitors, policy revision **1**.
+- Native runtime environment response compared equal before/after; deployment environment revision **0**.
+- No production records were created, edited or deleted during acceptance; all original task/customer/log values and allocation state were preserved.
+- Rollback reference if needed: previous saved Version 13 `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979~appgver_94d39cf96d30819183352ac54faf2298`; retain production D1 records.
+- Evidence classification: **GitHub source/CI verified; native Sites release verified; authenticated desktop production UI observed; complete production D1 before/after verified**. Production successful-write behavior and live mobile behavior remain untested in production, with isolated CI coverage stated separately.
+
+---
+
 # CR-017 / CR-018 / CR-019 Log Time UX — GitHub implementation merged, Sites publish PENDING (2026-10-19 MYT)
 
 **Status: IMPLEMENTED / TESTED / GITHUB MERGED; SITES DEPLOYMENT AND LIVE PRODUCTION VERIFICATION NOT DONE.** GitHub and the real Sites release are separate actions. **Current last verified production is Sites Version 13**, whose full native release and D1/access evidence is preserved below. No Version 14 or other new published version is claimed.
