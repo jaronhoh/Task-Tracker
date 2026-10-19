@@ -1,3 +1,14 @@
+# Approved Phase 2 — Log Time PRD (2026-10-19, MYT)
+
+**Status: USER-APPROVED REQUIREMENTS / PRD COMMITTED ON DOCUMENTATION BRANCH.** No Phase 2 implementation, test, merge, D1 migration or Sites deployment has been performed by this documentation update. **Last confirmed production release remains Sites Version 12** (2026-10-18), with the GitHub/Sites evidence detailed in the historical entry below.
+
+- Dedicated PRD: `docs/PRD_PHASE2_LOG_TIME_2026-10-19.md`; branch `docs/phase2-log-time-prd-20261019` for documentation review/PR.
+- Phase 2 Scope: top-level Task Tracker / Log Time tabs; separate dated Log Time CRUD, shared Customer, single-use Custom Task, eligible Task Tracker subjects (Work in Progress, Pending with Customer, KIV), closed historical log edit/delete, task-linked calculated Time Spent, fixed 11 Activity options, popup dialogs, compact date-grouped tables, Today/This Week/Show All Data, Total/Today/This Week dashboard cards.
+- Copy-on-select: task title, customer (locked), task_description, note and tracker_link; edited copied fields belong only to Log Time. Relinking tracker tasks recopies after confirmation; converting to one-off custom retains copied fields/customer but unlocks Customer. Custom task never creates a Task Tracker task and its time is not counted in Tracker Time Spent.
+- Time validation: Malaysia work Date required, past/today only, end > start on same Date, no overnight and no overlapping intervals for any customer/subject on that Date; adjacent permitted; enforce server-side transactionally.
+- Engineering notes: new **additive D1 Log Time schema** expected; never rewrite/remove production tasks/customers or task ID sequence; preserve Sites URL/access. Open safeguards D001–D004 documented in PRD, including deletion/reference safety; do not infer deployment approval for irreversible migrations.
+- Next: review/merge PRD documentation, implement in `sites/react-d1/`, run code/tests/real Chromium desktop+mobile × Light/Dark in isolated D1, verify production snapshot and safe migration, separately deploy existing Site and record verified release/version/SHA/deployment/data equality. GitHub merge **is not** Sites deployment.
+
 # Latest release — CR-015 / CR-016, Sites Version 12 (2026-10-18)
 
 **Status: IMPLEMENTED / TESTED / SELF-REVIEWED / MERGED / DEPLOYED / native production browser verified.** This entry supersedes the approved-next-requirements record below; historical entries are retained.
