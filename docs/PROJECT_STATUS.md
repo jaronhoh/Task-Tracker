@@ -1,3 +1,14 @@
+# Approved Log Time UX improvements — CR-017 to CR-019 (2026-10-19 MYT)
+
+**Status: USER-APPROVED / PRD DOCUMENTATION UPDATED; IMPLEMENTATION AND SITES DEPLOYMENT NOT DONE BY THIS DOCUMENTATION CHANGE.** Last recorded verified production remains **Sites Version 13** (2026-10-19 12:33:58 MYT). Historical Version 13 release evidence and earlier entries are preserved below.
+
+- New PRD requirements: `docs/PRD_PHASE2_LOG_TIME_2026-10-19.md` §8 on feature branch `docs/cr017-cr019-logtime-parity-20261019`.
+- **CR-017**: Add independent Log Time Search Bar matching existing Task Tracker Search / Clear behavior, across Subject, Customer, Description, Note, Activity, Tracker Link (and practical Date search), scoped to Today / This Week / Show All Data; retain date Accordion grouping and baseline dashboard totals.
+- **CR-018**: In **existing-record Edit Log Time Dialog only**, plain text fields auto-save on blur and valid option selections auto-save immediately; **new** Log Time still requires explicit Create/Save. Date + Start Time + End Time persist **together only after Save Time**, with full overlap/time validation and derived Time Spent updates. Preserve task-copy confirmation, locked linked customer, existing status eligibility, stale revision protection and queued saves; report failure without losing draft.
+- **CR-019**: Single-click Log Time table row selects; double click or keyboard Enter opens the existing Edit Dialog. Retain Edit/Delete controls, date group toggles, and event-isolation/focus behavior.
+- Evidence: user explicitly chose **A**, matching existing Task Tracker edit semantics. Source inspection found `LogTime.tsx` currently has **no search bar**, requires explicit `Save Log Time` in Edit Dialog, and only exposes row `Edit` rather than Task Tracker's double-click row edit behavior. This is GitHub code inspection, not proof of a new Sites release.
+- Safety: update **existing** React + D1 Site only, no legacy Express and no expected D1 schema change; preserve all original task/customer/log records, identifiers, sequence/revision, site URL and owner-only policy. Next: code, isolated D1 tests, CI, browser 1440/390 Light/Dark, implementation PR/merge, **separate Sites deployment and production read-only reconciliation**.
+
 # Phase 2 — Log Time released as Sites Version 13 (2026-10-19, MYT)
 
 **Status: F01–F06 IMPLEMENTED / TESTED / SELF-REVIEWED / MERGED / DEPLOYED / authenticated production browser verified.** This entry supersedes the blocked-publication records below; historical entries are retained.

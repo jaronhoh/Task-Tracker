@@ -154,3 +154,51 @@ These items are **not user-approved new business rules** and must be resolved by
 - This document approval is **not** implementation, PR merge, test, D1 migration, Sites version, or live release.
 - Existing release baseline remains **Sites Version 12** until independently verified otherwise.
 - Canonical project history: `docs/PROJECT_STATUS.md`. Keep past completed CR-005–CR-016 and released versions unchanged, not reopened.
+
+
+## 8. Approved Phase 2 follow-up — Log Time UX parity with Task Tracker (2026-10-19 MYT)
+
+**Approval:** User requested all three enhancements, then explicitly selected option **A**: **existing Log Time records opened in Edit Dialog must use Auto Save** for ordinary editable fields; **Date / Start Time / End Time are saved together using Save Time**. These requirements extend the existing Phase 2 PRD, without reopening completed original F01–F06 scope. **Implementation pending.** The latest GitHub-recorded production baseline is **Sites Version 13** (2026-10-19); verify live before any new release.
+
+### CR-017 / F05 extension — Log Time Search Bar
+
+- Add a visible Log Time search bar with **Search** and **Clear** buttons, consistent with Task Tracker's existing global search UI, keyboard Enter-to-search, empty/reset state, theme styling, and mobile responsiveness.
+- Search the **Log Time records themselves**, independently of Task Tracker's search state. Case-insensitive, partial keyword/substring matching across **Task Title, Customer Name, Task Description/Comment, Note, Activity and Tracker Link**. Include Date text where practicable without changing stored date formats.
+- Search is scoped to the current **Today / This Week / Show All Data** Log Time view and preserves its existing date-range eligibility; **Search** applies the query and **Clear** restores the unfiltered rows in the current view. The search query must not alter persisted data.
+- Retain date-only Accordion groups, descending date order, ascending Start Time inside each day, and correct **filtered** daily subtotals. Preserve top-level Dashboard card meanings (Total = all Log Time record count, Today/This Week = all relevant work-date hours) independently of search; do not relabel them as filtered counts without a further user decision.
+- Show an accessible **No results found** message for zero keyword matches without suggesting the underlying Log Time database is empty. Do not change Task Tracker's own global search functionality.
+- **AC-CR-017-01:** Search by partial Customer/Task/Activity/Description/Note/Tracker Link finds matching rows, case-insensitively, within the selected view. Clearing restores prior view contents.
+- **AC-CR-017-02:** Date group headers, filtered daily hours, chronological order, dashboard totals, dropdowns, and Task Tracker independent search continue to work; no-result and mobile/keyboard/theme states are tested.
+
+### CR-018 / F03 extension — Auto Save in Edit Log Time only
+
+- **Only existing Log Time records** (`Edit Log Time` dialog) auto-save ordinary editable fields, using the existing **Task Tracker Edit Task** interaction pattern. **New Log Time** continues to use an explicit **Save Log Time** / Create action; merely opening a blank New form or typing a draft must not persist a record.
+- **Auto-save upon blur** for text input/textarea edits: **Task Description/Comment, Note, Tracker Link**, and the free-text **Custom Task Title**. Selectors (**Activity**, **Customer when Custom**, and **Task Title/association**) save when selection is committed, not on search keyword typing. Customer remains locked for linked tasks.
+- The existing task-selection/autopopulate and safety contract remains: switching linked task A → B copies title/description/note/link/customer, subject to existing **confirmation before overwriting edited content**; commit the entire logical association change **atomically** and recalculate both related Time Spent totals. Switching to a one-off Custom Task retains existing copied content and Customer, unlocks Customer, and safely removes prior link. Do not silently persist an incomplete Custom Task title before it has a valid value.
+- **Date, Start Time and End Time are intentionally excluded from per-field Auto Save.** Users edit these as one draft and click a distinct **Save Time** action. Save Time submits the three values in **one atomic update**, validates Malaysia date rules, end > start, same-day-only, no overlaps (including concurrent editors), and recomputes derived duration and linked Task Tracker Time Spent. Changing date/time input or leaving either time field without clicking Save Time must **not** persist any partial time change.
+- Prevent draft loss and race conditions: serialize normal field saves against each other and Save Time, and use the current `updated`/revision conflict protection (`expectedUpdated`) so one save cannot revert another. Preserve authoritative server-returned values; avoid partial snapshots, stale overwrites, duplicate updates or repeated Time Spent accumulation.
+- UI displays a clear **Saving… / Saved / Save failed** state. On validation/API/conflict failure, retain the user's input and display a meaningful error, with retry or safe reload path; do not show success before a server acknowledgment. On dialog close, wait for in-flight saves or warn appropriately, preventing silent loss. The edit dialog must not require the old overall **Save Log Time** button for fields that are auto-saved; **Save Time** remains explicit for the three time fields.
+- Editing historical Log Time linked to a **Closed** task stays allowed; auto-saving textual changes must not silently relink it, reset copied values or change Task Tracker's original task content. Deleting a log remains separately confirmed and recalculates derived totals.
+- **AC-CR-018-01:** Existing log text/textarea blur and dropdown selection persist immediately and survive close/reopen and refresh; no global Save Log Time action is required for these fields.
+- **AC-CR-018-02:** New Log Time requires explicit Save Log Time; invalid/unfinished new drafts are never auto-created.
+- **AC-CR-018-03:** Date, Start, End edits do not persist on blur; Save Time atomically validates and updates duration; overlap/overnight/future-date failures leave existing persisted time and task totals unchanged.
+- **AC-CR-018-04:** Rapid sequential edits, API failure, stale revision, changing linked tasks, customer lock, custom titles and Closing with in-flight requests do not lose data or miscount linked Time Spent.
+- **AC-CR-018-05:** Distinct save statuses and failure messages are accessible in Light/Dark desktop/mobile dialogs.
+
+### CR-019 / F05–F03 extension — Double-click Log Time row to edit
+
+- Reuse existing Task Tracker table row interaction: **single click selects/highlights the Log Time row**, **double click opens that row's Edit Log Time Popup Dialog**, and **Enter** on a keyboard-focused selected row opens the same dialog. The existing row **Edit** button remains available; **Delete** remains available with its existing confirmation.
+- Use the row's stable Log Time `id`, not a date/row index, to prevent opening the wrong record after sorting, search or view change.
+- Do not trigger accidental edit when users click **Delete**, **Edit** or date-group expand/collapse buttons; interactive button events must not bubble into row double-click behavior. Keep visible focus/selection indication and appropriate `tabIndex`, `aria-selected` and labels.
+- Reuse the single existing Edit Dialog and CR-018 Auto Save behavior. Do not create duplicate dialogs, alter Log Time grouping, or change Task Tracker's existing double-click support.
+- **AC-CR-019-01:** Single click selects; double click or keyboard Enter opens the correct Log Time with all saved values; Edit/Delete controls retain their original behavior.
+- **AC-CR-019-02:** Correct under filtered rows, grouped dates, Light/Dark, 1440px desktop and 390px mobile; touch access via Edit button remains usable.
+
+### Release and regression safety for CR-017–CR-019
+
+- Modify the **existing Sites React + D1 project** in `sites/react-d1/`, preserving existing production deployment, full customer/task/log data, IDs, revision/sequence, URL, DB, secrets, access and config.
+- Prefer reuse of the current `LogTime.tsx`, `TaskTable.tsx`, `Editors.tsx`, `SearchPicker` and `createSaveQueue` patterns; inspect actual repo implementation before coding. The existing `PATCH /api/log-time/:id` supports partial changes via merge-then-validate but must be checked for revision-safe queued Auto Save; **do not assume API robustness without tests**.
+- No new D1 schema or migration should be required for these **UX-only** changes. If implementation uncovers an unavoidable migration, stop and validate its necessity and safety before production.
+- Run existing 90-test baseline plus targeted automated API/D1/React and real Chromium acceptance; verify 1440px desktop / 390px mobile × Light/Dark, keyboard/touch, date filters, error/retry/conflict, atomic Save Time, activity/subject/customer dropdowns, customer guard and all original Task Tracker regressions.
+- Use isolated local/test D1 for **all mutation testing**. Production verification is read-only. For a verified production update, record **separate** GitHub implementation PR/merge and actual Sites version/source SHA/deployment ID, authenticated browser acceptance, before/after full-row equality for tasks, customers, Log Time, task sequence/revisions and unchanged owner-only access.
+- No code/test/merge/Sites change is asserted by this PRD requirement update alone. Proposed next Site release number is **14** only if deployment tooling assigns it; never label deployed before direct evidence.
