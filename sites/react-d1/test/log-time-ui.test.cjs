@@ -11,7 +11,9 @@ for(const width of [1440,390])for(const theme of ['light','dark'])test(`Log Time
   const other=await api('/api/tasks',{customerName:'Customer B',taskTitle:'Second task',taskDescription:'Other description',note:'Other note'});
   browser=await chromium.launch({headless:true});const ctx=await browser.newContext({viewport:{width,height:900},timezoneId:'America/Los_Angeles',colorScheme:theme,hasTouch:width===390});const page=await ctx.newPage();page.setDefaultTimeout(12000);
   await page.goto(url);await page.locator('#healthBadge.ok').waitFor();await page.getByRole('tab',{name:'Log Time',exact:true}).click();
-  const workspace=page.getByRole('region',{name:'Log Time workspace'});await workspace.getByText('No Log Time records',{exact:true}).waitFor();await page.locator('#newLogBtn').click();
+  const workspace=page.getByRole('region',{name:'Log Time workspace'});await workspace.getByText('No Log Time records',{exact:true}).waitFor();
+  for(const label of ['Workspace','Log Time views']){const tops=await page.getByRole('tablist',{name:label,exact:true}).getByRole('tab').evaluateAll(ns=>ns.map(n=>n.getBoundingClientRect().top));assert.ok(tops.every(y=>y===tops[0]),`${label} tabs remain on one line`);}
+  await page.locator('#newLogBtn').click();
   await page.locator('#logTask').click();await page.getByRole('combobox',{name:'Search Log Task Title'}).fill('no matches');await page.getByRole('button',{name:'+ Add Custom Task',exact:true}).waitFor();
   await page.getByRole('combobox',{name:'Search Log Task Title'}).fill('DESIGN DOC');await page.getByRole('option').filter({hasText:'Prepare FDD'}).click();assert.equal(await page.locator('#logDescription').inputValue(),'Design document');assert.equal(await page.locator('#logNote').inputValue(),'Task note');assert.equal(await page.locator('#logCustomer').isDisabled(),true);
   await page.locator('#logNote').fill('Log only note');await page.locator('#logActivity').click();assert.equal(await page.getByRole('option').count(),11);await page.getByRole('combobox',{name:'Search Log Activity'}).fill('velop');await page.getByRole('option',{name:'Development',exact:true}).click();

@@ -205,7 +205,7 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
       await toggle.press('Space');assert.equal(await toggle.getAttribute('aria-expanded'),initial);
       await toggle.click();await toggle.click();assert.equal(await toggle.getAttribute('aria-expanded'),initial);
     }
-    const tabPositions=await page.locator('.view-tab').evaluateAll(ns=>ns.map(n=>n.getBoundingClientRect().top));
+    const tabPositions=await page.locator('[data-view]').evaluateAll(ns=>ns.map(n=>n.getBoundingClientRect().top));
     assert.ok(tabPositions.every(y=>y===tabPositions[0]),'tabs remain one line');
     await page.locator('#globalSearch').fill('unmatched');await page.locator('#searchBtn').click();
     assert.equal(await page.locator('.group-toggle[aria-expanded="false"]').count(),4);
@@ -213,7 +213,7 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
     await page.locator('[data-task-id="carry"]').press('Enter');await page.locator('#taskDialog').waitFor();await page.keyboard.press('Escape');
     await page.locator('#taskDialog').waitFor({state:'hidden'});
     await page.waitForFunction(()=>document.activeElement?.id==='editTaskBtn');
-    const chrome=await page.locator('.view-tab').evaluateAll(ns=>ns.map(n=>{const s=getComputedStyle(n);return {top:s.borderTopWidth,left:s.borderLeftWidth,right:s.borderRightWidth,bg:s.backgroundColor,bottom:s.borderBottomColor}}));
+    const chrome=await page.locator('[data-view]').evaluateAll(ns=>ns.map(n=>{const s=getComputedStyle(n);return {top:s.borderTopWidth,left:s.borderLeftWidth,right:s.borderRightWidth,bg:s.backgroundColor,bottom:s.borderBottomColor}}));
     for(const s of chrome){assert.equal(s.top,'0px');assert.equal(s.left,'0px');assert.equal(s.right,'0px');assert.equal(s.bg,'rgba(0, 0, 0, 0)');}
     assert.equal(chrome[1].bottom,'rgb(37, 99, 235)');
     await page.locator('[data-view="weekly"]').click();await page.locator('[data-view="weekly"]').press('ArrowRight');
@@ -342,10 +342,10 @@ test('CR-013/014: single-row customer summaries, exact filtered counts, colors, 
         if(g.expanded){const expected={};for(const row of g.rows){const name=customers.some(c=>c.name===row.customer)?row.customer:'Unassigned';expected[name]=(expected[name]||0)+1;}assert.deepEqual(Object.fromEntries(g.badges.map(b=>[b.name,b.count])),expected);}
         for(const b of g.badges){const c=customers.find(c=>c.name===b.name);if(c){const rgb=c.color==='#F87171'?'rgb(248, 113, 113)':c.color==='#60A5FA'?'rgb(96, 165, 250)':'rgb(74, 222, 128)';assert.equal(b.color,rgb);}}
       }
-      const style=await page.locator('.line-tabs').evaluate(n=>{const s=getComputedStyle(n);return {border:s.borderBottomWidth,shadow:s.boxShadow}});
+      const style=await page.locator('[aria-label="Task views"]').evaluate(n=>{const s=getComputedStyle(n);return {border:s.borderBottomWidth,shadow:s.boxShadow}});
       assert.equal(style.border,'0px');assert.equal(style.shadow,'none');
-      await page.waitForFunction(expected=>getComputedStyle(document.querySelector('.view-tab[data-state="active"]')).borderBottomColor===expected,mode==='light'?'rgb(37, 99, 235)':'rgb(147, 197, 253)');
-      const active=page.locator('.view-tab[data-state="active"]');assert.equal(await active.evaluate(n=>getComputedStyle(n).borderBottomWidth),'2px');
+      await page.waitForFunction(expected=>getComputedStyle(document.querySelector('[data-view][data-state="active"]')).borderBottomColor===expected,mode==='light'?'rgb(37, 99, 235)':'rgb(147, 197, 253)');
+      const active=page.locator('[data-view][data-state="active"]');assert.equal(await active.evaluate(n=>getComputedStyle(n).borderBottomWidth),'2px');
       assert.equal(await active.evaluate(n=>getComputedStyle(n).borderBottomColor),mode==='light'?'rgb(37, 99, 235)':'rgb(147, 197, 253)');
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
       return groups;
@@ -417,3 +417,5 @@ test('CR-015/016: keyword selectors preserve draft, footer actions, saves, RGB, 
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);console.log(JSON.stringify({release:'CR-015/016',width,mode,result:'passed'}));await ctx.close();
   }
 }));
+
+
