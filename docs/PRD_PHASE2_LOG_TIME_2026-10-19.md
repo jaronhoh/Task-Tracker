@@ -202,3 +202,32 @@ These items are **not user-approved new business rules** and must be resolved by
 - Run existing 90-test baseline plus targeted automated API/D1/React and real Chromium acceptance; verify 1440px desktop / 390px mobile × Light/Dark, keyboard/touch, date filters, error/retry/conflict, atomic Save Time, activity/subject/customer dropdowns, customer guard and all original Task Tracker regressions.
 - Use isolated local/test D1 for **all mutation testing**. Production verification is read-only. For a verified production update, record **separate** GitHub implementation PR/merge and actual Sites version/source SHA/deployment ID, authenticated browser acceptance, before/after full-row equality for tasks, customers, Log Time, task sequence/revisions and unchanged owner-only access.
 - No code/test/merge/Sites change is asserted by this PRD requirement update alone. Proposed next Site release number is **14** only if deployment tooling assigns it; never label deployed before direct evidence.
+
+## 9. Approved Log Time compact-table UI correction — CR-020 and CR-021 (2026-10-19 MYT)
+
+**Source:** Direct user request to improve Log Time date Accordion visual separation and remove redundant table actions now that double-click edits work. **Baseline:** Verified production Sites Version 14 (see the latest `docs/PROJECT_STATUS.md` release entry). These two rules **supersede** earlier §4 F05 and §8 CR-019 wording which required an `Actions` column and visible Edit/Delete buttons. The rest of Phase 2 remains unchanged.
+
+### CR-020 — Date Accordion header separates date from total time
+
+- Show each Log Time Date-group heading with an explicit, legible **vertical separator** between date and the total hours for the visible records under the selected Log Time view/search, e.g. **`2026-10-19 | 3.75h`** rather than `2026-10-19 3.75h`.
+- Use the existing Accordion typography, spacing, theme color, indicator and padding. Separator must remain visible and aligned in both expanded and collapsed states, Light/Dark and 1440px/390px layouts.
+- Do not modify the Date key, time rounding, date sorting, duration aggregation, Time Spent synchronization or Search Bar/filter semantics.
+- **AC-CR-020-01:** Date and exact day subtotal are distinguishable with `|` in Today, This Week and Show All Data, including when keyword search narrows visible records.
+- **AC-CR-020-02:** Collapse/expand, horizontal scroll and date-group full-width alignment still work; no cropped labels or theme regressions.
+
+### CR-021 — Remove redundant Log Time table Actions column
+
+- Remove the **entire `Actions` column** from the Log Time table: header, Edit button and Delete button; no empty trailing action cell. The compact table has **exactly five columns**: `Time (Start–End) | Task Title | Customer | Activity | Spend`.
+- Date-group Accordion header cells span **five**, not six, table columns. Do not change existing Task Tracker table columns/actions.
+- Keep row **single-click selection**, **double-click to Edit Log Time Popup**, and **keyboard Enter** on a focused row opening the same existing editor. Preserve CR-018 ordinary-field Auto Save and separate explicit Save Time, including historical Closed task associations. Date-group toggle must not open the editor.
+- **Delete is not needed in the Log Time table UI.** Remove the now-unreachable frontend Log Time delete dialog and related state. Do **not** automatically delete historical records or change the underlying server API, permissions, migration, data retention, or D1 data as part of a presentation-only request.
+- **AC-CR-021-01:** Exactly five header labels and five data cells per visible Log Time row, date-group colspan=5; no `Actions`, `Edit`, or `Delete` row buttons, including after searching or changing views.
+- **AC-CR-021-02:** Both double-click and Enter still open the correct saved entry, with Auto Save and Save Time intact. A user can collapse or expand a date group without editing the row.
+- **AC-CR-021-03:** All existing time logs remain unchanged. Backend delete support is untouched; this CR removes the Log Time **UI exposure** only. Desktop/mobile/browser tests should no longer assume table Edit/Delete buttons exist.
+
+### Delivery and release safety
+
+- Restrict implementation to `sites/react-d1/` React UI and necessary tests; no D1 migration or backend mutation needed.
+- Run TypeScript, builds, React/API/D1 regressions and actual Chromium 1440px/390px × Light/Dark. Update pre-existing browser tests that used the old Edit/Delete controls; use double-click/Enter and verify rows remain in D1.
+- Commit via GitHub PR, then **separately** deploy to the *existing* owner-only Sites project; preserve URL, DB binding, all task/customer/log records, original task IDs, sequence, revision/token and access/configuration. All acceptance mutations belong in isolated test D1; production checks must be read-only.
+- A GitHub merge is **not** a Sites deployment. Only record an actual new Sites version when the native deploy succeeds and after-release data integrity checks are evidenced.

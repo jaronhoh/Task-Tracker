@@ -1,3 +1,12 @@
+# CR-020 / CR-021 — Log Time date separator and actionless table (2026-10-19 MYT)
+
+**Status: USER-APPROVED REQUIREMENTS / IMPLEMENTATION PR IN PROGRESS; SITES RELEASE NOT VERIFIED.** The latest verified production remains **Sites Version 14** (2026-10-19, see historic release entry below). Do not label this change as deployed until a distinct native Sites publish and production validation confirm it.
+
+- Requirements: `docs/PRD_PHASE2_LOG_TIME_2026-10-19.md` §9. **CR-020:** Date Accordion heading becomes `2026-10-19 | 3.75h` with a visible separator and existing rounded display. **CR-021:** remove Log Time `Actions` column, Edit/Delete row buttons and now-unreachable frontend delete popup; retain five columns: Time (Start–End), Task Title, Customer, Activity, Spend. Date-group colspan becomes five. Double click and keyboard Enter still open existing edit dialog and keep Auto Save / Save Time; single-click selects.
+- Only Log Time presentation and matching tests are in scope. No backend DELETE API removal, record deletion, D1 migration, versioned DB change, customer/task changes, environment, hosting, Site URL or owner-only access-policy changes are approved.
+- Implementation branch `feat/cr020-cr021-logtime-accordion-cleanup-20261019`. CI and browser acceptance must pass before implementation PR merge. GitHub merge and Sites deployment are separate milestones.
+- Required before deployment: full read-only production D1 snapshot including tasks/customers/log_time/app_sequence/app_revision, unchanged owner-only access/environment/DB binding; after native existing-project deployment compare all rows/fields, verify actual Site Version and new 5-column/Accordion UI, and append verified results to this status log. Do not modify production data merely to test.
+
 # CR-017 / CR-018 / CR-019 — Sites Version 14 deployed (2026-10-19 MYT)
 
 **Status: DEPLOYED; production non-mutating interaction checks and full-row D1 preservation VERIFIED.** This entry supersedes the pending-publication entries below; historical records are retained. Successful mutation acceptance is verified in isolated D1/Chromium CI, not by modifying production records.
