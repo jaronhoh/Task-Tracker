@@ -1,3 +1,9 @@
+# Phase 2 PRD merged into main — Log Time (2026-10-19, MYT)
+
+**GitHub verified:** User-approved Phase 2 Log Time PRD and status documentation merged to `main` via [PR #14](https://github.com/jaronhoh/Task-Tracker/pull/14), squash commit `c8fd723ed7997ce8fba7e55283507c7c21b5ed6f`. PRD: `docs/PRD_PHASE2_LOG_TIME_2026-10-19.md`.
+
+**Still not done:** Phase 2 React/API/D1 implementation, new schema migration, automated tests, browser acceptance, implementation PR/merge, Sites deploy, live verification and D1 full-row pre/post comparison. No direct Sites management/deployment interface was available in this ChatGPT session; **no claim of release**. Last evidenced production remains **Sites Version 12**. Preserve all records/IDs/URL/access policy; use the existing Site. Next implementation owner: authorized Work/Codex workflow; implement F01–F06, CI and additive migration checks, then separately deploy and record native Sites version/source/deployment evidence.
+
 # Approved Phase 2 — Log Time PRD (2026-10-19, MYT)
 
 **Status: USER-APPROVED REQUIREMENTS / PRD COMMITTED ON DOCUMENTATION BRANCH.** No Phase 2 implementation, test, merge, D1 migration or Sites deployment has been performed by this documentation update. **Last confirmed production release remains Sites Version 12** (2026-10-18), with the GitHub/Sites evidence detailed in the historical entry below.
