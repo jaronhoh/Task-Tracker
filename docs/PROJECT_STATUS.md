@@ -1,3 +1,9 @@
+# Log Time UX follow-up PRD merged — CR-017/018/019 (2026-10-19 MYT)
+
+**GitHub verified:** Approved Phase 2 Log Time UX changes have been documented and merged into `main` in [PR #16](https://github.com/jaronhoh/Task-Tracker/pull/16), squash merge `ef395e47bc3003a399581f5b7735443a74c9c5bd`. Full scope/acceptance in `docs/PRD_PHASE2_LOG_TIME_2026-10-19.md` §8. Changes: **CR-017 Log Time Search Bar; CR-018 existing Log Time edit-only Auto Save for regular fields and explicit atomic Save Time for Date/Start/End; CR-019 double-click/Enter row to open existing Edit Dialog**.
+
+**Not yet implemented or deployed by PR #16:** No CR-017–019 application code, regression test, Sites deployment or live acceptance is claimed. Latest verified production in this canonical record remains **Sites Version 13**, not Version 14. Next owner/action: authorized coding and Sites release workflow, implement from merged PRD; run isolated D1 and Chromium desktop/mobile Light/Dark tests; merge implementation PR separately; update existing Site; validate all production rows/IDs/config/policy unchanged and record actual release metadata. This post-merge status update is documentation only.
+
 # Approved Log Time UX improvements — CR-017 to CR-019 (2026-10-19 MYT)
 
 **Status: USER-APPROVED / PRD DOCUMENTATION UPDATED; IMPLEMENTATION AND SITES DEPLOYMENT NOT DONE BY THIS DOCUMENTATION CHANGE.** Last recorded verified production remains **Sites Version 13** (2026-10-19 12:33:58 MYT). Historical Version 13 release evidence and earlier entries are preserved below.
