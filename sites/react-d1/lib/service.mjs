@@ -1,3 +1,4 @@
+import { toLog, validateLog } from './log-time.mjs';
 import * as R from './rules.mjs';
 const {HttpError, normalizeCustomerName,cleanRequiredString,cleanOptionalString,assertStatus,rowToTask,malaysiaNow,resolveStatusEnd,validateTaskTimes,ACTIVE_STATUSES,isFuture,toMalaysiaTimestamp,CUSTOMER_COLORS}=R;
 const has=(o,k)=>Object.hasOwn(o,k);
@@ -24,7 +25,16 @@ function cleanTrackerLink(value) {
 }
 export async function operate(repo,method,path,body={}) {
   if(path==='/api/health' && method==='GET') return {status:'ok',timeZone:'Malaysia Time (UTC+08:00)'};
-  if(path==='/api/tasks' && method==='GET') return (await repo.snapshot()).tasks.map(rowToTask);
+  if(path==='/api/log-time' && method==='GET') return (await repo.snapshot()).log_time.map(toLog);
+  if(path==='/api/log-time' && method==='POST') return repo.transact(s=>{const row=validateLog(s,body,null,cleanTrackerLink);s.log_time.push(row);return toLog(row);});
+  const lm=path.match(/^\/api\/log-time\/([^/]+)$/);
+  if(lm&&['PATCH','DELETE'].includes(method))return repo.transact(s=>{
+    const old=s.log_time.find(r=>r.id===decodeURIComponent(lm[1]));
+    if(!old)throw new HttpError(404,'Log Time was not found.');
+    if(method==='DELETE'){s.log_time=s.log_time.filter(r=>r.id!==old.id);return {id:old.id,deleted:true};}
+    const row=validateLog(s,{...toLog(old),...body},old,cleanTrackerLink);Object.assign(old,row);return toLog(row);
+  });
+  if(path==='/api/tasks' && method==='GET') {const s=await repo.snapshot();return s.tasks.map(t=>({...rowToTask(t),timeSpentMinutes:s.log_time.filter(r=>r.task_id===t.task_id).reduce((n,r)=>n+toLog(r).durationMinutes,0)}));}
   if(path==='/api/customers' && method==='GET') return (await repo.snapshot()).customers.map(({name,color})=>({name,color}));
   if(path==='/api/customers' && method==='POST') return repo.transact(s=>{const c=addCustomer(s,body.name,has(body,'color')?body.color:undefined);return {name:c.name,normalizedName:c.normalized_name,color:c.color};});
   const cd=path.match(/^\/api\/customers\/([^/]+)$/);
@@ -32,6 +42,8 @@ export async function operate(repo,method,path,body={}) {
     const c=customer(s,decodeURIComponent(cd[1]));
     if(!c) throw new HttpError(404,'Customer was not found.','CUSTOMER_NOT_FOUND');
     const taskCount=s.tasks.filter(t=>t.customer_name===c.name).length;
+    const logCount=s.log_time.filter(r=>r.customer_name===c.name).length;
+    if(logCount)throw new HttpError(409,`Cannot delete ${c.name}: it is referenced by ${logCount} Log Time records.`,'CUSTOMER_IN_USE');
     if(taskCount) { const error=new HttpError(409,`Cannot delete ${c.name}: it is referenced by ${taskCount} Task${taskCount===1?'':'s'}.`,'CUSTOMER_IN_USE');error.taskCount=taskCount;throw error; }
     s.customers=s.customers.filter(row=>row!==c);
     return {name:c.name,deleted:true};
@@ -49,6 +61,7 @@ export async function operate(repo,method,path,body={}) {
       const name=cleanRequiredString(body.name,'Customer Name',100), normalized=normalizeCustomerName(name);
       if(s.customers.some(other=>other!==c && other.normalized_name===normalized)) throw new HttpError(400,'Customer Name already exists.','CUSTOMER_EXISTS');
       for(const t of s.tasks) if(t.customer_name===c.name) t.customer_name=name;
+      for(const r of s.log_time)if(r.customer_name===c.name)r.customer_name=name;
       c.name=name;c.normalized_name=normalized;
     }
     return {name:c.name,color:c.color};
@@ -104,3 +117,4 @@ export async function operate(repo,method,path,body={}) {
   }
   throw new HttpError(404,'Endpoint was not found.','NOT_FOUND');
 }
+

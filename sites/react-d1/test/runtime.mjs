@@ -2,11 +2,11 @@ import { Miniflare } from 'miniflare';
 import { readFile, readdir } from 'node:fs/promises';
 import http from 'node:http';
 import { handle } from '../lib/handler.mjs';
-export async function runtime(persist=false) {
+export async function runtime(persist=false,maxMigration=null) {
   const mf=new Miniflare({modules:true,script:'export default {fetch(){return new Response("test")}}',compatibilityDate:'2026-05-15',d1Databases:{DB:'task-tracker-test'},d1Persist:persist});
   const db=await mf.getD1Database('DB');
   await db.prepare('CREATE TABLE IF NOT EXISTS __test_migrations (name TEXT PRIMARY KEY)').run();
-  for(const file of (await readdir(new URL('../drizzle/',import.meta.url))).filter(x=>x.endsWith('.sql')).sort()) {
+  for(const file of (await readdir(new URL('../drizzle/',import.meta.url))).filter(x=>x.endsWith('.sql')&&(!maxMigration||x<=maxMigration)).sort()) {
     if(await db.prepare('SELECT name FROM __test_migrations WHERE name = ?').bind(file).first())continue;
     const sql=await readFile(new URL('../drizzle/'+file,import.meta.url),'utf8');
     for(const statement of sql.split('--> statement-breakpoint').map(x=>x.trim()).filter(Boolean)) await db.prepare(statement).run();
@@ -22,3 +22,4 @@ export function httpApp(db,trace=[]) {
     res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
   });
 }
+

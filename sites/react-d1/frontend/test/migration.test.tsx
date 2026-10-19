@@ -13,7 +13,8 @@ test('migrated PRD sample renders two independent lists, eight data fields plus 
   const tasks=viewTasks(fixture,'weekly','',bounds),html=markup(tasks)
   assert.match(html,/Carry Over: 1 tasks[\s\S]*TSK-0001[\s\S]*New This Week: 1 tasks[\s\S]*TSK-0002/)
   assert.equal((html.match(/data-task-id=/g)||[]).length,2)
-  assert.equal((html.match(/<td /g)||[]).length,20)
+  assert.equal((html.match(/<td /g)||[]).length,22)
+  assert.match(html,/Time Spent/)
   assert.equal(groupsFor(tasks,'weekly',bounds).reduce((n,[,t])=>n+t.length,0),tasks.length)
 })
 test('Malaysia Monday boundaries, historical terminal and future exclusions in React model',()=>{
@@ -151,3 +152,4 @@ test('customer breakdown conserves filtered group totals, handles unresolved cus
   assert.match(html,/data-customer="Unassigned" data-count="2"/)
   assert.match(html,/role="region" aria-label="Work in Progress customer task counts; scroll horizontally for more" tabindex="0"/)
 })
+

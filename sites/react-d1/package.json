@@ -12,7 +12,7 @@
     "start": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
-    "test": "node --test test/api.test.cjs test/d1.test.mjs test/weekly.test.cjs",
+    "test": "node --test test/api.test.cjs test/d1.test.mjs test/weekly.test.cjs test/log-time.test.mjs",
     "test:ui": "node --test test/ui.test.cjs test/migration-ui.test.mjs test/react-ui.test.cjs",
     "test:react": "tsx --tsconfig frontend/tsconfig.json --test frontend/test/*.test.tsx"
   },

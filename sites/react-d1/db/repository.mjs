@@ -9,9 +9,10 @@ export class Repository {
       this.db.prepare('SELECT * FROM app_revision WHERE id = 1'),
       this.db.prepare('SELECT * FROM app_sequence'),
       this.db.prepare('SELECT * FROM customers ORDER BY name COLLATE NOCASE'),
-      this.db.prepare('SELECT * FROM tasks ORDER BY task_id')
+      this.db.prepare('SELECT * FROM tasks ORDER BY task_id'),
+      this.db.prepare('SELECT * FROM log_time ORDER BY work_date DESC, start_time, id')
     ]);
-    return { revision: results[0].results[0]?.revision ?? 0, sequence: results[1].results[0]?.next_value ?? 1, customers: results[2].results, tasks: results[3].results };
+    return { revision: results[0].results[0]?.revision ?? 0, sequence: results[1].results[0]?.next_value ?? 1, customers: results[2].results, tasks: results[3].results, log_time: results[4].results };
   }
   async transact(change) {
     for (let attempt = 0; attempt < 100; attempt++) {
@@ -22,7 +23,7 @@ export class Repository {
       const guard = 'EXISTS (SELECT 1 FROM app_revision WHERE id = 1 AND token = ?)';
       const statements = [this.db.prepare('INSERT INTO app_revision (id,revision,token) VALUES (1,1,?) ON CONFLICT(id) DO UPDATE SET revision = revision + 1, token = excluded.token WHERE revision = ? RETURNING revision').bind(token, before.revision)];
       if (state.sequence !== before.sequence) statements.push(this.db.prepare(`INSERT INTO app_sequence (sequence_name,next_value) SELECT 'task_id', ? WHERE ${guard} ON CONFLICT(sequence_name) DO UPDATE SET next_value = excluded.next_value`).bind(state.sequence, token));
-      for (const [table, key] of [['customers','name'],['tasks','task_id']]) {
+      for (const [table, key] of [['customers','name'],['tasks','task_id'],['log_time','id']]) {
         const original = new Map(before[table].map(row => [row[key],row]));
         for (const row of before[table]) if (!state[table].some(r => r[key] === row[key])) statements.push(this.db.prepare(`DELETE FROM ${table} WHERE "${key}" = ? AND ${guard}`).bind(row[key],token));
         for (const row of state[table]) {
@@ -44,3 +45,4 @@ export class Repository {
   }
   async allocateId() { return this.transact(s => `TSK-${String(s.sequence++).padStart(4,'0')}`); }
 }
+
