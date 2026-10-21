@@ -1,3 +1,16 @@
+# Current project health review — 2026-10-21 MYT (documentation audit, no deployment)
+
+**Last verified production release in repository records: Sites Version 15 (2026-10-19), CR-020/021 live-verified; no later native Sites verification was performed in this review.** Release history and full Version 15 validation details are retained below. **This entry does not change production version, source, D1 data, access or hosting.**
+
+- Latest code changes remain [PR #18](https://github.com/jaronhoh/Task-Tracker/pull/18), merge `bfbd80eab3c9f626134407a73cabcf2bddc8a6ed`. Last evidenced CI [39219104492](https://github.com/jaronhoh/Task-Tracker/actions/runs/39219104492): 92 passed, 0 failed. Last recorded production data after v15: 32 Tasks, 6 Customers, 2 Log Time, Sequence next_value=33, Revision=171, Owner-only; **historical snapshot, not a current read**.
+- **Project health/gaps report:** [Task Tracker Project Health Audit — 2026-10-21](analysis/Task_Tracker_Project_Health_Audit_2026-10-21.md). This is **static GitHub/CI/docs analysis** with prioritized hypotheses and test plans; no new production incident, security breach, backup failure, or live Sites test is claimed.
+- **Immediate confirmation (P0):** GitHub repository metadata currently reports **Public** while deployed Site is **Owner-only**; confirm whether public source/docs are intentional, perform sensitive-information review, and verify the currently active Sites version/access separately. No repo visibility change was made.
+- **Next stability fixes (P1):** verify/improve Log Time Auto Save refresh-failure feedback; prevent confusing POST success followed by refresh failure; test Linked→Custom Task early unlink/cancel case before changing its semantics; define and drill a secure D1 backup/restore flow; document unauthorized/Non-Owner access rejection; validate touch-only editing without Actions column.
+- **Maintenance (P2):** reconcile stale README/PRD status and historic superseded rules, test midnight rollover, synthetic-volume performance and monitoring. Log Time export/date-range requests are optional product questions, **not user-approved development scope**.
+- **Delivery plan:** security/production-readonly confirmation → isolated-D1 failure test and approved Auto Save fixes → backup/restore and auth-negative check → cross-device operational sign-off → documentation/performance. Any eventual implementation needs independent PR/CI/real Sites publish + before/after D1 equality; do not mark “deployed” from this audit.
+
+---
+
 # CR-020 / CR-021 — Sites Version 15 production release VERIFIED (2026-10-19 MYT)
 
 **Status: DEPLOYED AND LIVE-VERIFIED.** This entry supersedes the two pending-deployment handoff snapshots immediately below it; those notes and all earlier release history are retained.
