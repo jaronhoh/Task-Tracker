@@ -1,4 +1,18 @@
 
+# 2026-11-05 — Draft PR #20: CR-023 time picker + REL-01/03 early fixes, CI passed, release NOT COMPLETE
+
+**Status: PARTIAL DEVELOPMENT ON OPEN DRAFT PR ONLY.** No merge to main, no current production data reads/writes, no Sites publish; last verified production release still **Version 15**.
+
+- Draft PR #20: https://github.com/jaronhoh/Task-Tracker/pull/20. New requirements CR-022 (Deleted card in two views) and CR-023 (Log Time AM/PM picker), plus H0–H4 follow-ups, are in PRD §10 with explicit pending owner decisions.
+- **Implemented on draft branch, not published:** CR-023 native accessible hour/minute/AM/PM select controls, 1-minute precision, existing HH:mm API/storage and New Save versus Edit Save Time semantics. REL-01: distinguish PATCH persisted from list-refresh failure and preserve accurate visible error. REL-03: distinguish POST created from refresh failure; use Retry Refresh rather than a second POST.
+- **Passed automated CI on tested draft head `8b4f4ebac49048541c367b68c453548ed499b438`:** [Run 41965612216](https://github.com/jaronhoh/Task-Tracker/actions/runs/41965612216) succeeded: 17 React/model, 62 API/D1, 15 Chromium (total **94 passed, 0 failed**), including 1440-minute AM/PM conversion test, fault-injection refresh failures, desktop/mobile and Light/Dark. TypeScript and production build passed. A prior run on an earlier draft revision failed due to old generic 'option' test selectors counting the new native select options; selectors were scoped and retested to green.
+- **Still to develop/verify:** CR-022 card until counting/time scope and interaction defined; REL-02 Linked→Custom atomic transition until business decision; H0 native current-Sites/access baseline and owner visibility decision; H2 actual backup/restore and non-owner API denial; H3 real touch-only experience, cross-midnight week rollover; H4 live performance/operations/doc cleanup and old PR #2; all final integration and release gates.
+- Public GitHub visibility is a separate owner decision: **no permission change made**. No destructive Log Time Delete UI reintroduction, database migration, production record modification, or new Site requested.
+- **Do not merge/publish the draft batch until critical decisions and tests/operational checks pass.** If native Sites permissions/tools or actual recovery testing are unavailable, list those parts as NOT VERIFIED, not completed.
+
+---
+
+
 # 2026-11-05 — New feature requests and all H0–H4 development follow-ups (specification draft, NOT DEPLOYED)
 
 **Status:** Two new requirements recorded in Phase 2 PRD section 10 on branch docs/cr022-cr023-hardening-backlog-20261105. This documentation entry does not represent implemented code, new CI, merged PR or Sites deployment. Latest verified published Sites Version remains **15** (2026-10-19); this is based on the prior release record, not a new native Sites inspection.
