@@ -1,3 +1,11 @@
+
+async function selectLogTime(page,id,time){
+ const hour24=Number(time.slice(0,2)),hour12=String(hour24%12||12).padStart(2,'0')
+ await page.locator('#'+id+'Hour').selectOption(hour12)
+ await page.locator('#'+id+'Minute').selectOption(time.slice(3,5))
+ await page.locator('#'+id+'Period').selectOption(hour24>=12?'PM':'AM')
+}
+
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -452,8 +460,8 @@ test('CR-017 to CR-019: Log Time Search/Clear, double-click/Enter editing, edit 
       assert.equal(stored.startTime,width===1440?'09:00':'14:00');
       if(width===1440){
       await page.locator('#logDate').fill('2026-10-13');
-      await page.locator('#logStart').fill('14:00');
-      await page.locator('#logEnd').fill('15:15');
+      await selectLogTime(page,'logStart','14:00');
+      await selectLogTime(page,'logEnd','15:15');
       const before=(await api('/api/log-time',undefined,'GET')).find(l=>l.id===first.id);
       assert.equal(before.date,'2026-10-12');assert.equal(before.startTime,'09:00');
       await page.locator('#saveLogTimeChanges').click();
