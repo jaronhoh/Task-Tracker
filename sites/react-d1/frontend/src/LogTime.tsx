@@ -65,6 +65,7 @@ function LogEditor({log,tasks,customers,onClose,onSaved,notify}:{log:Log|null;ta
   const [draft,setDraft]=useState<Draft>(initial)
   const draftRef=useRef(draft);draftRef.current=draft
   const latest=useRef(log)
+  const createdLog=useRef<Log|null>(null)
   const queue=useRef(createSaveQueue())
   const [custom,setCustom]=useState(!!log&&!log.taskId),[error,setError]=useState('')
   const [busy,setBusy]=useState(false),[saving,setSaving]=useState(0),[saveStatus,setSaveStatus]=useState('')
@@ -74,15 +75,21 @@ function LogEditor({log,tasks,customers,onClose,onSaved,notify}:{log:Log|null;ta
     if(!log)return false
     setSaving(n=>n+1);setSaveStatus('Saving…')
     try {
+      let outcome:'unchanged'|'saved'|'refresh-failed'='unchanged'
       await queue.current.enqueue(async()=>{
         const previous=latest.current!
         if((Object.keys(patch) as (keyof Draft)[]).every(key=>String(previous[key]??'')===String(patch[key]??'')))return
         const saved=await api<Log>('/api/log-time/'+encodeURIComponent(log.id),{method:'PATCH',body:JSON.stringify({...patch,expectedUpdated:previous.updated})})
         latest.current=saved
-        try{await onSaved()}catch{setError('Saved successfully, but refreshing the table failed. Please reload.')}
+        try{await onSaved();outcome='saved'}catch{outcome='refresh-failed'}
       })
-      setSaveStatus('Saved')
-      setError('')
+      if(outcome==='refresh-failed'){
+        setSaveStatus('Saved, refresh failed')
+        setError('Your changes were saved, but the list could not refresh. Reload the page to see the latest data.')
+      }else{
+        setSaveStatus('Saved')
+        if(outcome==='saved')setError('')
+      }
       return true
     } catch(e) {
       setError('Save failed: '+(e as Error).message+'. Your input has been kept. Correct it or retry.')
@@ -129,16 +136,30 @@ function LogEditor({log,tasks,customers,onClose,onSaved,notify}:{log:Log|null;ta
   async function create(e:React.FormEvent){
     e.preventDefault();if(log||busy)return
     const d=draftRef.current
-    if(!d.taskId&&!custom){setError('Choose a Task or Add Custom Task.');return}
-    if(!d.customerName||!d.taskTitle.trim()||!d.activity){setError('Customer, Task Title and Activity are required.');return}
-    if(!validTime(d.startTime)||!validTime(d.endTime)||timeMinutes(d.endTime)<=timeMinutes(d.startTime)){setError('End Time must be later than Start Time on the same Date.');return}
-    if(d.date>today()){setError('Date cannot be in the future.');return}
+    if(!createdLog.current){
+      if(!d.taskId&&!custom){setError('Choose a Task or Add Custom Task.');return}
+      if(!d.customerName||!d.taskTitle.trim()||!d.activity){setError('Customer, Task Title and Activity are required.');return}
+      if(!validTime(d.startTime)||!validTime(d.endTime)||timeMinutes(d.endTime)<=timeMinutes(d.startTime)){setError('End Time must be later than Start Time on the same Date.');return}
+      if(d.date>today()){setError('Date cannot be in the future.');return}
+    }
     setBusy(true);setError('')
-    try{await api('/api/log-time',{method:'POST',body:JSON.stringify(d)});await onSaved();notify('Log Time created.');onClose()}catch(e){setError((e as Error).message)}finally{setBusy(false)}
+    try {
+      if(!createdLog.current){
+        createdLog.current=await api<Log>('/api/log-time',{method:'POST',body:JSON.stringify(d)})
+      }
+      try{
+        await onSaved()
+        notify('Log Time created.')
+        onClose()
+      }catch{
+        setError('Log Time was created successfully, but refreshing the list failed. Choose Retry Refresh; do not create the same entry again.')
+      }
+    }catch(e){setError('Log Time could not be created: '+(e as Error).message)}
+    finally{setBusy(false)}
   }
   const start=validTime(draft.startTime)?timeMinutes(draft.startTime):0,end=validTime(draft.endTime)?timeMinutes(draft.endTime):0
   return <Modal id="logDialog" title={log?'Edit Log Time':'New Log Time'} description={log?'Editable fields save automatically on leaving the field. Use Save Time for Date and Start/End Time.':'Each entry covers one Malaysia work date. Overlapping intervals are not allowed.'} onClose={()=>void close()} returnId="newLogBtn">
-    <form className="grid gap-4" onSubmit={create}><fieldset disabled={busy} className="grid gap-4 min-w-0">
+    <form className="grid gap-4" onSubmit={create}><fieldset disabled={busy||!!createdLog.current} className="grid gap-4 min-w-0">
       <label>Customer Name *<SearchPicker id="logCustomer" label="Log Customer" value={draft.customerName} disabled={!!draft.taskId} options={customers.map(c=>({value:c.name,label:c.name,color:c.color}))} onChange={v=>{change('customerName',v);if(log)void autoSave({customerName:v})}}/></label>
       <label>Task Title *<SearchPicker id="logTask" label="Log Task Title" value={draft.taskId??''} placeholder={draft.taskId?draft.taskTitle+' · historical task':custom?'Custom Task':'Select Task…'} options={tasks.filter(t=>ACTIVE.has(t.status)).map(t=>({value:t.taskId,label:t.taskTitle,columns:[t.taskTitle,t.taskDescription??'',t.customerName],searchText:[t.taskTitle,t.taskDescription,t.customerName].join(' ')}))} onChange={choose} actionsAtTop actions={[{label:'+ Add Custom Task',onClick:switchToCustom}]}/></label>
       {custom&&<label>Custom Task Title *<Input id="logCustomTitle" required maxLength={100} value={draft.taskTitle} onChange={e=>change('taskTitle',e.target.value)} onBlur={e=>saveField('taskTitle',e.target.value)}/></label>}
@@ -150,6 +171,6 @@ function LogEditor({log,tasks,customers,onClose,onSaved,notify}:{log:Log|null;ta
       <label>Spend Time (Hour)<Input id="logSpend" readOnly value={hours(Math.max(0,end-start))}/></label>
     </fieldset><ErrorText id="logDialogError" error={error}/>
     {log?<div className="flex flex-wrap items-center justify-between gap-3"><p id="logAutoSaveStatus" role="status" className="text-sm text-muted-foreground">{saving>0?'Saving…':saveStatus||'Editable fields save automatically when you leave a field.'}{timeDirty?' · Time changes not saved':''}{ordinaryDirty&&saveStatus==='Save failed'?' · Retry the field to save':''}</p><div className="flex gap-2"><Button type="button" variant="outline" disabled={busy} onClick={()=>void close()}>Close</Button><Button id="saveLogTimeChanges" type="button" disabled={busy||saving>0||!timeDirty} onClick={()=>void saveTime()}>{saving>0?'Saving…':'Save Time'}</Button></div></div>:
-    <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>Cancel</Button><Button type="submit" disabled={busy}>{busy?'Saving…':'Save Log Time'}</Button></div>}</form>
+    <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>{createdLog.current?'Close':'Cancel'}</Button><Button type="submit" disabled={busy}>{busy?'Saving…':createdLog.current?'Retry Refresh':'Save Log Time'}</Button></div>}</form>
   </Modal>
 }
