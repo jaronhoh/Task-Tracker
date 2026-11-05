@@ -1,4 +1,4 @@
-
+'use strict';
 async function selectLogTime(page,id,time){
  const hour24=Number(time.slice(0,2)),hour12=String(hour24%12||12).padStart(2,'0')
  await page.locator('#'+id+'Hour').selectOption(hour12)
@@ -6,7 +6,7 @@ async function selectLogTime(page,id,time){
  await page.locator('#'+id+'Period').selectOption(hour24>=12?'PM':'AM')
 }
 
-'use strict';
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
