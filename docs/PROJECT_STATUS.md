@@ -1,3 +1,15 @@
+# 2026-11-05 — User requested production proceed: preflight checked, native Sites gates BLOCKED
+
+**Decision:** No publish or merge was performed. Project safety requirements remain in effect. Latest tested PR #20 head `930e49252e4a16f862c0f5859ebccc963403750e` had **GitHub Actions run 41975974141 success: 18 React/model + 65 API/D1 + 18 Chromium = 101 passed, 0 failed.** GitHub compare with `main` shows PR branch ahead 40 commits and behind 0, mergeable; changed files contain **no new D1 schema migration**.
+
+**Production preflight limitation:** Connected operations expose GitHub but **no native ChatGPT Sites project/version/deployment, D1, access-policy or backup tools**; available deployment-related plugins target other hosting providers, not the existing Sites project. Unauthenticated general-web reads of current Site root and `/api/health`, `/api/tasks`, `/api/log-time` returned `URL not accessible via this tool`. This is **not a measured HTTP 401/403/5xx** and **does not prove Owner-only protection, live Site health or current production version**.
+
+**Tracking updates:** Open [#21](https://github.com/jaronhoh/Task-Tracker/issues/21) native owner access/anonymous denial, [#22](https://github.com/jaronhoh/Task-Tracker/issues/22) actual encrypted production D1 backup and detached restore, and [#23](https://github.com/jaronhoh/Task-Tracker/issues/23) real-device mobile acceptance and original-Site publish now have specific evidence/checkpoint comments. No private task/customer/log content was added to this public GitHub repository.
+
+**Gate and safe next action:** Use authorized native Sites management to perform actual live read-only checks and secure backups, verify physical touch, only then merge tested PR and deploy **to the existing Sites project, URL and DB binding** with before/after all-field D1 parity. Do not interpret user “go” as permission to skip required safety gates or to create a replacement app. Until those actions are observable, **Version 15 remains the latest verified production version, not a fresh real-time Sites read.**
+
+---
+
 
 # 2026-11-05 — Latest PR #20 implementation/test checkpoint: 101 green, native Sites deployment BLOCKED
 
