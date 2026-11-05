@@ -1,4 +1,4 @@
-import { toLog, validateLog } from './log-time.mjs';
+import { toLog, validateLog, minutes } from './log-time.mjs';
 import * as R from './rules.mjs';
 const {HttpError, normalizeCustomerName,cleanRequiredString,cleanOptionalString,assertStatus,rowToTask,malaysiaNow,resolveStatusEnd,validateTaskTimes,ACTIVE_STATUSES,isFuture,toMalaysiaTimestamp,CUSTOMER_COLORS}=R;
 const has=(o,k)=>Object.hasOwn(o,k);
@@ -34,7 +34,14 @@ export async function operate(repo,method,path,body={}) {
     if(method==='DELETE'){s.log_time=s.log_time.filter(r=>r.id!==old.id);return {id:old.id,deleted:true};}
     const row=validateLog(s,{...toLog(old),...body},old,cleanTrackerLink);Object.assign(old,row);return toLog(row);
   });
-  if(path==='/api/tasks' && method==='GET') {const s=await repo.snapshot();return s.tasks.map(t=>({...rowToTask(t),timeSpentMinutes:s.log_time.filter(r=>r.task_id===t.task_id).reduce((n,r)=>n+toLog(r).durationMinutes,0)}));}
+  if(path==='/api/tasks' && method==='GET') {
+    const s=await repo.snapshot(), totals=new Map();
+    for(const r of s.log_time){
+      if(!r.task_id)continue
+      totals.set(r.task_id,(totals.get(r.task_id)??0)+minutes(r.end_time)-minutes(r.start_time))
+    }
+    return s.tasks.map(t=>({...rowToTask(t),timeSpentMinutes:totals.get(t.task_id)??0}))
+  }
   if(path==='/api/customers' && method==='GET') return (await repo.snapshot()).customers.map(({name,color})=>({name,color}));
   if(path==='/api/customers' && method==='POST') return repo.transact(s=>{const c=addCustomer(s,body.name,has(body,'color')?body.color:undefined);return {name:c.name,normalizedName:c.normalized_name,color:c.color};});
   const cd=path.match(/^\/api\/customers\/([^/]+)$/);
