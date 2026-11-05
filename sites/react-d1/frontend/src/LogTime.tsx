@@ -75,13 +75,12 @@ function LogEditor({log,tasks,customers,onClose,onSaved,notify}:{log:Log|null;ta
     if(!log)return false
     setSaving(n=>n+1);setSaveStatus('Saving…')
     try {
-      let outcome:'unchanged'|'saved'|'refresh-failed'='unchanged'
-      await queue.current.enqueue(async()=>{
+      const outcome=await queue.current.enqueue(async():Promise<'unchanged'|'saved'|'refresh-failed'>=>{
         const previous=latest.current!
-        if((Object.keys(patch) as (keyof Draft)[]).every(key=>String(previous[key]??'')===String(patch[key]??'')))return
+        if((Object.keys(patch) as (keyof Draft)[]).every(key=>String(previous[key]??'')===String(patch[key]??'')))return 'unchanged'
         const saved=await api<Log>('/api/log-time/'+encodeURIComponent(log.id),{method:'PATCH',body:JSON.stringify({...patch,expectedUpdated:previous.updated})})
         latest.current=saved
-        try{await onSaved();outcome='saved'}catch{outcome='refresh-failed'}
+        try{await onSaved();return 'saved'}catch{return 'refresh-failed'}
       })
       if(outcome==='refresh-failed'){
         setSaveStatus('Saved, refresh failed')
