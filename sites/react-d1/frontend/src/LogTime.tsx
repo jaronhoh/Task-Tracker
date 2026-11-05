@@ -19,6 +19,38 @@ const TIME_FIELDS=['date','startTime','endTime'] as const
 const OTHER_FIELDS=['taskId','customerName','taskTitle','taskDescription','note','trackerLink','activity'] as const
 const validTime=(s:string)=>/^([01]\d|2[0-3]):[0-5]\d$/.test(s)
 const timeMinutes=(s:string)=>Number(s.slice(0,2))*60+Number(s.slice(3))
+type Meridiem='AM'|'PM'|''
+type ClockParts={hour:string;minute:string;period:Meridiem}
+export function toAmPm(value:string):ClockParts{
+  if(!validTime(value))return {hour:'',minute:'',period:''}
+  const hour=Number(value.slice(0,2))
+  return {hour:String(hour%12||12).padStart(2,'0'),minute:value.slice(3),period:hour<12?'AM':'PM'}
+}
+export function fromAmPm(hour:string,minute:string,period:string):string{
+  if(!/^(0[1-9]|1[0-2])$/.test(hour)||!/^([0-5]\\d)$/.test(minute)||!['AM','PM'].includes(period))return ''
+  const h=(Number(hour)%12)+(period==='PM'?12:0)
+  return String(h).padStart(2,'0')+':'+minute
+}
+function LogTimePicker({id,label,value,onChange}:{id:string;label:string;value:string;onChange:(time:string)=>void}){
+  const [parts,setParts]=useState<ClockParts>(()=>toAmPm(value))
+  function change(field:keyof ClockParts,next:string){
+    const updated={...parts,[field]:next} as ClockParts
+    setParts(updated)
+    onChange(fromAmPm(updated.hour,updated.minute,updated.period))
+  }
+  const style='h-9 min-w-0 w-full rounded-md border border-input bg-transparent px-1 text-sm dark:bg-input/30 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50'
+  return <div id={id} className="grid grid-cols-[1fr_1fr_1.2fr] gap-1" role="group" aria-label={label}>
+    <select id={id+'Hour'} aria-label={label+' hour'} className={style} required value={parts.hour} onChange={e=>change('hour',e.target.value)}>
+      <option value="">Hour</option>{Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0')).map(v=><option key={v} value={v}>{v}</option>)}
+    </select>
+    <select id={id+'Minute'} aria-label={label+' minute'} className={style} required value={parts.minute} onChange={e=>change('minute',e.target.value)}>
+      <option value="">Min</option>{Array.from({length:60},(_,i)=>String(i).padStart(2,'0')).map(v=><option key={v} value={v}>{v}</option>)}
+    </select>
+    <select id={id+'Period'} aria-label={label+' AM/PM'} className={style} required value={parts.period} onChange={e=>change('period',e.target.value)}>
+      <option value="">AM/PM</option><option value="AM">AM</option><option value="PM">PM</option>
+    </select>
+  </div>
+}
 export function today(now=new Date()){const p=malaysiaParts(now);return p.year+'-'+p.month+'-'+p.day}
 export function summarize(logs:Log[],now=new Date()){
   const date=today(now),bounds=weekBounds(now)
@@ -166,7 +198,7 @@ function LogEditor({log,tasks,customers,onClose,onSaved,notify}:{log:Log|null;ta
       <label>Note<Textarea id="logNote" maxLength={10000} value={draft.note} onChange={e=>change('note',e.target.value)} onBlur={e=>saveField('note',e.target.value)}/></label>
       <label>Tracker Link<Input id="logLink" type="url" maxLength={2048} value={draft.trackerLink} onChange={e=>change('trackerLink',e.target.value)} onBlur={e=>saveField('trackerLink',e.target.value)}/></label>
       <label>Activity *<SearchPicker id="logActivity" label="Log Activity" value={draft.activity} options={ACTIVITIES.map(value=>({value,label:value}))} onChange={v=>{change('activity',v);if(log)void autoSave({activity:v})}}/></label>
-      <div className="grid gap-4 sm:grid-cols-3"><label>Date *<Input id="logDate" type="date" required max={today()} value={draft.date} onChange={e=>change('date',e.target.value)}/></label><label>Start Time *<Input id="logStart" type="text" inputMode="numeric" placeholder="HH:mm" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" required value={draft.startTime} onChange={e=>change('startTime',e.target.value)}/></label><label>End Time *<Input id="logEnd" type="text" inputMode="numeric" placeholder="HH:mm" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" required value={draft.endTime} onChange={e=>change('endTime',e.target.value)}/></label></div>
+      <div className="grid gap-4 sm:grid-cols-2"><label className="sm:col-span-2">Date *<Input id="logDate" type="date" required max={today()} value={draft.date} onChange={e=>change('date',e.target.value)}/></label><div><p className="text-sm mb-1">Start Time *</p><LogTimePicker id="logStart" label="Start Time" value={draft.startTime} onChange={v=>change('startTime',v)}/></div><div><p className="text-sm mb-1">End Time *</p><LogTimePicker id="logEnd" label="End Time" value={draft.endTime} onChange={v=>change('endTime',v)}/></div></div>
       <label>Spend Time (Hour)<Input id="logSpend" readOnly value={hours(Math.max(0,end-start))}/></label>
     </fieldset><ErrorText id="logDialogError" error={error}/>
     {log?<div className="flex flex-wrap items-center justify-between gap-3"><p id="logAutoSaveStatus" role="status" className="text-sm text-muted-foreground">{saving>0?'Saving…':saveStatus||'Editable fields save automatically when you leave a field.'}{timeDirty?' · Time changes not saved':''}{ordinaryDirty&&saveStatus==='Save failed'?' · Retry the field to save':''}</p><div className="flex gap-2"><Button type="button" variant="outline" disabled={busy} onClick={()=>void close()}>Close</Button><Button id="saveLogTimeChanges" type="button" disabled={busy||saving>0||!timeDirty} onClick={()=>void saveTime()}>{saving>0?'Saving…':'Save Time'}</Button></div></div>:
