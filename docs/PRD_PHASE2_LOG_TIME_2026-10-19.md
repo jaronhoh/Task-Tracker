@@ -7,6 +7,17 @@
 **Status:** User-approved functional scope; documentation only until implementation, tests, merge, Sites deployment and production verification each succeed  
 **Target:** Existing Site project `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979`, not a replacement Site
 
+## Current effective requirements index (added 2026-11-05)
+
+This is an **append-only** PRD. Historic acceptance text remains for traceability but is not always the current approved UI. Read the latest `docs/PROJECT_STATUS.md` for release evidence.
+
+| Revision | Effective status | Rule |
+|---|---|---|
+| §1–§7 Phase 2 core | Released at Sites v13 | Log Time workspace, linked/custom logs, grouping, validation, Task Time Spent; original Edit/Delete dialog references are historical where superseded below. |
+| §8 CR-017–019 | Released at Sites v14 | Independent search, Edit ordinary-field Auto Save, explicit atomic Save Time, row double-click/Enter; **old Edit/Delete table-action claims are superseded by §9**. |
+| §9 CR-020/021 | Released at Sites v15 | `Date | Hours` heading; five-column Log Time table with no Actions/Edit/Delete buttons. |
+| §10 CR-022/023 & H0–H4 | **Draft PR #20; NOT LIVE** | New Deleted this-Malaysia-week card uses task End; 12-hour picker; reliability, backup/access, touch/midnight and maintenance. Do not claim published until a new native Sites release is verified. |
+
 ## 1. Objective and scope
 
 Add an independent **Log Time** workspace for dated time entries while keeping all existing Task Tracker capabilities. Log Time shares the existing Customer master. A time entry may link to an existing eligible Task Tracker task or contain a **one-off Custom Task**; only linked entries contribute to that Task Tracker task's displayed **Time Spent**.
@@ -234,7 +245,7 @@ These items are **not user-approved new business rules** and must be resolved by
 
 ## 10. Coordinated improvement scope — CR-022/023 and H0–H4 (2026-11-05)
 
-**Status: USER REQUEST RECORDED; DETAILED CARD BEHAVIOR REQUIRES CONFIRMATION; NOT IMPLEMENTED, TESTED OR DEPLOYED.** The user requests the two capabilities below and completion of outstanding P1/P2 and Sprint 1–4 audit work as one coordinated delivery. Existing production evidence remains Sites Version 15. Do not confuse this specification with a released build.
+**Status: USER REQUEST AND CR-022 OPTION B CONFIRMED; PARTIAL IMPLEMENTATION IN OPEN DRAFT PR #20; NOT MERGED OR DEPLOYED.** The user requests the two capabilities below and completion of outstanding P1/P2 and Sprint 1–4 audit work as one coordinated delivery. Existing production evidence remains Sites Version 15. Do not confuse this specification with a released build.
 
 ### CR-022 — Deleted card in Weekly Task and Current Week Status
 
