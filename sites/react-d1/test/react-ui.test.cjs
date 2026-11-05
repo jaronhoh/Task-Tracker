@@ -47,7 +47,7 @@ test('React UI: weekly totals, boundaries, search, timezone independence, mobile
     await page.route('**/api/tasks', route => route.fulfill({json:fixture}));
     await page.route('**/api/customers', route => route.fulfill({json:[{name:'Customer A',color:'#F87171'}]}));
     page.setDefaultTimeout(8000);await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
-    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','2','1']);
+    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','2','1','0']);
     assert.deepEqual(await page.locator('.weekly-group-row .group-count-badge').allTextContents(),['2','1']);
     assert.deepEqual(await page.locator('.weekly-group-row .group-count-badge').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-label'))),['Carry Over: 2 tasks','New This Week: 1 tasks']);
     assert.equal(await page.locator('[data-task-id]').count(),3);
@@ -58,13 +58,13 @@ test('React UI: weekly totals, boundaries, search, timezone independence, mobile
     await page.keyboard.press('Escape');await page.locator('#taskDialog').waitFor({state:'hidden'});
     await page.waitForFunction(()=>document.activeElement.id==='editTaskBtn');
     await page.locator('#globalSearch').fill(' tsk-0002 ');await page.locator('#searchBtn').click();
-    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','0','1']);
+    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','0','1','0']);
     assert.equal(await page.locator('.group-toggle[aria-expanded="false"]').count(),1);
     await page.locator('#clearSearchBtn').click();await page.locator('[data-view="status"]').click();
     assert.equal(await page.locator('.status-group-row').count(),4);
-    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','1','0','1','1']);
+    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','1','0','1','1','0']);
     await page.locator('#globalSearch').fill('unmatched');await page.locator('#searchBtn').click();
-    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['0','0','0','0','0']);
+    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['0','0','0','0','0','0']);
     await ctx.close();
   }
 }));
@@ -183,7 +183,7 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
     for(const [label,expected] of [['Overall Total',['carry','closed','new']],['Carry Over',['carry','closed']],['New This Week',['new']]]) {
       await card(label).click();assert.deepEqual(await ids(),expected);
       assert.equal(await card(label).getAttribute('aria-pressed'),'true');
-      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','2','1']);
+      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','2','1','0']);
       console.log(JSON.stringify({width,view:'weekly',card:label,ids:await ids()}));
       if(process.env.TASK_TRACKER_EVIDENCE_DIR&&label==='New This Week')await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`weekly-${width}.png`),fullPage:true,animations:'disabled'});
       if(label!=='Overall Total'){await card(label).click();assert.deepEqual(await ids(),['carry','closed','new']);}
@@ -202,7 +202,7 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
     for(const [label,expected] of [['All',['carry','closed','new']],['Work in Progress',['carry']],['Pending with Customer',[]],['KIV',['new']],['Closed',['closed']]]){
       await card(label).click();assert.deepEqual(await ids(),expected);
       assert.equal(await card(label).getAttribute('aria-pressed'),'true');
-      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','1','0','1','1']);
+      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','1','0','1','1','0']);
       console.log(JSON.stringify({width,view:'status',card:label,ids:await ids()}));
       if(process.env.TASK_TRACKER_EVIDENCE_DIR&&label==='KIV')await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`status-${width}.png`),fullPage:true,animations:'disabled'});
       if(label!=='All'){await card(label).click();assert.deepEqual(await ids(),['carry','closed','new']);}
@@ -525,4 +525,55 @@ test('REL-01 and REL-03: server saved but refresh failed cannot masquerade as fa
     assert.equal(edited.note,'Persisted despite refresh outage')
     assert.equal((await api('/api/tasks',undefined,'GET'))[0].timeSpentMinutes,60)
   }finally{await ctx.close()}
+}))
+
+
+test('CR-022: weekly and status Deleted cards use Malaysia-week End, filter and restore without deleting records',async()=>harness(async({browser,url,temp})=>{
+  const regular=task('regular','2026-10-13T08:00:00+08:00','KIV');
+  const deleted=(id,end)=>({...task(id,'2026-10-01T10:00:00+08:00','Deleted'),end});
+  const fixture=[regular,
+    deleted('deleted-monday','2026-10-12T00:00:00+08:00'),
+    deleted('deleted-sunday','2026-10-18T23:59:00+08:00'),
+    deleted('deleted-before','2026-10-11T23:59:00+08:00'),
+    deleted('deleted-after','2026-10-19T00:00:00+08:00'),
+    deleted('deleted-no-end',null)];
+  for(const width of [1440,390])for(const theme of ['light','dark']){
+    const ctx=await browser.newContext({viewport:{width,height:850},acceptDownloads:true,timezoneId:'America/Los_Angeles'}),page=await ctx.newPage()
+    try{
+      await page.clock.setFixedTime(new Date('2026-10-15T04:00:00Z'))
+      await page.route('**/api/tasks',r=>r.fulfill({json:fixture}))
+      await page.route('**/api/customers',r=>r.fulfill({json:[{name:'Customer A',color:'#F87171'}]}))
+      await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
+      await page.locator('html').evaluate((node,mode)=>{node.classList.toggle('dark',mode==='dark')},theme)
+      const ids=async()=>await page.locator('[data-task-id]').evaluateAll(ns=>ns.map(n=>n.dataset.taskId).sort())
+      const deletedCard=page.locator('#summaryRow button').filter({has:page.getByText('Deleted',{exact:true})})
+      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','0','1','2'])
+      assert.deepEqual(await ids(),['regular'])
+      await deletedCard.click()
+      assert.equal(await deletedCard.getAttribute('aria-pressed'),'true')
+      assert.deepEqual(await ids(),['deleted-monday','deleted-sunday'])
+      assert.equal(await page.locator('.group-toggle').count(),1)
+      assert.match(await page.locator('.group-toggle').innerText(),/Deleted/)
+      await deletedCard.click()
+      assert.equal(await deletedCard.getAttribute('aria-pressed'),'false')
+      assert.deepEqual(await ids(),['regular'])
+      await page.locator('#globalSearch').fill('deleted-monday')
+      await page.locator('#searchBtn').click()
+      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['0','0','0','1'])
+      await deletedCard.click()
+      assert.deepEqual(await ids(),['deleted-monday'])
+      await page.locator('#clearSearchBtn').click()
+      assert.deepEqual(await ids(),['deleted-monday','deleted-sunday'])
+      await page.locator('[data-view="status"]').click()
+      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','0','0','1','0','2'])
+      assert.deepEqual(await ids(),['regular'])
+      await deletedCard.click()
+      assert.deepEqual(await ids(),['deleted-monday','deleted-sunday'])
+      await deletedCard.click()
+      assert.deepEqual(await ids(),['regular'])
+      await page.locator('[data-view="all"]').click()
+      assert.equal(await page.locator('[data-task-id]').count(),fixture.length)
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Page overflow at '+width)
+    }finally{await ctx.close()}
+  }
 }))
