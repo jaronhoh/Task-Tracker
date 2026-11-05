@@ -12,10 +12,13 @@ const paths = [
   '/api/customers',
   '/api/log-time',
   '/api/tasks/CR024-NONEXISTENT',
+  '/api/tasks/CR024-NONEXISTENT/time',
   '/api/customers/CR024-NONEXISTENT',
+  '/api/customers/CR024-NONEXISTENT/color',
   '/api/log-time/CR024-NONEXISTENT'
 ];
 const findings = [];
+for (const profile of ['no-credentials', 'same-origin-headers-no-credentials']) {
 for (const path of paths) {
   let status = null, disposition = 'INCONCLUSIVE';
   try {
@@ -24,7 +27,9 @@ for (const path of paths) {
       method: 'GET',
       redirect: 'manual',
       signal: AbortSignal.timeout(12000),
-      headers: {'Accept':'application/json, text/html;q=0.9'},
+      headers: profile === 'no-credentials'
+        ? {'Accept':'application/json, text/html;q=0.9'}
+        : {'Accept':'application/json, text/html;q=0.9', 'Origin':site.origin, 'Sec-Fetch-Site':'same-origin'},
       cache: 'no-store'
     });
     status = response.status;
@@ -40,8 +45,9 @@ for (const path of paths) {
     disposition = 'INCONCLUSIVE_NETWORK';
     // Avoid logging URLs or arbitrary potentially sensitive error strings.
   }
-  findings.push({route:path,status,disposition});
+  findings.push({profile,route:path,status,disposition});
   console.log(JSON.stringify(findings.at(-1)));
+}
 }
 const allDenied=findings.every(result => result.disposition === 'DENIED');
 console.log(allDenied
