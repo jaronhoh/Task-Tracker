@@ -1,0 +1,19 @@
+name: CR-024 anonymous Sites API gate (read-only)
+on:
+  pull_request:
+    paths:
+      - 'sites/react-d1/scripts/check-anonymous-sites.mjs'
+      - '.github/workflows/sites-api-anonymous-gate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  anonymous-readonly-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TASK_TRACKER_SITE_URL: https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe original Sites root and private API GETs without credentials
+        run: node sites/react-d1/scripts/check-anonymous-sites.mjs
