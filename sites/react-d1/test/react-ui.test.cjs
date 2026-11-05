@@ -628,6 +628,7 @@ test('UX-02: long-lived tab updates Malaysia Today and weekly data at midnight w
   await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
   assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','0','1','1'])
   await page.getByRole('tab',{name:'Log Time',exact:true}).click()
+  await page.waitForFunction(()=>document.querySelector('[data-log-summary="Today"]')?.textContent==='1.00h')
   assert.equal(await page.locator('[data-log-summary="Today"]').innerText(),'1.00h')
   assert.equal(await page.locator('[data-log-summary="This Week"]').innerText(),'1.00h')
   await page.clock.fastForward(90_000)
