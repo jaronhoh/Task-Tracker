@@ -1,4 +1,41 @@
 
+# 2026-11-05 — Latest PR #20 implementation/test checkpoint: 101 green, native Sites deployment BLOCKED
+
+**Actual status: OPEN DRAFT PR, NOT MERGED; NOT DEPLOYED.** The last **native-verified** production release remains **Sites Version 15 (2026-10-19)**. User instructed “continue until end”, so all source-level, testable reliability/feature work continues on the existing draft. Do not confuse GitHub Actions with live production.
+
+## Source/test additions since prior checkpoint
+
+- **UX-01 accessible mobile edit path:** Retain the original five-column actionless Log Time table and desktop double-click / Enter. At small touch-screen widths the user may tap a Log Time row then press **Edit Selected Log Time** in a separate mobile-only toolbar. No Log Time Actions column or Delete button has returned; Playwright emulated touch exercises the path. **Real physical-phone acceptance is not evidenced.**
+- **PERF-01 isolated Miniflare D1 volume smoke:** Insert 100 → 1,000 → 10,000 synthetic historical, non-overlapping one-minute logs into **isolated local D1**, then read full Log Time list and Task Time Spent from the repository. 10k-row tests passed with correct counts/totals. Example GitHub CI timings for isolated 10k: GET tasks ~196.7 ms, GET logs ~166.1 ms. Values vary per runner and do **not** represent native production Cloudflare D1 p95, quota, or business SLOs.
+- **OPS-01 scheduled source regressions:** `.github/workflows/sites-react-acceptance.yml` now includes manual dispatch and scheduled GitHub Actions regression at **Monday 09:00 Malaysia time** (cron Monday 01:00 UTC) with seven-day artifact retention. This becomes active on `main` after merge. It is **not** an authenticated production uptime monitor, database backup nor automatic Sites release.
+- **SEC-01 preliminary GitHub code search:** current `main` search for common key/token markers (private-key prefix, ghp_, sk-, client_secret, DATABASE_URL, D1_TOKEN, CLOUDFLARE_API_TOKEN, api_key, Bearer) returned no matches. This was **not** a full git-history secret scanner or evidence that a Public repo is harmless. Repository visibility remains **Public**, unchanged.
+- H2 release blockers now tracked as GitHub [#21](https://github.com/jaronhoh/Task-Tracker/issues/21) (actual Sites owner/anonymous access), [#22](https://github.com/jaronhoh/Task-Tracker/issues/22) (real encrypted off-repo production backup and isolated restore), [#23](https://github.com/jaronhoh/Task-Tracker/issues/23) (real mobile touch and safe production deployment). Do not publish protected customer rows/credentials in public issues.
+
+## Latest actual passing CI on complete source/CI changes
+
+[GitHub Actions run 41975598445](https://github.com/jaronhoh/Task-Tracker/actions/runs/41975598445) **completed/success** on `8273bc1c55ac04585ab2439d4018da7eb348ff39` (latest source/workflow change before this status entry):
+
+| Suite | Passed | Failed |
+|---|---:|---:|
+| React/model | 18 | 0 |
+| API/isolated D1/restore/synthetic perf | 65 | 0 |
+| Chromium browser | 18 | 0 |
+| **Total** | **101** | **0** |
+
+Frontend TypeScript, browser acceptance and Sites/Vinext build also passed. This test suite does not authenticate to live private Sites or modify production data.
+
+## Explicit incomplete gates
+
+1. Actual native Sites authenticated environment/project/permission/DB read-only verification before deploy (no native Sites tool available in this chat). Existing public URL was not accessible through generic web retrieval; that does not constitute a non-Owner HTTP API denial audit.
+2. Authorized durable encrypted **production D1 backup** and detached restore; synthetic Miniflare D1 restore passed but is not real backup.
+3. Actual anonymous/non-Owner sensitive API rejection evidence; physical-phone touch testing; owner decision on public GitHub visibility (no permission changes).
+4. Owner-approved production release into **same** Site/DB, with pre/post all-field D1 equality, actual Sites saved version and native deployment ID. No release was attempted in this chat, and no unapproved production data writes occurred.
+
+**Do not merge or mark the package production-released while the above critical gates are outstanding.** See the current PRD §10, the [Release and Recovery Runbook](operations/RELEASE_AND_RECOVERY.md) and issues #21–23 for operational handoff.
+
+---
+
+
 # 2026-11-05 — CR-022/023 + H0–H4 stabilization draft: 100 CI tests GREEN; native release PENDING
 
 **Delivery status: NOT DEPLOYED.** Draft [PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20) contains implementation and this status update; **main production code has not been changed by this draft**. Last native-verified Sites production remains Version 15 (2026-10-19); this entry is **GitHub/CI evidence only**, not a fresh Sites inspection.
