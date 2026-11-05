@@ -4,6 +4,12 @@
 
 > **Unreleased work:** Draft [PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20) holds CR-022/023 and reliability fixes; its code, test results and approval status must be checked separately from the currently deployed Site. See `../../docs/PROJECT_STATUS.md`, `../../docs/PRD_PHASE2_LOG_TIME_2026-10-19.md` and `../../docs/operations/RELEASE_AND_RECOVERY.md`.
 
+## CR-024: site-internal APIs only (approved; implementation pending)
+
+The **active** deployment is designed as an Owner-only ChatGPT Sites React/D1 application. It does **not** provide a supported public or third-party API service. Keep the relative `/api/tasks`, `/api/customers`, `/api/log-time` and minimal `/api/health` HTTP contracts used by the authorized browser, including their existing record-specific methods. Do not expose them as a separately documented API product or remove them at the cost of breaking the UI.
+
+**Not yet verified:** The native Sites Owner-only gate has not been independently checked for every `/api/**` route, and `lib/handler.mjs` does not implement its own Owner login check. Actual non-Owner/anonymous denial and server-side request protections must be checked under [CR-024 PRD §11](../../docs/PRD_PHASE2_LOG_TIME_2026-10-19.md) / [Issue #24](https://github.com/jaronhoh/Task-Tracker/issues/24). Treat the historical REST API references below as **migration history**, not current public API documentation. No code deletion/deployment is implied by this documentation.
+
 ## Current source folders
 
 - `frontend/src/`: React Task Tracker + Log Time, reusable UI components and model functions.
