@@ -25,7 +25,8 @@ export class Repository {
       if (state.sequence !== before.sequence) statements.push(this.db.prepare(`INSERT INTO app_sequence (sequence_name,next_value) SELECT 'task_id', ? WHERE ${guard} ON CONFLICT(sequence_name) DO UPDATE SET next_value = excluded.next_value`).bind(state.sequence, token));
       for (const [table, key] of [['customers','name'],['tasks','task_id'],['log_time','id']]) {
         const original = new Map(before[table].map(row => [row[key],row]));
-        for (const row of before[table]) if (!state[table].some(r => r[key] === row[key])) statements.push(this.db.prepare(`DELETE FROM ${table} WHERE "${key}" = ? AND ${guard}`).bind(row[key],token));
+        const remainingKeys = new Set(state[table].map(row => row[key]));
+        for (const row of before[table]) if (!remainingKeys.has(row[key])) statements.push(this.db.prepare(`DELETE FROM ${table} WHERE "${key}" = ? AND ${guard}`).bind(row[key],token));
         for (const row of state[table]) {
           const old = original.get(row[key]);
           if (JSON.stringify(old) === JSON.stringify(row)) continue;
