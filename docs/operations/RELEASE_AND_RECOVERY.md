@@ -1,5 +1,17 @@
 # Task Tracker — Release, D1 Recovery and Operations Checklist
 
+## Current release decision — 2026-11-05: existing Sites functionality confirmed; no extra deployment requested
+
+The user has confirmed that the **existing Task Tracker Site already contains the features they need**. The previously attempted release of merged PR #20 through the original Site source-sync process is **no longer requested**. This is a **functional user confirmation**, not proof of a new native Sites deployment or of GitHub/Sites source-SHA equality.
+
+**No deployment is scheduled for this change.** Do not run the release, version-save, migration, backup, source sync or production data-altering steps in this runbook merely because PR #20 is merged. This runbook remains the checklist **if and when a future deployment is actually requested**.
+
+Last Work read-only native observation (relayed by the user) was Sites v15, Owner-only, D1 binding `DB` and production D1 `tasks=36`, `customers=6`, `log_time=49`, `app_sequence=1 / value 37`, `app_revision=1 / value 286`. There was **no new version published** during the attempted release; this baseline is not a recoverable backup. Native Sites ↔ GitHub source-commit equivalence remains unverified. The user's current functional confirmation must not be converted into a claim that Sites is running the merged PR source.
+
+Keep real backup/restore and non-Owner authenticated access acceptance as separately tracked unverified operational items; they **do not justify repeatedly requesting a deployment that the user says is unnecessary**. See [current project status](../PROJECT_STATUS.md).
+
+---
+
 > **Scope:** Existing owner-only ChatGPT Sites project `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979`, URL `https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/`. Updated 2026-11-05. **This document is a runbook, not evidence that backup, restore, access or monitoring actions have been performed.**
 
 ## 1. Baseline and permissions (H0)
