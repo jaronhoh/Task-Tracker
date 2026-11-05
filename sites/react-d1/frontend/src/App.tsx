@@ -17,6 +17,24 @@ import { TaskEditor, CustomerManager, TimeEditor } from './Editors'
 export default function App() {
   const [tasks,setTasks]=useState<Task[]>([]),[customers,setCustomers]=useState<Customer[]>([]),[view,setView]=useState<View>('weekly'),[query,setQuery]=useState(''),[search,setSearch]=useState(''),[selected,setSelected]=useState<string|null>(null)
   const [workspace,setWorkspace]=useState('tasks')
+  // Advance the view at Malaysia midnight even when this page remains open.
+  const [malaysiaDay,setMalaysiaDay]=useState(()=>{
+    const p=malaysiaParts();return p.year+'-'+p.month+'-'+p.day
+  })
+  useEffect(()=>{
+    let timer:ReturnType<typeof setTimeout>|undefined
+    function refreshDay(){
+      if(timer!==undefined)clearTimeout(timer)
+      const p=malaysiaParts(),key=p.year+'-'+p.month+'-'+p.day
+      setMalaysiaDay(key)
+      const nextMidnight=Date.parse(key+'T00:00:00+08:00')+86400000
+      timer=setTimeout(refreshDay,Math.max(100,nextMidnight-Date.now()+100))
+    }
+    function resume(){if(document.visibilityState==='visible')refreshDay()}
+    refreshDay()
+    document.addEventListener('visibilitychange',resume)
+    return()=>{if(timer!==undefined)clearTimeout(timer);document.removeEventListener('visibilitychange',resume)}
+  },[])
   const [cardFilter,setCardFilter]=useState('Overall Total')
   const [health,setHealth]=useState('Connecting…'),[notices,setNotices]=useState<NoticeItem[]>([]),[loading,setLoading]=useState(true)
   const [editor,setEditor]=useState<Task|null|undefined>(undefined),[manage,setManage]=useState(false),[time,setTime]=useState<{task:Task;special?:Status}|null>(null),[ordered,setOrdered]=useState<Task[]>([])
@@ -24,7 +42,7 @@ export default function App() {
   const notify=useCallback((message:string,variant:NoticeVariant='success')=>{const id=crypto.randomUUID();setNotices(items=>[...items,{id,message,variant}])},[])
   const dismissNotice=useCallback((id:string)=>setNotices(items=>items.filter(item=>item.id!==id)),[])
   useEffect(()=>{void(async()=>{try{await api('/api/health');await refresh();setHealth('API Connected')}catch(e){setHealth('API Unavailable');notify((e as Error).message,'error')}finally{setLoading(false)}})()},[refresh,notify])
-  const bounds=weekBounds()
+  const bounds=useMemo(()=>weekBounds(),[malaysiaDay])
   const searched=useMemo(()=>viewTasks(tasks,view,query,bounds),[tasks,view,query,bounds.start,bounds.end])
   const deletedRows=useMemo(()=>deletedThisWeek(tasks,query,bounds),[tasks,query,bounds.start,bounds.end])
   const scopeGroups=useMemo(()=>groupsFor(searched,view,bounds),[searched,view,bounds.start,bounds.end])
