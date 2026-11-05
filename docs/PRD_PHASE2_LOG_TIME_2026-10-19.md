@@ -275,6 +275,14 @@ Use the existing health audit at docs/analysis/Task_Tracker_Project_Health_Audit
 
 **Scope boundary:** The health audit's PRODUCT-01 Log Time Excel Export and custom date-range filter were optional feature ideas, not established defects. They are not approved by the request to "fix bugs"; request separate confirmation before building them. Do not reintroduce the Log Time table Delete UI removed by CR-021.
 
+### Verified draft implementation and remaining operational acceptance (2026-11-05)
+
+Draft PR #20 includes the CR-022 approved **B** current-week End selection and clickable filter, CR-023 explicit native AM/PM dropdowns, REL-01/03 truthful saved-vs-refresh behavior and REL-02 safe deferred Linked→Custom confirmation (if no valid Custom Task Title is committed, original association is preserved).
+
+To resolve UX-01 without reintroducing an unwanted Action column, a **mobile-only Edit Selected Log Time** button outside the five-column table is available after selecting a row. Desktop double-click and keyboard Enter are unaffected. Touch emulation is tested, but real-phone acceptance is **not** yet verified.
+
+H4 source maintenance includes a weekly Monday 09:00 Malaysia GitHub Actions regression, optional manual run, short evidence retention, and isolated D1 100/1,000/10,000 synthetic log volume testing. These are *source/CI checks*, not real production health monitoring. Actual encrypted production backup/restore, Sites access control negative testing, authorized native deployment, actual phone acceptance and production D1 row preservation remain blocking operational checks. See `docs/PROJECT_STATUS.md` and issues #21–23.
+
 ### Quality and release gates
 
 - Keep existing production URL, Site project, D1 binding, task/customer/log rows, IDs, sequence, revision, environment and Owner-only access unchanged unless user expressly approves a safe change.
