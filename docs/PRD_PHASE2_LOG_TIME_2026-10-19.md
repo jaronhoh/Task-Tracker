@@ -292,7 +292,7 @@ H4 source maintenance includes a weekly Monday 09:00 Malaysia GitHub Actions reg
 
 ## 11. CR-024 — Remove External API Access; keep protected site-internal APIs (2026-11-05)
 
-**Approval:** User confirmed **Option A**. This requirement is **approved**; it is a new change request to be developed/verified as part of existing Draft PR #20. **This PRD update itself does not remove endpoints, implement security controls, merge code, pass new CR-024 tests or deploy Sites.** The last native-verified production baseline is Sites Version 15.
+**Approval:** User confirmed **Option A**. This requirement is **approved**; it is a new change request to be developed/verified as part of existing Draft PR #20. **The current draft includes request-integrity protections; identity authorization, real Sites checks and production deployment remain unverified.** The last native-verified production baseline is Sites Version 15.
 
 ### 11.1 Objective and scope
 
@@ -332,6 +332,12 @@ This is an **API exposure/control** change, not an instruction to delete D1 tabl
 - **AC-CR-024-04:** No new D1 migrations, no data deletion or reset, no change to task IDs, sequence/revision token, Owner-only access lists, existing Site project/URL or other production configuration without separate explicit approval.
 - **AC-CR-024-05:** TypeScript, isolated API/D1/React/Chromium tests and security-negative tests pass; deploy to **existing Sites** only after actual native authenticated checks and full secure backup, then verify pre/post all-field production D1 equality and record exact deployment IDs.
 - **AC-CR-024-06:** If native Sites authorization evidence or required integration removal cannot be established, mark CR-024 **BLOCKED / NOT VERIFIED**, and do not claim public API exposure was eliminated or Site published.
+
+### 11.4a Implementation checkpoint — application request-integrity layer (2026-11-05)
+
+The current draft branch now contains `sites/react-d1/lib/request-policy.mjs` and calls it from `lib/handler.mjs` **before any D1 access or queued task mutation**. It rejects browsers that explicitly identify a cross-site/same-site context with Fetch Metadata, rejects mismatched/malformed `Origin`, requires `application/json` for POST/PATCH and returns no-store, same-origin resource and nosniff headers. It keeps the existing internal API routes and database schema unchanged. `test/security.test.mjs` exercises rejection without a database and confirms a valid same-origin-shaped local session can still use task CRUD.
+
+**Crucial limit:** Origin and Fetch Metadata are **request-integrity signals, not identity**. Requests without these signals (including direct command-line HTTP calls) are not authenticated by this code. Native Sites **Owner-only** enforcement on `/api/**` remains a release-blocking unverified requirement, not an achieved property. The implementation does not remove any active external integration because one has not been established from the inspected active route code; confirm true deployed exposure in the Sites owner console.
 
 ### 11.5 Dependencies, decisions and release sequencing
 
