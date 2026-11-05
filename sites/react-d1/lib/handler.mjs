@@ -1,8 +1,13 @@
 import { Repository } from '../db/repository.mjs';
 import { operate } from './service.mjs';
 import { HttpError } from './rules.mjs';
+import { assertInternalApiRequest, apiHeaders, apiError } from './request-policy.mjs';
 const writeTails=new WeakMap();
 export async function handle(request,db) {
+  // Refuse explicit cross-site requests before any D1 read or write queue.
+  // Real Owner identity is enforced by the native Sites access boundary,
+  // whose API coverage still requires live verification (CR-024 / issue #21).
+  try { assertInternalApiRequest(request); } catch(error) { return apiError(error); }
   const path=new URL(request.url).pathname;
   if(!['PATCH','DELETE'].includes(request.method)||!/^\/api\/tasks\/[^/]+(?:\/time)?$/.test(path))return execute(request,db);
   // Retain the original arrival-order contract within each Worker isolate.
@@ -25,9 +30,9 @@ async function execute(request,db) {
       if(!body||typeof body!=='object'||Array.isArray(body))body={};
     }
     const result=await operate(new Repository(db),request.method,path,body);
-    return Response.json(result,{status:request.method==='POST'?201:200,headers:{'Cache-Control':'no-store'}});
+    return Response.json(result,{status:request.method==='POST'?201:200,headers:apiHeaders});
   } catch(error) {
     if(!(error instanceof HttpError))console.error(error);
-    return Response.json({error:{code:error.code||'INTERNAL_ERROR',message:error instanceof HttpError?error.message:'An unexpected server error occurred.',...(Number.isInteger(error.taskCount)?{taskCount:error.taskCount}:{})}},{status:error instanceof HttpError?error.status:500,headers:{'Cache-Control':'no-store'}});
+    return apiError(error);
   }
 }
