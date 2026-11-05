@@ -483,3 +483,46 @@ test('CR-017 to CR-019: Log Time Search/Clear, double-click/Enter editing, edit 
     }finally{await ctx.close()}
   }
 }));
+
+test('REL-01 and REL-03: server saved but refresh failed cannot masquerade as failed or trigger duplicate POST',async()=>harness(async({browser,url,api})=>{
+  const task=await api('/api/tasks',{customerName:'Reliability Customer',taskTitle:'Reliability task',taskDescription:'Description'})
+  const ctx=await browser.newContext({viewport:{width:1000,height:760},timezoneId:'Asia/Kuala_Lumpur'}),page=await ctx.newPage()
+  try{
+    await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
+    await page.getByRole('tab',{name:'Log Time',exact:true}).click()
+    await page.locator('#newLogBtn').click()
+    await page.locator('#logTask').click()
+    await page.getByRole('option').filter({hasText:'Reliability task'}).click()
+    await page.locator('#logActivity').click()
+    await page.getByRole('option',{name:'Design',exact:true}).click()
+    await page.locator('#logDate').fill('2026-10-14')
+    await selectLogTime(page,'logStart','09:00')
+    await selectLogTime(page,'logEnd','10:00')
+    let failedRefresh=1
+    await page.route('**/api/log-time',route=>{
+      if(route.request().method()==='GET'&&failedRefresh-->0)return route.fulfill({status:503,contentType:'application/json',body:'{"error":"Injected refresh outage"}'})
+      return route.continue()
+    })
+    await page.getByRole('button',{name:'Save Log Time',exact:true}).click()
+    await page.locator('#logDialogError').waitFor()
+    assert.match(await page.locator('#logDialogError').innerText(),/created successfully.*refreshing the list failed/)
+    assert.equal(await page.getByRole('button',{name:'Retry Refresh'}).count(),1)
+    let saved=await api('/api/log-time',undefined,'GET')
+    assert.equal(saved.length,1)
+    assert.equal(saved[0].taskId,task.taskId)
+    await page.getByRole('button',{name:'Retry Refresh'}).click()
+    await page.locator('#logDialog').waitFor({state:'hidden'})
+    saved=await api('/api/log-time',undefined,'GET');assert.equal(saved.length,1)
+    await page.getByRole('tab',{name:'Show All Data',exact:true}).click()
+    await page.locator('tr[data-log-id="'+saved[0].id+'"]').dblclick()
+    failedRefresh=1
+    await page.locator('#logNote').fill('Persisted despite refresh outage')
+    await page.locator('#logDescription').click()
+    await page.locator('#logDialogError').waitFor()
+    assert.match(await page.locator('#logDialogError').innerText(),/changes were saved, but the list could not refresh/)
+    await page.waitForFunction(()=>document.getElementById('logAutoSaveStatus')?.textContent?.startsWith('Saved, refresh failed'))
+    const edited=(await api('/api/log-time',undefined,'GET'))[0]
+    assert.equal(edited.note,'Persisted despite refresh outage')
+    assert.equal((await api('/api/tasks',undefined,'GET'))[0].timeSpentMinutes,60)
+  }finally{await ctx.close()}
+}))
