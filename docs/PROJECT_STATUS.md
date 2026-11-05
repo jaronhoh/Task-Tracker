@@ -1,3 +1,31 @@
+# 2026-11-05 — PR #20 merged; Sites deployment blocked by inaccessible original-Site source sync
+
+**Overall status: GITHUB MERGED / CI PASSED / SITES PRODUCTION NOT DEPLOYED.**
+
+### GitHub — verified in chat against live repository
+
+- [PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20) is **merged and closed**, no longer Draft. Merge SHA: `bee56116976558f4c10c8590b8a128e7048b1853`.
+- Tested PR head: `7b70b051a416a4c2c91b95f705aa098201c0e2ab`. Exact-head Actions **Sites React acceptance [#41991309148](https://github.com/jaronhoh/Task-Tracker/actions/runs/41991309148) SUCCESS**: 18 React/model, 69 API/D1/security and 18 Chromium = **105 passed, 0 failed**. Exact-head **[anonymous API gate #41991308993](https://github.com/jaronhoh/Task-Tracker/actions/runs/41991308993) SUCCESS**, 20/20 unauthenticated read probes returned HTTP 401. GitHub's legacy commit status API can return `statuses: []` despite successful GitHub Actions workflow runs; use Actions workflows, not legacy status alone.
+- Compared merged commit to tested PR head: **zero changed files**. No D1 schema migration in merged changes. Do not re-open Draft/CI/merge as blockers.
+
+### Original Sites — user-provided ChatGPT Work execution report; no native Site changes made
+
+- Existing production project ID: `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979`.
+- Existing URL: `https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/`.
+- Work observed **Site Version 15**, **Owner-only allowlist containing Owner only**, **D1 binding `DB`**. It read five production tables **read-only**: `tasks` **36 rows**, `customers` **6 rows**, `log_time` **49 rows**, `app_sequence` **1 row (sequence value 37)**, `app_revision` **1 row (revision value 286)**. This is a **read-only comparison baseline, NOT a recoverable backup**.
+- Sites v15 reports source SHA `251d602ee3c01f561017aba66ab2101a6e745241`. GitHub `jaronhoh/Task-Tracker` did **not recognize this as a commit** in direct lookup. This alone does **not prove a wrong GitHub connection**: Sites may maintain an independent source commit graph.
+- Repo source includes `sites/react-d1/.openai/hosting.json` with the **correct existing** `project_id` and `d1: DB`; this alone does **not establish a valid native Sites source-sync channel**.
+- **Actual deployment blocker (per Work):** available Sites tools can inspect Site and D1 and publish **already-saved Sites versions**, but do not expose the **original Site's hosted source editing/synchronization** or its source GitHub repository/branch mapping. A save-version API expects the HEAD of the already-connected source branch; the GitHub merge SHA **must not** be supplied as though it were that native HEAD. Work could not open/edit the original Site's hosted source, sync GitHub `main` / `sites/react-d1/`, or safely save a new version.
+- **Not done:** no new Sites version saved; **no production publish**, Site remains **v15**; no production D1 mutation, migration, deletion or overwrite; no complete encrypted D1 backup or detached restore (capability unavailable to Work); no successful post-deploy data parity test. Do not label this deployment successful.
+
+### Only remaining direct next step
+
+**Resolve native original-Site source sync**: find an authorized supported path to open/update the hosted source of project `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979` from the already-merged `main/sites/react-d1/`, or obtain the missing original-Site source editing / linked-branch operation from the platform owner/support. Then **save and deploy to the same Site** and verify actual Version, source identity, Owner-only access, D1 binding and **all-record before/after parity**. If full production backup remains unavailable, disclose it as residual risk; do not substitute row counts for a backup. Do not create a new Site or reset D1.
+
+**Evidence classification:** GitHub merge / CI / 0-file comparison = GitHub verified. Production v15, owner allowlist, D1 baseline and native tool limitation = **user-relayed Work observation**, not independently accessed by this chat. Native deployment = **NOT PERFORMED**.
+
+---
+
 # 2026-11-05 — CR-024 external anonymous Sites API denial ACTUALLY VERIFIED (20 × HTTP 401); no release
 
 **New real-production read-only evidence (not a browser simulation):** GitHub Actions accessed the **existing** Task Tracker Sites URL from an unauthenticated external runner, without Site credentials/cookies. [Run 41990957290](https://github.com/jaronhoh/Task-Tracker/actions/runs/41990957290) completed **success**. Ten URLs (Site root, `/api/health`, `/api/tasks`, `/api/customers`, `/api/log-time`, plus non-existent resource/time/color subpaths) were each tested twice: (1) no login credentials/normal headers; (2) **spoofable same-origin-shaped `Origin` and `Sec-Fetch-Site` headers** but still no credentials. **All 20 anonymous GET requests returned HTTP 401 Unauthorized.** Earlier eight-route [run 41990721825](https://github.com/jaronhoh/Task-Tracker/actions/runs/41990721825) independently returned 8×401.
