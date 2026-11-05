@@ -611,3 +611,33 @@ test('REL-02: cancelling Linked-to-Custom keeps original link and time total; ti
     assert.equal((await api('/api/tasks',undefined,'GET'))[0].timeSpentMinutes,0)
   }finally{await ctx.close()}
 }))
+
+
+test('UX-02: long-lived tab updates Malaysia Today and weekly data at midnight without reload',async()=>harness(async({browser,url})=>{
+ const regular=task('week-regular','2026-10-18T08:00:00+08:00','KIV')
+ const deleted=(id,end)=>({...task(id,'2026-10-12T08:00:00+08:00','Deleted'),end})
+ const tasks=[regular,deleted('sunday','2026-10-18T23:59:00+08:00'),deleted('monday','2026-10-19T00:00:00+08:00')]
+ const log=(id,date,durationMinutes)=>({id,taskId:null,customerName:'Customer A',taskTitle:id,taskDescription:null,note:null,trackerLink:null,activity:'Development',date,startTime:'09:00',endTime:durationMinutes===60?'10:00':'11:00',durationMinutes,created:date+'T12:00:00+08:00',updated:date+'T12:00:00+08:00'})
+ const logs=[log('sun','2026-10-18',60),log('mon','2026-10-19',120)]
+ const ctx=await browser.newContext({viewport:{width:1440,height:900},timezoneId:'America/Los_Angeles'}),page=await ctx.newPage()
+ try{
+  await page.clock.install({time:new Date('2026-10-18T15:59:30Z')})
+  await page.route('**/api/tasks',r=>r.fulfill({json:tasks}))
+  await page.route('**/api/customers',r=>r.fulfill({json:[{name:'Customer A',color:'#F87171'}]}))
+  await page.route('**/api/log-time',r=>r.fulfill({json:logs}))
+  await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
+  assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','0','1','1'])
+  await page.getByRole('tab',{name:'Log Time',exact:true}).click()
+  assert.equal(await page.locator('[data-log-summary="Today"]').innerText(),'1.00h')
+  assert.equal(await page.locator('[data-log-summary="This Week"]').innerText(),'1.00h')
+  await page.clock.fastForward(90_000)
+  await page.waitForFunction(()=>document.querySelector('[data-log-summary="Today"]')?.textContent==='2.00h')
+  assert.equal(await page.locator('[data-log-summary="This Week"]').innerText(),'2.00h')
+  await page.getByRole('tab',{name:'Task Tracker',exact:true}).click()
+  assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','1','0','1'])
+  // A returning background tab also re-evaluates the Malaysia date.
+  await page.clock.setFixedTime(new Date('2026-10-20T16:00:00Z'))
+  await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')))
+  await page.waitForFunction(()=>document.querySelector('#summaryRow strong')?.textContent==='1')
+ }finally{await ctx.close()}
+}))
