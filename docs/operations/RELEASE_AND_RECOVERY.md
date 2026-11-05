@@ -8,6 +8,14 @@
 - GitHub repository visibility currently reports **Public**; Sites Owner-only is independent. Owner must decide whether public code/history is intentional. Review credentials/test fixtures before any publication; never post real customer/task/log rows or tokens in GitHub or CI artifacts. Changing GitHub visibility/history needs explicit owner authorization.
 - Verify API resources are protected using **read-only, non-owner/anonymous negative checks**, including `/api/tasks`, `/api/customers`, `/api/log-time` and health route policy. Record HTTP status and check that no sensitive JSON rows are disclosed; do not expose an actual owner's session or data. Authorization must be verified at the actual deployed Site, not inferred from code-only unit tests.
 
+### CR-024 — internal API access gate (approved requirement; not yet verified)
+
+- The user approved **Option A**: no public/third-party API product; the authorized React frontend still needs its existing internal `/api/tasks`, `/api/customers`, `/api/log-time` and `/api/health` routes. Do **not** delete them wholesale, expose a new shared public key or embed credentials in frontend code.
+- For each API path family (including record-specific GET/PATCH/DELETE, task Time and Customer color), verify the **actual** Sites Owner-only identity boundary covers the route before it reaches D1. If not, use a supported **server-side fail-closed** identity mechanism and re-test; a CORS setting or Origin header alone is not sufficient authentication.
+- For anonymous/non-Owner requests, record actual HTTP status and verify sensitive data is not returned. Prove write rejection in isolated D1 or other non-destructive authorized test settings; **do not send uncertain writes to production**. Test Owner browser CRUD and save flows as a positive control.
+- Review any real legacy third-party API keys, webhooks, integrations and current public docs for deprecation if found; never invent integration removals. This is an approved change request **CR-024**, tracked in [Issue #24](https://github.com/jaronhoh/Task-Tracker/issues/24); native authorization evidence remains pending in [#21](https://github.com/jaronhoh/Task-Tracker/issues/21).
+- CR-024 must be **implemented and verified** before the next Sites production release; documentation or CI success alone does not close it.
+
 ## 2. CI and controlled release
 
 - Keep change requests and high-risk decisions traceable in PRD and approved. Review PR, changed files, schema diffs, D1 binding and potential secrets; run TypeScript, React/model, API/D1, browser Chromium desktop/mobile × Light/Dark, accessible keyboard/touch checks and necessary fault injection; **failing or unexecuted necessary tests block release**.
