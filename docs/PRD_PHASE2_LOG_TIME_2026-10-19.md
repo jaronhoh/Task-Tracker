@@ -231,3 +231,41 @@ These items are **not user-approved new business rules** and must be resolved by
 - Run TypeScript, builds, React/API/D1 regressions and actual Chromium 1440px/390px × Light/Dark. Update pre-existing browser tests that used the old Edit/Delete controls; use double-click/Enter and verify rows remain in D1.
 - Commit via GitHub PR, then **separately** deploy to the *existing* owner-only Sites project; preserve URL, DB binding, all task/customer/log records, original task IDs, sequence, revision/token and access/configuration. All acceptance mutations belong in isolated test D1; production checks must be read-only.
 - A GitHub merge is **not** a Sites deployment. Only record an actual new Sites version when the native deploy succeeds and after-release data integrity checks are evidenced.
+
+## 10. Coordinated improvement scope — CR-022/023 and H0–H4 (2026-11-05)
+
+**Status: USER REQUEST RECORDED; DETAILED CARD BEHAVIOR REQUIRES CONFIRMATION; NOT IMPLEMENTED, TESTED OR DEPLOYED.** The user requests the two capabilities below and completion of outstanding P1/P2 and Sprint 1–4 audit work as one coordinated delivery. Existing production evidence remains Sites Version 15. Do not confuse this specification with a released build.
+
+### CR-022 — Deleted card in Weekly Task and Current Week Status
+
+- Add a summary card for the Task Tracker **Deleted** status to both **Weekly Task** and **Current Week Status**, matching the existing shadcn summary-card visual language and the currently supported logical-delete status. The user's term "Delete" is interpreted as the existing **Deleted** status card, **not** as a destructive Delete button; confirm label if needed.
+- **Open D-022-A (blocks calculation):** show all historic Deleted tasks, or only tasks Deleted in the current Malaysia week? Current model's viewTasks() explicitly excludes Deleted from weekly/status views, so simply inserting a card based on the current visible list would incorrectly show zero. No dedicated deletion timestamp has been confirmed.
+- **Open D-022-B (blocks interaction):** clickable card filtering to its Deleted rows, consistent with other cards, or informational count-only? Recommendation is clickable with deselection restoring the normal view. In either case existing other card counts and status grouping must not change accidentally.
+- Acceptance: both views show the approved correct count; searching, grouping, weekly calculations, row editing, and Excel export retain consistent approved scope; tests cover old-week and current-week Deleted, missing End, no matches, mobile/desktop and Light/Dark. Never physically delete data.
+
+### CR-023 — AM/PM picker for Log Time Start and End
+
+- Replace type-only HH:mm Start Time and End Time fields in **New Log Time** and **Edit Log Time** with selectable **12-hour hour/minute/AM-or-PM picker controls** (hours 1–12, minutes 00–59, AM/PM) usable on touch and with keyboard. Do not require manual typing as the sole method.
+- Keep precise 1-minute values, including midnight/noon. UI examples: 12:00 AM -> existing API 00:00; 12:00 PM -> 12:00; 01:30 PM -> 13:30. Convert existing saved HH:mm to picker fields. **No D1 migration or stored format changes.**
+- In New Log Time the user still clicks Save Log Time. In Edit Log Time, Date/Start/End must only persist atomically via **Save Time**, not when choosing a picker option. Keep existing date, time overlap, no-overnight, duration calculation, linked Time Spent and conflict validation unchanged.
+- Acceptance: round-trip exact minute/noon/midnight values; correct AM/PM display in both dialogs at 1440px/390px, Light/Dark and touch/keyboard; read-only historical data unchanged after deploy.
+
+### One coordinated H0–H4 hardening delivery
+
+Use the existing health audit at docs/analysis/Task_Tracker_Project_Health_Audit_2026-10-21.md, reproducing issues with isolated test data before fixing. Avoid speculative expansions.
+
+| Stage | Items | Definition of done |
+|---|---|---|
+| H0 preflight | SEC-01 public GitHub visibility and sensitive content review; DEPLOY-01 actual native Sites v15/permissions/D1 recheck | Current permission/release evidence; **no automatic repo visibility change, data exposure, or Git history rewrite**. Owner authorization required to change visibility. |
+| H1 / Sprint 1 | REL-01 PATCH succeeds but refresh fails, REL-03 POST succeeds but refresh fails, REL-02 premature Linked->Custom unlink | Distinguish database write result from refresh error, prevent duplicate POST, preserve drafts, test retry/timeout/conflict/close. **Open D-REL-02:** approve delaying unlink until a valid Custom Task Title is committed atomically; do not silently change association semantics. |
+| H2 / Sprint 2 | DATA-01 secure backup and isolated restore drill, QA-01 anonymous/non-Owner denial, RECOVERY-01 safe correction procedure | Actual supported backup/restore mechanism, restore equality checks, unauthorized access denial; **requires native environment/owner access** and never tests by changing production data. |
+| H3 / Sprint 3 | UX-01 touch-only editing with actionless table, UX-02 MYT midnight and week rollover | Real touch acceptance plus clock/visibility tests; ask permission before changing single-click/touch edit gesture or restoring any action. |
+| H4 / Sprint 4 | DOC-01 README/PRD current state, PERF-01 synthetic 100/1,000/10,000 logs, OPS-01 monitoring/release/rollback checklist, stale React migration PR #2 review | Aligned documentation, measured repeatable performance, safe minimal optimizations if justified, verified operations checklist; do not merge stale PR blindly. |
+
+**Scope boundary:** The health audit's PRODUCT-01 Log Time Excel Export and custom date-range filter were optional feature ideas, not established defects. They are not approved by the request to "fix bugs"; request separate confirmation before building them. Do not reintroduce the Log Time table Delete UI removed by CR-021.
+
+### Quality and release gates
+
+- Keep existing production URL, Site project, D1 binding, task/customer/log rows, IDs, sequence, revision, environment and Owner-only access unchanged unless user expressly approves a safe change.
+- Test real build/TypeScript, full API/D1/React and Chromium regression with 1440/390 widths and Light/Dark, explicit 12h/24h boundary checks, failure injection, summary-card period rules, touch, midnight, backup restoration and synthetic-volume checks. Label tests not actually executed as NOT VERIFIED.
+- Use reviewable GitHub changes/PRs; even if one release is preferred, deployment requires all blocking tests/permissions and approved decisions. Separately publish to the **existing** Sites project and verify actual version/deployment ID, authenticated UI, and full D1 pre/post equality. GitHub merge never proves Sites release. If an operational/native step is not possible with available tools, report the blocker, not a fabricated successful result.
