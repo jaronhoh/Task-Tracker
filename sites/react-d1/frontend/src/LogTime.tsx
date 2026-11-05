@@ -27,7 +27,7 @@ export function toAmPm(value:string):ClockParts{
   return {hour:String(hour%12||12).padStart(2,'0'),minute:value.slice(3),period:hour<12?'AM':'PM'}
 }
 export function fromAmPm(hour:string,minute:string,period:string):string{
-  if(!/^(0[1-9]|1[0-2])$/.test(hour)||!/^([0-5]\\d)$/.test(minute)||!['AM','PM'].includes(period))return ''
+  if(!/^(0[1-9]|1[0-2])$/.test(hour)||!/^([0-5]\d)$/.test(minute)||!['AM','PM'].includes(period))return ''
   const h=(Number(hour)%12)+(period==='PM'?12:0)
   return String(h).padStart(2,'0')+':'+minute
 }
