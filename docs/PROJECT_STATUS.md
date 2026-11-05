@@ -1,3 +1,23 @@
+# 2026-11-05 — User confirmed existing Sites features; no additional deploy required
+
+**CURRENT PRODUCT DECISION (user-confirmed on 2026-11-05): The existing Task Tracker Site already has the features the user needs. There is NO REQUEST to publish an additional version or pursue the blocked source-sync workflow. Stop treating source sync as a mandatory immediate release blocker.** Earlier entries below describe the historical, now-superseded attempt to release PR #20; retain them as evidence, but do not mistake them for the current user decision.
+
+| Area | Current status | Evidence / qualification |
+|---|---|---|
+| Existing production Site functionality | **USER CONFIRMED SUFFICIENT** | User explicitly reports the existing Sites has the desired features. No independent screen-by-screen acceptance of a new version was performed in this chat. |
+| Extra Sites deployment | **NOT NEEDED / NOT REQUESTED** | The earlier attempt to publish merged PR #20 is **cancelled as a current work item**, not marked successful. Do not keep prompting the owner to fix GitHub→Sites source mapping for this release. |
+| GitHub source | **MERGED** | [PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20), merge commit `bee56116976558f4c10c8590b8a128e7048b1853`. Exact pre-merge head: `7b70b051a416a4c2c91b95f705aa098201c0e2ab`. |
+| Automated checks | **PASSED for tested GitHub source** | [105/105](https://github.com/jaronhoh/Task-Tracker/actions/runs/41991309148) and [20/20 anonymous GET HTTP 401](https://github.com/jaronhoh/Task-Tracker/actions/runs/41991308993). These are not evidence that the merged source is the version currently hosted by Sites. |
+| Current native Sites version and GitHub/Sites source equivalence | **NOT INDEPENDENTLY VERIFIED** | Last Work report inspected original Site as Version **15**, Owner-only with owner-only allowlist, D1 binding `DB`, but the source commit association could not be confirmed. User's later functional confirmation does **not** establish an exact version, deployment ID or source commit. |
+| D1 preservation | **LAST READ-ONLY WORK BASELINE ONLY** | Previously reported: `tasks=36`, `customers=6`, `log_time=49`, `app_sequence=1` (value 37), `app_revision=1` (value 286); not a real backup and not a new snapshot. |
+| Unverified operations/security items | **SEPARATE FOLLOW-UPS ONLY** | Real production full backup/restore, non-Owner logged-in authorization and authenticated write-denial were not fully verified; keep historical evidence and any corresponding issues separate from a no-longer-required deployment. Do not claim they passed. |
+
+**Decision:** Keep the working existing Site untouched. Do not create a replacement Site, reset/migrate D1, attempt another version save, or open another Work deployment task **unless the user requests a new update or reports an actual defect**. A future release can independently establish source mapping and recovery plan when genuinely needed. Historical reports saying “Sites production not deployed / source-sync blocked” refer to the **attempted PR #20 redeployment**, not to the user-confirmed availability of required features on the existing Site.
+
+**Evidence labels:** GitHub merge/CI = **GitHub verified**; live functionality available = **User confirmed**; Sites v15/Owner-only/D1 counts/source-sync limitation = **User-relayed Work report**; claimed new deployment = **Not performed / Not asserted**.
+
+---
+
 # 2026-11-05 — PR #20 merged; Sites deployment blocked by inaccessible original-Site source sync
 
 **Overall status: GITHUB MERGED / CI PASSED / SITES PRODUCTION NOT DEPLOYED.**
