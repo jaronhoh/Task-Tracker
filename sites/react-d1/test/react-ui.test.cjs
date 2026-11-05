@@ -1,4 +1,12 @@
 'use strict';
+async function selectLogTime(page,id,time){
+ const hour24=Number(time.slice(0,2)),hour12=String(hour24%12||12).padStart(2,'0')
+ await page.locator('#'+id+'Hour').selectOption(hour12)
+ await page.locator('#'+id+'Minute').selectOption(time.slice(3,5))
+ await page.locator('#'+id+'Period').selectOption(hour24>=12?'PM':'AM')
+}
+
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
@@ -39,7 +47,7 @@ test('React UI: weekly totals, boundaries, search, timezone independence, mobile
     await page.route('**/api/tasks', route => route.fulfill({json:fixture}));
     await page.route('**/api/customers', route => route.fulfill({json:[{name:'Customer A',color:'#F87171'}]}));
     page.setDefaultTimeout(8000);await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
-    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','2','1']);
+    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','2','1','0']);
     assert.deepEqual(await page.locator('.weekly-group-row .group-count-badge').allTextContents(),['2','1']);
     assert.deepEqual(await page.locator('.weekly-group-row .group-count-badge').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-label'))),['Carry Over: 2 tasks','New This Week: 1 tasks']);
     assert.equal(await page.locator('[data-task-id]').count(),3);
@@ -50,13 +58,13 @@ test('React UI: weekly totals, boundaries, search, timezone independence, mobile
     await page.keyboard.press('Escape');await page.locator('#taskDialog').waitFor({state:'hidden'});
     await page.waitForFunction(()=>document.activeElement.id==='editTaskBtn');
     await page.locator('#globalSearch').fill(' tsk-0002 ');await page.locator('#searchBtn').click();
-    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','0','1']);
+    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','0','1','0']);
     assert.equal(await page.locator('.group-toggle[aria-expanded="false"]').count(),1);
     await page.locator('#clearSearchBtn').click();await page.locator('[data-view="status"]').click();
     assert.equal(await page.locator('.status-group-row').count(),4);
-    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','1','0','1','1']);
+    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','1','0','1','1','0']);
     await page.locator('#globalSearch').fill('unmatched');await page.locator('#searchBtn').click();
-    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['0','0','0','0','0']);
+    assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['0','0','0','0','0','0']);
     await ctx.close();
   }
 }));
@@ -175,7 +183,7 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
     for(const [label,expected] of [['Overall Total',['carry','closed','new']],['Carry Over',['carry','closed']],['New This Week',['new']]]) {
       await card(label).click();assert.deepEqual(await ids(),expected);
       assert.equal(await card(label).getAttribute('aria-pressed'),'true');
-      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','2','1']);
+      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','2','1','0']);
       console.log(JSON.stringify({width,view:'weekly',card:label,ids:await ids()}));
       if(process.env.TASK_TRACKER_EVIDENCE_DIR&&label==='New This Week')await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`weekly-${width}.png`),fullPage:true,animations:'disabled'});
       if(label!=='Overall Total'){await card(label).click();assert.deepEqual(await ids(),['carry','closed','new']);}
@@ -194,7 +202,7 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
     for(const [label,expected] of [['All',['carry','closed','new']],['Work in Progress',['carry']],['Pending with Customer',[]],['KIV',['new']],['Closed',['closed']]]){
       await card(label).click();assert.deepEqual(await ids(),expected);
       assert.equal(await card(label).getAttribute('aria-pressed'),'true');
-      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','1','0','1','1']);
+      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','1','0','1','1','0']);
       console.log(JSON.stringify({width,view:'status',card:label,ids:await ids()}));
       if(process.env.TASK_TRACKER_EVIDENCE_DIR&&label==='KIV')await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`status-${width}.png`),fullPage:true,animations:'disabled'});
       if(label!=='All'){await card(label).click();assert.deepEqual(await ids(),['carry','closed','new']);}
@@ -452,8 +460,8 @@ test('CR-017 to CR-019: Log Time Search/Clear, double-click/Enter editing, edit 
       assert.equal(stored.startTime,width===1440?'09:00':'14:00');
       if(width===1440){
       await page.locator('#logDate').fill('2026-10-13');
-      await page.locator('#logStart').fill('14:00');
-      await page.locator('#logEnd').fill('15:15');
+      await selectLogTime(page,'logStart','14:00');
+      await selectLogTime(page,'logEnd','15:15');
       const before=(await api('/api/log-time',undefined,'GET')).find(l=>l.id===first.id);
       assert.equal(before.date,'2026-10-12');assert.equal(before.startTime,'09:00');
       await page.locator('#saveLogTimeChanges').click();
@@ -475,3 +483,168 @@ test('CR-017 to CR-019: Log Time Search/Clear, double-click/Enter editing, edit 
     }finally{await ctx.close()}
   }
 }));
+
+test('REL-01 and REL-03: server saved but refresh failed cannot masquerade as failed or trigger duplicate POST',async()=>harness(async({browser,url,api})=>{
+  const task=await api('/api/tasks',{customerName:'Reliability Customer',taskTitle:'Reliability task',taskDescription:'Description'})
+  const ctx=await browser.newContext({viewport:{width:1000,height:760},timezoneId:'Asia/Kuala_Lumpur'}),page=await ctx.newPage()
+  try{
+    await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
+    await page.getByRole('tab',{name:'Log Time',exact:true}).click()
+    await page.locator('#newLogBtn').click()
+    await page.locator('#logTask').click()
+    await page.getByRole('option').filter({hasText:'Reliability task'}).click()
+    await page.locator('#logActivity').click()
+    await page.getByRole('option',{name:'Design',exact:true}).click()
+    await page.locator('#logDate').fill('2026-10-14')
+    await selectLogTime(page,'logStart','09:00')
+    await selectLogTime(page,'logEnd','10:00')
+    let failedRefresh=1
+    await page.route('**/api/log-time',route=>{
+      if(route.request().method()==='GET'&&failedRefresh-->0)return route.fulfill({status:503,contentType:'application/json',body:'{"error":"Injected refresh outage"}'})
+      return route.continue()
+    })
+    await page.getByRole('button',{name:'Save Log Time',exact:true}).click()
+    await page.locator('#logDialogError').waitFor()
+    assert.match(await page.locator('#logDialogError').innerText(),/created successfully.*refreshing the list failed/)
+    assert.equal(await page.getByRole('button',{name:'Retry Refresh'}).count(),1)
+    let saved=await api('/api/log-time',undefined,'GET')
+    assert.equal(saved.length,1)
+    assert.equal(saved[0].taskId,task.taskId)
+    await page.getByRole('button',{name:'Retry Refresh'}).click()
+    await page.locator('#logDialog').waitFor({state:'hidden'})
+    saved=await api('/api/log-time',undefined,'GET');assert.equal(saved.length,1)
+    await page.getByRole('tab',{name:'Show All Data',exact:true}).click()
+    await page.locator('tr[data-log-id="'+saved[0].id+'"]').dblclick()
+    failedRefresh=1
+    await page.locator('#logNote').fill('Persisted despite refresh outage')
+    await page.locator('#logDescription').click()
+    await page.locator('#logDialogError').waitFor()
+    assert.match(await page.locator('#logDialogError').innerText(),/changes were saved, but the list could not refresh/)
+    await page.waitForFunction(()=>document.getElementById('logAutoSaveStatus')?.textContent?.startsWith('Saved, refresh failed'))
+    const edited=(await api('/api/log-time',undefined,'GET'))[0]
+    assert.equal(edited.note,'Persisted despite refresh outage')
+    assert.equal((await api('/api/tasks',undefined,'GET'))[0].timeSpentMinutes,60)
+  }finally{await ctx.close()}
+}))
+
+
+test('CR-022: weekly and status Deleted cards use Malaysia-week End, filter and restore without deleting records',async()=>harness(async({browser,url,temp})=>{
+  const regular=task('regular','2026-10-13T08:00:00+08:00','KIV');
+  const deleted=(id,end)=>({...task(id,'2026-10-01T10:00:00+08:00','Deleted'),end});
+  const fixture=[regular,
+    deleted('deleted-monday','2026-10-12T00:00:00+08:00'),
+    deleted('deleted-sunday','2026-10-18T23:59:00+08:00'),
+    deleted('deleted-before','2026-10-11T23:59:00+08:00'),
+    deleted('deleted-after','2026-10-19T00:00:00+08:00'),
+    deleted('deleted-no-end',null)];
+  for(const width of [1440,390])for(const theme of ['light','dark']){
+    const ctx=await browser.newContext({viewport:{width,height:850},acceptDownloads:true,timezoneId:'America/Los_Angeles'}),page=await ctx.newPage()
+    try{
+      await page.clock.setFixedTime(new Date('2026-10-15T04:00:00Z'))
+      await page.route('**/api/tasks',r=>r.fulfill({json:fixture}))
+      await page.route('**/api/customers',r=>r.fulfill({json:[{name:'Customer A',color:'#F87171'}]}))
+      await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
+      await page.locator('html').evaluate((node,mode)=>{node.classList.toggle('dark',mode==='dark')},theme)
+      const ids=async()=>await page.locator('[data-task-id]').evaluateAll(ns=>ns.map(n=>n.dataset.taskId).sort())
+      const deletedCard=page.locator('#summaryRow button').filter({has:page.getByText('Deleted',{exact:true})})
+      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','0','1','2'])
+      assert.deepEqual(await ids(),['regular'])
+      await deletedCard.click()
+      assert.equal(await deletedCard.getAttribute('aria-pressed'),'true')
+      assert.deepEqual(await ids(),['deleted-monday','deleted-sunday'])
+      assert.equal(await page.locator('.group-toggle').count(),1)
+      assert.match(await page.locator('.group-toggle').innerText(),/Deleted/)
+      await deletedCard.click()
+      assert.equal(await deletedCard.getAttribute('aria-pressed'),'false')
+      assert.deepEqual(await ids(),['regular'])
+      await page.locator('#globalSearch').fill('deleted-monday')
+      await page.locator('#searchBtn').click()
+      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['0','0','0','1'])
+      await deletedCard.click()
+      assert.deepEqual(await ids(),['deleted-monday'])
+      await page.locator('#clearSearchBtn').click()
+      assert.deepEqual(await ids(),['deleted-monday','deleted-sunday'])
+      await page.locator('[data-view="status"]').click()
+      assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','0','0','1','0','2'])
+      assert.deepEqual(await ids(),['regular'])
+      await deletedCard.click()
+      assert.deepEqual(await ids(),['deleted-monday','deleted-sunday'])
+      await deletedCard.click()
+      assert.deepEqual(await ids(),['regular'])
+      await page.locator('[data-view="all"]').click()
+      assert.equal(await page.locator('[data-task-id]').count(),fixture.length)
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Page overflow at '+width)
+    }finally{await ctx.close()}
+  }
+}))
+
+
+test('REL-02: cancelling Linked-to-Custom keeps original link and time total; title commits unlink atomically',async()=>harness(async({browser,url,api})=>{
+  const task=await api('/api/tasks',{customerName:'Customer A',taskTitle:'Original linked task',taskDescription:'Unchanged'})
+  const linked=await api('/api/log-time',{taskId:task.taskId,customerName:'Customer A',taskTitle:'Original linked task',activity:'Development',date:'2026-10-13',startTime:'09:00',endTime:'10:00'})
+  const ctx=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,timezoneId:'Asia/Kuala_Lumpur'}),page=await ctx.newPage()
+  try{
+    await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
+    await page.getByRole('tab',{name:'Log Time',exact:true}).click()
+    await page.getByRole('tab',{name:'Show All Data',exact:true}).click()
+    const row=page.locator('tr[data-log-id="'+linked.id+'"]')
+    const touchEdit=page.locator('#editSelectedLogBtn')
+    assert.equal(await touchEdit.isVisible(),true)
+    assert.equal(await touchEdit.isDisabled(),true)
+    await row.tap()
+    assert.equal(await touchEdit.isEnabled(),true)
+    assert.equal(await page.locator('#logTimeTable').getByRole('button',{name:/^Edit|Delete/}).count(),0)
+    await touchEdit.tap();await page.locator('#logDialog').waitFor()
+    await page.locator('#logTask').click()
+    await page.getByRole('button',{name:'+ Add Custom Task',exact:true}).click()
+    assert.equal(await page.locator('#logCustomTitle').inputValue(),'')
+    assert.equal((await api('/api/log-time',undefined,'GET'))[0].taskId,task.taskId)
+    assert.equal((await api('/api/tasks',undefined,'GET'))[0].timeSpentMinutes,60)
+    page.once('dialog',d=>d.accept())
+    await page.locator('#logDialog').getByRole('button',{name:'Close',exact:true}).last().click()
+    await page.locator('#logDialog').waitFor({state:'hidden'})
+    assert.equal((await api('/api/log-time',undefined,'GET'))[0].taskId,task.taskId)
+    assert.equal((await api('/api/tasks',undefined,'GET'))[0].timeSpentMinutes,60)
+    await row.dblclick();await page.locator('#logTask').click()
+    await page.getByRole('button',{name:'+ Add Custom Task',exact:true}).click()
+    await page.locator('#logCustomTitle').fill('Custom work confirmed')
+    await page.locator('#logDescription').click()
+    await page.waitForFunction(()=>document.getElementById('logAutoSaveStatus')?.textContent?.startsWith('Saved'))
+    const custom=(await api('/api/log-time',undefined,'GET'))[0]
+    assert.equal(custom.taskId,null)
+    assert.equal(custom.taskTitle,'Custom work confirmed')
+    assert.equal(custom.durationMinutes,60)
+    assert.equal((await api('/api/tasks',undefined,'GET'))[0].timeSpentMinutes,0)
+  }finally{await ctx.close()}
+}))
+
+
+test('UX-02: long-lived tab updates Malaysia Today and weekly data at midnight without reload',async()=>harness(async({browser,url})=>{
+ const regular=task('week-regular','2026-10-18T08:00:00+08:00','KIV')
+ const deleted=(id,end)=>({...task(id,'2026-10-12T08:00:00+08:00','Deleted'),end})
+ const tasks=[regular,deleted('sunday','2026-10-18T23:59:00+08:00'),deleted('monday','2026-10-19T00:00:00+08:00')]
+ const log=(id,date,durationMinutes)=>({id,taskId:null,customerName:'Customer A',taskTitle:id,taskDescription:null,note:null,trackerLink:null,activity:'Development',date,startTime:'09:00',endTime:durationMinutes===60?'10:00':'11:00',durationMinutes,created:date+'T12:00:00+08:00',updated:date+'T12:00:00+08:00'})
+ const logs=[log('sun','2026-10-18',60),log('mon','2026-10-19',120)]
+ const ctx=await browser.newContext({viewport:{width:1440,height:900},timezoneId:'America/Los_Angeles'}),page=await ctx.newPage()
+ try{
+  await page.clock.install({time:new Date('2026-10-18T15:59:30Z')})
+  await page.route('**/api/tasks',r=>r.fulfill({json:tasks}))
+  await page.route('**/api/customers',r=>r.fulfill({json:[{name:'Customer A',color:'#F87171'}]}))
+  await page.route('**/api/log-time',r=>r.fulfill({json:logs}))
+  await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
+  assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','0','1','1'])
+  await page.getByRole('tab',{name:'Log Time',exact:true}).click()
+  await page.waitForFunction(()=>document.querySelector('[data-log-summary="Today"]')?.textContent==='1.00h')
+  assert.equal(await page.locator('[data-log-summary="Today"]').innerText(),'1.00h')
+  assert.equal(await page.locator('[data-log-summary="This Week"]').innerText(),'1.00h')
+  await page.clock.fastForward(90_000)
+  await page.waitForFunction(()=>document.querySelector('[data-log-summary="Today"]')?.textContent==='2.00h')
+  assert.equal(await page.locator('[data-log-summary="This Week"]').innerText(),'2.00h')
+  await page.getByRole('tab',{name:'Task Tracker',exact:true}).click()
+  assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','1','0','1'])
+  // A returning background tab also re-evaluates the Malaysia date.
+  await page.clock.setFixedTime(new Date('2026-10-20T16:00:00Z'))
+  await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')))
+  await page.waitForFunction(()=>document.querySelector('#summaryRow strong')?.textContent==='1')
+ }finally{await ctx.close()}
+}))

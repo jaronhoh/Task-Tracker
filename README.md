@@ -1,5 +1,42 @@
 # Task Tracker
 
+## Current application — ChatGPT Sites (React + D1)
+
+**Production:** [Task Tracker](https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/) · existing owner-only Sites project. **Latest release verified in repository records:** Sites **Version 15** (2026-10-19). The GitHub repository is currently **Public**, which is a separate access policy from the Site. Do not publish real task/customer/log data or credentials to this repository.
+
+**Current source of truth:** `sites/react-d1/` (React 19 + TypeScript + shadcn-style UI/Tailwind + Vinext/Workers routes + production Cloudflare D1 `DB` binding). The original standalone HTML/Express/SQLite design documented further below is **legacy project history, not the current production deployment**.
+
+Core workspaces: Task Tracker (Weekly Task, Current Week Status, Show All Data, customer/task editing and Excel export) and Log Time (Today/This Week/Show All Data, searchable dated work entries, linked or one-off custom tasks, time validation, date Accordion and linked Time Spent). Existing Log Time ordinary edits Auto Save; changes to Date/Start/End use explicit Save Time.
+
+**Changes not yet released:** [Draft PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20) contains CR-022 (current-week Deleted card), CR-023 (12-hour AM/PM pickers), reliability/hardening and newly approved **CR-024** (no public/third-party API service, protected internal APIs only). **CR-024 request-integrity guards are implemented in Draft PR #20 and tested locally, but Owner authentication and production Sites exposure are NOT VERIFIED**; see [Issue #24](https://github.com/jaronhoh/Task-Tracker/issues/24). No draft feature is production-live solely because it was committed or passed CI. Read `docs/PROJECT_STATUS.md` and `docs/PRD_PHASE2_LOG_TIME_2026-10-19.md` §§10–11.
+
+### API access policy — CR-024 (approved requirement, pending verification)
+
+Task Tracker is a single-owner Sites application; **it does not offer a public or third-party API service**. Existing same-origin browser-to-D1 HTTP routes (e.g., `/api/tasks`, `/api/customers`, `/api/log-time` and `/api/health`) must remain available **only to authorized Site Owner requests**. They are **not to be deleted indiscriminately** or exposed to anonymous callers. Native Owner-only protection of every API path requires real Sites verification; a relative URL, CORS setting or client-supplied header is **not** itself authorization. Server request guards now reject explicit cross-site Fetch Metadata, mismatched Origin and non-JSON POST/PATCH in local tests. **These are not identity checks**: native Sites Owner-only protection of each route, anonymous/non-Owner denial and real production backup are still pending. Historical REST API sections below are preserved only as archived project context, not an active public API offering.
+
+### Development and validation
+
+```bash
+cd sites/react-d1
+npm ci --no-audit --no-fund
+node node_modules/typescript/bin/tsc -p frontend/tsconfig.json --noEmit
+npm run test:react
+npm test
+npm run build
+# Browser QA requires Playwright Chromium:
+npx playwright install chromium
+node --test test/react-ui.test.cjs test/log-time-ui.test.cjs
+```
+
+Use isolated D1 test fixtures for all write-path QA. After code review and green CI, update the **existing** Sites project through authorized native Sites publishing. A GitHub merge or a successful build is not a deployment. Read `docs/operations/RELEASE_AND_RECOVERY.md` for preservation, owner-only, D1 snapshot, rollback and restore-check guidelines. Do not run destructive migrations or reset production task IDs.
+
+---
+
+## Archived Phase 1 product/design notes (historical only)
+
+The following original planning material is preserved for traceability; where it differs from the current React/D1 implementation or later PRD changes, **the current code and latest approved PRD take precedence**.
+
+
 A simple task management and weekly reporting web application designed around a Microsoft Lists / Power Apps-style table experience.
 
 ## Overview

@@ -1,3 +1,174 @@
+# 2026-11-05 — CR-024 external anonymous Sites API denial ACTUALLY VERIFIED (20 × HTTP 401); no release
+
+**New real-production read-only evidence (not a browser simulation):** GitHub Actions accessed the **existing** Task Tracker Sites URL from an unauthenticated external runner, without Site credentials/cookies. [Run 41990957290](https://github.com/jaronhoh/Task-Tracker/actions/runs/41990957290) completed **success**. Ten URLs (Site root, `/api/health`, `/api/tasks`, `/api/customers`, `/api/log-time`, plus non-existent resource/time/color subpaths) were each tested twice: (1) no login credentials/normal headers; (2) **spoofable same-origin-shaped `Origin` and `Sec-Fetch-Site` headers** but still no credentials. **All 20 anonymous GET requests returned HTTP 401 Unauthorized.** Earlier eight-route [run 41990721825](https://github.com/jaronhoh/Task-Tracker/actions/runs/41990721825) independently returned 8×401.
+
+**Safety and limits:** This checked **current deployed production access** externally without reading or logging response bodies. No POST, PATCH, DELETE, Site admin, token, D1 read/write or deployment operation was performed. The 401 responses demonstrate anonymous GET denial from the tested external source; they do **not** prove non-Owner **logged-in** access rejection, write-method authorization, actual native Sites owner list/version/DB binding, or recoverable real production D1 backup. These are still necessary release gates. The real production version was **not** read during the probe; latest **native verified** version remains v15 in the repo's historical evidence, not a fresh live version assertion.
+
+**Automation:** `sites/react-d1/scripts/check-anonymous-sites.mjs` and `.github/workflows/sites-api-anonymous-gate.yml` now provide a non-credentialed, read-only, redacted external regression check. The workflow includes manual dispatch and a **weekly Monday 09:15 Malaysia** schedule (Monday 01:15 UTC), which becomes active only on GitHub `main` after merging. No actual continuous production health monitoring or D1 backup is enabled by this draft.
+
+**Work remaining before PR #20 release:** [#21](https://github.com/jaronhoh/Task-Tracker/issues/21) requires direct authenticated native Sites Owner-only settings, non-Owner logged-in negative and safe write-route denial; [#24](https://github.com/jaronhoh/Task-Tracker/issues/24) requires full CR-024 acceptance; [#22](https://github.com/jaronhoh/Task-Tracker/issues/22) requires actual secured production D1 backup and isolated restore; [#23](https://github.com/jaronhoh/Task-Tracker/issues/23) requires physical mobile acceptance and original-Site deployment with all-field production D1 parity. Keep Draft PR open until native evidence is complete. Do not accidentally treat the 20×401 as proof that a new Site version was published.
+
+---
+
+# 2026-11-05 — CR-024 application request guards implemented; 105 tests PASS; live Owner authorization STILL BLOCKED
+
+**Status: CR-024 PARTIAL IMPLEMENTATION ON DRAFT PR #20; NOT MERGED OR DEPLOYED.** No production D1 reads/writes or native Sites publish occurred in this implementation round. Last **native-verified** production release is still recorded as Sites **Version 15**; this is not a fresh Sites environment query.
+
+## What actually changed
+
+- Inspected the active app route `sites/react-d1/app/api/[...path]/route.ts`: it delegates GET/POST/PATCH/DELETE to `lib/handler.mjs`; `lib/service.mjs` supplies **website-internal** tasks, customers, log-time and health contracts. There was **no separately provisioned webhook or external API product in the inspected active route sources**. Legacy REST API descriptions remain archived history. The user-approved Option A does **not** authorize removing the internal URLs.
+- Added `lib/request-policy.mjs`, applied in `lib/handler.mjs` **before the D1 repository or per-task mutation queue**. Explicit `Sec-Fetch-Site` cross-site/same-site requests and mismatched/invalid `Origin` are refused (403); POST/PATCH with non-JSON Content-Type is refused (415). API responses include no-store, same-origin resource and nosniff headers. These controls reduce browser cross-origin/CSRF request exposure but **do not authenticate users**.
+- Added `test/security.test.mjs` with exhaustive representative read/write route-family refusal cases asserting **no D1 access after an explicit denial**, plus legitimate same-origin-shaped local CRUD/health positive controls. Existing `test/d1.test.mjs` fixtures now identify JSON writes; isolated HTTP harnesses preserve the original Host to avoid false failures when the browser uses `127.0.0.1`.
+- **Passed final application-source CI**: [Run 41989429042](https://github.com/jaronhoh/Task-Tracker/actions/runs/41989429042) completed **success**: **18 React/model + 69 API/D1/security + 18 Chromium = 105 tests passed, 0 failed**, plus TypeScript checks and production build. An earlier run failed browser tests when the test harness substituted localhost for the real request Host; corrected, then reran to full green. This result is for the tested code revision `da425ff9bfde02717bdc789d0202b3a4d24ed239`; subsequent documentation-only commits do not alter application logic.
+
+## Critical security and release caveat
+
+**CR-024 is NOT an authenticated Owner-only API implementation.** Anyone able to reach the API with a direct client lacking Fetch Metadata/Origin could still issue a request in this isolated application if the **native Sites hosting access gate** does not block them. OpenAI's Sites public documentation describes Site sharing as the visitor access boundary, but the exact protection of this deployed `/api/**` route has **not been observed**. Rejecting cross-site browser request headers, CORS or an embedded secret alone is insufficient to establish Owner identity.
+
+Mandatory blocking tasks remain open:
+- [#24](https://github.com/jaronhoh/Task-Tracker/issues/24) CR-024 real identity/route-access acceptance and integration-exposure review;
+- [#21](https://github.com/jaronhoh/Task-Tracker/issues/21) actual native Sites Owner-only verification plus anonymous/non-Owner API GET denial and safe write-denial evidence;
+- [#22](https://github.com/jaronhoh/Task-Tracker/issues/22) authorized encrypted production D1 backup and **detached restore**;
+- [#23](https://github.com/jaronhoh/Task-Tracker/issues/23) physical touch acceptance and final original-Site publish with exact D1 before/after equality.
+
+**No PR merge, Site permission/URL/DB binding change, D1 migration, production data deletion or deployment is claimed or authorized by the source-level CI.** If native Sites access/backup cannot be verified, do not deploy and mark the remaining controls BLOCKED / NOT VERIFIED.
+
+---
+
+# 2026-11-05 — CR-024: Internal API Only (Option A) approved, implementation PENDING
+
+**User-approved request:** Remove public/third-party API as a product capability. **Preserve only the HTTP APIs that the owner-authorized React frontend needs to read/write D1**; do not delete `/api/*` wholesale. Approved as **CR-024** in [Phase 2 PRD §11](PRD_PHASE2_LOG_TIME_2026-10-19.md) and tracked in [Issue #24](https://github.com/jaronhoh/Task-Tracker/issues/24), linked to open [Draft PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20).
+
+**Code inspection findings:** Existing `sites/react-d1/frontend/src/lib/api.ts` calls relative `/api/*` endpoints. `sites/react-d1/lib/service.mjs` provides Task, Customer, Log Time and health operations; `sites/react-d1/lib/handler.mjs` contains no independent login/Owner identity check. Access currently relies on the **native Sites owner-only access boundary**, whose coverage of each `/api/*` route **has not been verified in this chat**. It is not possible to establish anonymous/non-Owner API denial using code-only tests or CORS settings.
+
+**Required work, still NOT DONE:** Audit any actual third-party/public API exposure or integration (do not invent one), verify true native Owner-only API protection and no bypass; if necessary implement supported server-side fail-closed authorization and state-change request protections; test anonymous/non-Owner reads and writes in a safe environment; keep authenticated Owner Task/Customer/Log-Time workflows functioning. No new D1 schema migration, Site URL, binding, permissions, Task ID, sequence/revision or data changes are authorized by this intake.
+
+**Delivery gate:** Issue #24 depends on [Issue #21](https://github.com/jaronhoh/Task-Tracker/issues/21) native Sites/API authorization verification, [#22](https://github.com/jaronhoh/Task-Tracker/issues/22) real production D1 backup/restore and [#23](https://github.com/jaronhoh/Task-Tracker/issues/23) real-device/release. Do **not** merge PR #20 or claim deployment as a result of this documentation-only change; the last production version verified in repository records is **Sites v15**.
+
+---
+
+# 2026-11-05 — User requested production proceed: preflight checked, native Sites gates BLOCKED
+
+**Decision:** No publish or merge was performed. Project safety requirements remain in effect. Latest tested PR #20 head `930e49252e4a16f862c0f5859ebccc963403750e` had **GitHub Actions run 41975974141 success: 18 React/model + 65 API/D1 + 18 Chromium = 101 passed, 0 failed.** GitHub compare with `main` shows PR branch ahead 40 commits and behind 0, mergeable; changed files contain **no new D1 schema migration**.
+
+**Production preflight limitation:** Connected operations expose GitHub but **no native ChatGPT Sites project/version/deployment, D1, access-policy or backup tools**; available deployment-related plugins target other hosting providers, not the existing Sites project. Unauthenticated general-web reads of current Site root and `/api/health`, `/api/tasks`, `/api/log-time` returned `URL not accessible via this tool`. This is **not a measured HTTP 401/403/5xx** and **does not prove Owner-only protection, live Site health or current production version**.
+
+**Tracking updates:** Open [#21](https://github.com/jaronhoh/Task-Tracker/issues/21) native owner access/anonymous denial, [#22](https://github.com/jaronhoh/Task-Tracker/issues/22) actual encrypted production D1 backup and detached restore, and [#23](https://github.com/jaronhoh/Task-Tracker/issues/23) real-device mobile acceptance and original-Site publish now have specific evidence/checkpoint comments. No private task/customer/log content was added to this public GitHub repository.
+
+**Gate and safe next action:** Use authorized native Sites management to perform actual live read-only checks and secure backups, verify physical touch, only then merge tested PR and deploy **to the existing Sites project, URL and DB binding** with before/after all-field D1 parity. Do not interpret user “go” as permission to skip required safety gates or to create a replacement app. Until those actions are observable, **Version 15 remains the latest verified production version, not a fresh real-time Sites read.**
+
+---
+
+
+# 2026-11-05 — Latest PR #20 implementation/test checkpoint: 101 green, native Sites deployment BLOCKED
+
+**Actual status: OPEN DRAFT PR, NOT MERGED; NOT DEPLOYED.** The last **native-verified** production release remains **Sites Version 15 (2026-10-19)**. User instructed “continue until end”, so all source-level, testable reliability/feature work continues on the existing draft. Do not confuse GitHub Actions with live production.
+
+## Source/test additions since prior checkpoint
+
+- **UX-01 accessible mobile edit path:** Retain the original five-column actionless Log Time table and desktop double-click / Enter. At small touch-screen widths the user may tap a Log Time row then press **Edit Selected Log Time** in a separate mobile-only toolbar. No Log Time Actions column or Delete button has returned; Playwright emulated touch exercises the path. **Real physical-phone acceptance is not evidenced.**
+- **PERF-01 isolated Miniflare D1 volume smoke:** Insert 100 → 1,000 → 10,000 synthetic historical, non-overlapping one-minute logs into **isolated local D1**, then read full Log Time list and Task Time Spent from the repository. 10k-row tests passed with correct counts/totals. Example GitHub CI timings for isolated 10k: GET tasks ~196.7 ms, GET logs ~166.1 ms. Values vary per runner and do **not** represent native production Cloudflare D1 p95, quota, or business SLOs.
+- **OPS-01 scheduled source regressions:** `.github/workflows/sites-react-acceptance.yml` now includes manual dispatch and scheduled GitHub Actions regression at **Monday 09:00 Malaysia time** (cron Monday 01:00 UTC) with seven-day artifact retention. This becomes active on `main` after merge. It is **not** an authenticated production uptime monitor, database backup nor automatic Sites release.
+- **SEC-01 preliminary GitHub code search:** current `main` search for common key/token markers (private-key prefix, ghp_, sk-, client_secret, DATABASE_URL, D1_TOKEN, CLOUDFLARE_API_TOKEN, api_key, Bearer) returned no matches. This was **not** a full git-history secret scanner or evidence that a Public repo is harmless. Repository visibility remains **Public**, unchanged.
+- H2 release blockers now tracked as GitHub [#21](https://github.com/jaronhoh/Task-Tracker/issues/21) (actual Sites owner/anonymous access), [#22](https://github.com/jaronhoh/Task-Tracker/issues/22) (real encrypted off-repo production backup and isolated restore), [#23](https://github.com/jaronhoh/Task-Tracker/issues/23) (real mobile touch and safe production deployment). Do not publish protected customer rows/credentials in public issues.
+
+## Latest actual passing CI on complete source/CI changes
+
+[GitHub Actions run 41975598445](https://github.com/jaronhoh/Task-Tracker/actions/runs/41975598445) **completed/success** on `8273bc1c55ac04585ab2439d4018da7eb348ff39` (latest source/workflow change before this status entry):
+
+| Suite | Passed | Failed |
+|---|---:|---:|
+| React/model | 18 | 0 |
+| API/isolated D1/restore/synthetic perf | 65 | 0 |
+| Chromium browser | 18 | 0 |
+| **Total** | **101** | **0** |
+
+Frontend TypeScript, browser acceptance and Sites/Vinext build also passed. This test suite does not authenticate to live private Sites or modify production data.
+
+## Explicit incomplete gates
+
+1. Actual native Sites authenticated environment/project/permission/DB read-only verification before deploy (no native Sites tool available in this chat). Existing public URL was not accessible through generic web retrieval; that does not constitute a non-Owner HTTP API denial audit.
+2. Authorized durable encrypted **production D1 backup** and detached restore; synthetic Miniflare D1 restore passed but is not real backup.
+3. Actual anonymous/non-Owner sensitive API rejection evidence; physical-phone touch testing; owner decision on public GitHub visibility (no permission changes).
+4. Owner-approved production release into **same** Site/DB, with pre/post all-field D1 equality, actual Sites saved version and native deployment ID. No release was attempted in this chat, and no unapproved production data writes occurred.
+
+**Do not merge or mark the package production-released while the above critical gates are outstanding.** See the current PRD §10, the [Release and Recovery Runbook](operations/RELEASE_AND_RECOVERY.md) and issues #21–23 for operational handoff.
+
+---
+
+
+# 2026-11-05 — CR-022/023 + H0–H4 stabilization draft: 100 CI tests GREEN; native release PENDING
+
+**Delivery status: NOT DEPLOYED.** Draft [PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20) contains implementation and this status update; **main production code has not been changed by this draft**. Last native-verified Sites production remains Version 15 (2026-10-19); this entry is **GitHub/CI evidence only**, not a fresh Sites inspection.
+
+## New features and repairs implemented on PR #20
+
+- **CR-022 — RESOLVED option B:** user explicitly chose **only Deleted Tasks whose End timestamp falls in the current Asia/Kuala_Lumpur Monday 00:00 → next Monday 00:00 window**. Weekly Task and Current Week Status now include a clickable Deleted summary card showing those rows; second click restores ordinary view. Other Summary Cards retain their prior totals and default groups. Missing End, prior/future-week End are excluded; keyword search applies. No physical deletion.
+- **CR-023:** New/Edit Log Time Start/End have accessible hour/minute/AM/PM dropdowns, preserving 1-minute precision and stored HH:mm API/D1 strings; Save Time remains the only edit-time date/time write.
+- **REL-01:** PATCH persisted + refresh failed now shows "Saved, refresh failed" with a durable warning; no false fully-synced Saved state.
+- **REL-03:** POST created + refresh failed tracks the created record and offers Retry Refresh; does not resubmit a duplicate POST.
+- **REL-02 (draft safety fix):** changing linked entry to Custom only creates an unsaved draft, clearing the candidate title, and delays unlink until a nonempty Custom Title and relevant ordinary fields are saved in the same PATCH. Closing before confirmation leaves prior link and Task Tracker Time Spent unchanged. User-requested overall hardening authorized drafting; explicit product signoff for this behavior can be obtained before release.
+- **UX-02:** Malaysia midnight/week-boundary re-render on active page and after background-tab visibility resume (no production writes).
+- **PERF-01 targeted improvements:** D1 repository delete-diff detection uses a Set rather than per-row nested scanning; /api/tasks aggregates associated Log Time in one pass. Server/D1 API semantics unchanged.
+- **DATA-01 (partial):** a *synthetic isolated D1 restore regression* exercises every row/field of customers/tasks/log_time/app_sequence/app_revision, IDs, sequence and token. This is **not** a verified real Sites production backup/export/restore.
+- **DOC-01 / OPS-01 (partial):** README root and Sites docs label existing React/D1 production vs legacy HTML/SQLite; PRD has current-effective-rules index; [release/recovery/monitoring runbook](operations/RELEASE_AND_RECOVERY.md) created. **No monitoring automation is enabled** merely because a runbook exists.
+- **Legacy PR #2:** reviewed 42 changed files from old Express/SQLite app migration, then **closed without merge** as obsolete; code/history retained.
+
+## CI results (actual)
+
+[GitHub Actions Run 41968230605](https://github.com/jaronhoh/Task-Tracker/actions/runs/41968230605) completed **success** on app/test commit `2ca5152ddef69b841967d89c4c3e84040052b93a`: **18 React/model + 64 API/D1/synthetic restore/perf + 18 Chromium = 100 passed, 0 failed**. TypeScript, React build and Sites/Vinext production build passed. 1440/390 browser and existing Light/Dark scenarios remain covered. New browser regressions cover CR-022 week End boundaries/search/filter, REL-01/03 server-success/refresh-failure, REL-02 cancel/atomic confirmed unlink, and UX-02 long-lived Today/week rollover.
+
+The synthetic aggregation-only benchmark (200 tasks) reported:
+- 100 logs: **0.8 ms**
+- 1,000 logs: **1.6 ms**
+- 10,000 logs: **7.4 ms**
+
+These are CI isolated app-layer timings, **not real D1 latency, quota, network p95, or production throughput**. No full D1 10k-row saturation test or SLO acceptance is claimed.
+
+## Still open / explicit blockers before production sign-off
+
+| Category | Status / needed action |
+|---|---|
+| H0 SEC-01 GitHub visibility | GitHub currently Public and Sites Owner-only per last verified metadata. Owner must decide whether public is intended. No visibility/secret/history change made. Sensitive-source scan requires explicit review. |
+| H0 DEPLOY-01 | Native Sites current version, owner policy, DB binding and environment require a **fresh authenticated read-only check** before publish; GitHub docs are not live API. |
+| H2 DATA-01 production durable backup | Determine real native Sites/D1 backup/export path, make secure off-repo production backup and test isolated native restore. Our synthetic D1 test is only a rehearsal. |
+| H2 QA-01 | Real anonymous/non-owner HTTP API negative tests must be observed at native Sites without exposing sensitive rows. |
+| H3 UX-01 | Actual physical smartphone touch edit discoverability without Actions button still needs owner/device acceptance. Browser-emulated touch alone is insufficient. |
+| H4 PERF-01 / OPS-01 | Native 100/1k/10k D1 end-to-end performance, agreed thresholds and actual monitoring/backup schedule not yet executed. |
+| Product choices | Linked→Custom draft behavior and optional touch-specific edit affordance require confirmation before behavior-changing release. Export/date-range features remain unapproved/out of scope. |
+
+**Do not merge Draft PR #20 or claim Sites v16 until blockers and required release validation are cleared.** Keep existing Site URL, owner-only policy, all user D1 rows, task ID allocation/sequence, revision/token, env and DB binding unchanged. New Sites version requires native publishing proof + full production D1 pre/post equality. GitHub CI success is not a production deployment.
+
+---
+
+
+# 2026-11-05 — Draft PR #20: CR-023 time picker + REL-01/03 early fixes, CI passed, release NOT COMPLETE
+
+**Status: PARTIAL DEVELOPMENT ON OPEN DRAFT PR ONLY.** No merge to main, no current production data reads/writes, no Sites publish; last verified production release still **Version 15**.
+
+- Draft PR #20: https://github.com/jaronhoh/Task-Tracker/pull/20. New requirements CR-022 (Deleted card in two views) and CR-023 (Log Time AM/PM picker), plus H0–H4 follow-ups, are in PRD §10 with explicit pending owner decisions.
+- **Implemented on draft branch, not published:** CR-023 native accessible hour/minute/AM/PM select controls, 1-minute precision, existing HH:mm API/storage and New Save versus Edit Save Time semantics. REL-01: distinguish PATCH persisted from list-refresh failure and preserve accurate visible error. REL-03: distinguish POST created from refresh failure; use Retry Refresh rather than a second POST.
+- **Passed automated CI on tested draft head `8b4f4ebac49048541c367b68c453548ed499b438`:** [Run 41965612216](https://github.com/jaronhoh/Task-Tracker/actions/runs/41965612216) succeeded: 17 React/model, 62 API/D1, 15 Chromium (total **94 passed, 0 failed**), including 1440-minute AM/PM conversion test, fault-injection refresh failures, desktop/mobile and Light/Dark. TypeScript and production build passed. A prior run on an earlier draft revision failed due to old generic 'option' test selectors counting the new native select options; selectors were scoped and retested to green.
+- **Still to develop/verify:** CR-022 card until counting/time scope and interaction defined; REL-02 Linked→Custom atomic transition until business decision; H0 native current-Sites/access baseline and owner visibility decision; H2 actual backup/restore and non-owner API denial; H3 real touch-only experience, cross-midnight week rollover; H4 live performance/operations/doc cleanup and old PR #2; all final integration and release gates.
+- Public GitHub visibility is a separate owner decision: **no permission change made**. No destructive Log Time Delete UI reintroduction, database migration, production record modification, or new Site requested.
+- **Do not merge/publish the draft batch until critical decisions and tests/operational checks pass.** If native Sites permissions/tools or actual recovery testing are unavailable, list those parts as NOT VERIFIED, not completed.
+
+---
+
+
+# 2026-11-05 — New feature requests and all H0–H4 development follow-ups (specification draft, NOT DEPLOYED)
+
+**Status:** Two new requirements recorded in Phase 2 PRD section 10 on branch docs/cr022-cr023-hardening-backlog-20261105. This documentation entry does not represent implemented code, new CI, merged PR or Sites deployment. Latest verified published Sites Version remains **15** (2026-10-19); this is based on the prior release record, not a new native Sites inspection.
+
+- **CR-022:** Add a Deleted-status summary card to **Weekly Task** and **Current Week Status**. Pending owner clarification: current-week versus all-history Deleted scope and whether clicking filters the list. Current viewTasks() excludes Deleted, requiring careful scoping rather than a superficial new card.
+- **CR-023:** Log Time Start and End become 12-hour AM/PM time pickers in New/Edit. Preserve existing HH:mm API/D1 value, minute precision, interval rules and explicit Save Time for edits.
+- **H0–H4 coordinated hardening:** H0 GitHub/Sites permissions and baseline; H1 REL-01/02/03 Auto Save/Custom; H2 backup/isolated restore and non-Owner API tests; H3 touch and MYT midnight; H4 docs, load, monitoring, recovery and stale PR review.
+- **Open decision:** Linked→Custom must not change persistently until product semantics approved. GitHub visibility currently Public according to the previous audit; do not change without owner approval.
+- PRODUCT-01 Log Time export/date-range is an optional new feature, not a confirmed bug; not implicitly approved by “fix P1/P2”.
+- **All application implementation, test execution, GitHub merge and production deployment for these new requests remain pending.** Any actual future release must preserve existing URL/D1 records/sequence/access and record separate proof of CI and native deployment.
+
+---
+
 # Current project health review — 2026-10-21 MYT (documentation audit, no deployment)
 
 **Last verified production release in repository records: Sites Version 15 (2026-10-19), CR-020/021 live-verified; no later native Sites verification was performed in this review.** Release history and full Version 15 validation details are retained below. **This entry does not change production version, source, D1 data, access or hosting.**

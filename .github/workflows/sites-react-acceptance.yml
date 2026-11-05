@@ -1,5 +1,9 @@
 name: Sites React acceptance
 on:
+  workflow_dispatch:
+  # Source-level regression only: weekly Monday 09:00 Malaysia; no production data.
+  schedule:
+    - cron: '0 1 * * 1'
   push:
     branches: [main]
     paths:
@@ -42,4 +46,5 @@ jobs:
         with:
           name: sites-browser-evidence
           path: sites-evidence
+          retention-days: 7
 

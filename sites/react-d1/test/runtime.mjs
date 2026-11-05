@@ -18,7 +18,7 @@ export function httpApp(db,trace=[]) {
   return http.createServer(async (req,res)=>{
     if(req.headers['x-p0-request-id'])trace.push({requestId:req.headers['x-p0-request-id'],path:req.url,sequence:trace.length+1});
     const chunks=[];for await(const chunk of req)chunks.push(chunk);
-    const response=await handle(new Request('http://localhost'+req.url,{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})}),db);
+    const response=await handle(new Request(new URL(req.url, 'http://'+(req.headers.host||'localhost')).toString(),{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})}),db);
     res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));
   });
 }

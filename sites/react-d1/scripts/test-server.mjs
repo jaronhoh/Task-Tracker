@@ -10,7 +10,7 @@ const server=createServer(async(req,res)=>{
   try {
     if(req.url.startsWith('/api/')) {
       const chunks=[];for await(const c of req)chunks.push(c);
-      const result=await handle(new Request('http://localhost'+req.url,{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})}),db);
+      const result=await handle(new Request(new URL(req.url, 'http://'+(req.headers.host||'localhost')).toString(),{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})}),db);
       res.writeHead(result.status,Object.fromEntries(result.headers));res.end(Buffer.from(await result.arrayBuffer()));return;
     }
     const name=new URL(req.url,'http://localhost').pathname;

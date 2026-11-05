@@ -32,6 +32,13 @@ export function viewTasks(tasks: Task[], view: View, query = '', bounds = weekBo
     .filter(t => !q || SEARCH_FIELDS.some(f => String(t[f] ?? '').toLocaleLowerCase('en-US').includes(q)))
     .sort((a,b) => a.customerName.localeCompare(b.customerName, undefined, { sensitivity:'base' }) || a.taskId.localeCompare(b.taskId))
 }
+// Deleted is a logical status; count it in weekly cards by the task End timestamp,
+// independently from the unchanged active/current-week Task Tracker view filters.
+export function deletedThisWeek(tasks: Task[], query = '', bounds = weekBounds()): Task[] {
+  return viewTasks(tasks, 'all', query, bounds).filter(t =>
+    t.status === 'Deleted' && !!t.end && epoch(t.end) >= bounds.start && epoch(t.end) < bounds.end
+  )
+}
 export function groupsFor(tasks: Task[], view: View, bounds = weekBounds()): Group[] {
   if (view === 'weekly') return [['Carry Over', tasks.filter(t => isCarryOver(t, bounds))], ['New This Week', tasks.filter(t => epoch(t.created) >= bounds.start && epoch(t.created) < bounds.end && t.status !== 'Deleted')]]
   if (view === 'status') return STATUSES.slice(0,4).map(s => [s, tasks.filter(t => t.status === s)])

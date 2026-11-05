@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { searchLogs, summarize, today, type Log } from '../src/LogTime'
+import { fromAmPm, toAmPm, searchLogs, summarize, today, type Log } from '../src/LogTime'
 const log=(date:string,durationMinutes:number)=>({date,durationMinutes} as Log)
 test('Malaysia work dates and Monday boundaries determine independent Total/Today/This Week cards',()=>{
  const rows=[log('2026-10-11',120),log('2026-10-12',60),log('2026-10-18',90),log('2026-10-19',30)]
@@ -23,4 +23,19 @@ test('Log Time keyword search covers independent saved fields and restores full 
  assert.deepEqual(searchLogs(rows,'zzz'),[])
  assert.equal(searchLogs(rows,''),rows)
  assert.equal(searchLogs(rows,'   '),rows)
+})
+
+test('AM/PM picker round trips exact minutes, midnight and noon without altering 24-hour persisted values',()=>{
+ for(let h=0;h<24;h++)for(let m=0;m<60;m++){
+   const expected=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')
+   const p=toAmPm(expected)
+   assert.equal(fromAmPm(p.hour,p.minute,p.period),expected)
+ }
+ assert.deepEqual(toAmPm('00:00'),{hour:'12',minute:'00',period:'AM'})
+ assert.deepEqual(toAmPm('12:00'),{hour:'12',minute:'00',period:'PM'})
+ assert.deepEqual(toAmPm('23:59'),{hour:'11',minute:'59',period:'PM'})
+ assert.equal(fromAmPm('01','30','PM'),'13:30')
+ for(const bad of [['00','00','AM'],['13','00','PM'],['01','60','AM'],['01','10',''],['','20','PM']]){
+   assert.equal(fromAmPm(bad[0],bad[1],bad[2]),'')
+ }
 })
