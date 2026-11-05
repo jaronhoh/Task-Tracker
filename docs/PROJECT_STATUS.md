@@ -1,3 +1,17 @@
+
+# 2026-11-05 — New feature requests and all H0–H4 development follow-ups (specification draft, NOT DEPLOYED)
+
+**Status:** Two new requirements recorded in Phase 2 PRD section 10 on branch docs/cr022-cr023-hardening-backlog-20261105. This documentation entry does not represent implemented code, new CI, merged PR or Sites deployment. Latest verified published Sites Version remains **15** (2026-10-19); this is based on the prior release record, not a new native Sites inspection.
+
+- **CR-022:** Add a Deleted-status summary card to **Weekly Task** and **Current Week Status**. Pending owner clarification: current-week versus all-history Deleted scope and whether clicking filters the list. Current viewTasks() excludes Deleted, requiring careful scoping rather than a superficial new card.
+- **CR-023:** Log Time Start and End become 12-hour AM/PM time pickers in New/Edit. Preserve existing HH:mm API/D1 value, minute precision, interval rules and explicit Save Time for edits.
+- **H0–H4 coordinated hardening:** H0 GitHub/Sites permissions and baseline; H1 REL-01/02/03 Auto Save/Custom; H2 backup/isolated restore and non-Owner API tests; H3 touch and MYT midnight; H4 docs, load, monitoring, recovery and stale PR review.
+- **Open decision:** Linked→Custom must not change persistently until product semantics approved. GitHub visibility currently Public according to the previous audit; do not change without owner approval.
+- PRODUCT-01 Log Time export/date-range is an optional new feature, not a confirmed bug; not implicitly approved by “fix P1/P2”.
+- **All application implementation, test execution, GitHub merge and production deployment for these new requests remain pending.** Any actual future release must preserve existing URL/D1 records/sequence/access and record separate proof of CI and native deployment.
+
+---
+
 # Current project health review — 2026-10-21 MYT (documentation audit, no deployment)
 
 **Last verified production release in repository records: Sites Version 15 (2026-10-19), CR-020/021 live-verified; no later native Sites verification was performed in this review.** Release history and full Version 15 validation details are retained below. **This entry does not change production version, source, D1 data, access or hosting.**
