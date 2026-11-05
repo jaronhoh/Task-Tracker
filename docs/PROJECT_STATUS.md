@@ -1,3 +1,15 @@
+# 2026-11-05 — CR-024: Internal API Only (Option A) approved, implementation PENDING
+
+**User-approved request:** Remove public/third-party API as a product capability. **Preserve only the HTTP APIs that the owner-authorized React frontend needs to read/write D1**; do not delete `/api/*` wholesale. Approved as **CR-024** in [Phase 2 PRD §11](PRD_PHASE2_LOG_TIME_2026-10-19.md) and tracked in [Issue #24](https://github.com/jaronhoh/Task-Tracker/issues/24), linked to open [Draft PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20).
+
+**Code inspection findings:** Existing `sites/react-d1/frontend/src/lib/api.ts` calls relative `/api/*` endpoints. `sites/react-d1/lib/service.mjs` provides Task, Customer, Log Time and health operations; `sites/react-d1/lib/handler.mjs` contains no independent login/Owner identity check. Access currently relies on the **native Sites owner-only access boundary**, whose coverage of each `/api/*` route **has not been verified in this chat**. It is not possible to establish anonymous/non-Owner API denial using code-only tests or CORS settings.
+
+**Required work, still NOT DONE:** Audit any actual third-party/public API exposure or integration (do not invent one), verify true native Owner-only API protection and no bypass; if necessary implement supported server-side fail-closed authorization and state-change request protections; test anonymous/non-Owner reads and writes in a safe environment; keep authenticated Owner Task/Customer/Log-Time workflows functioning. No new D1 schema migration, Site URL, binding, permissions, Task ID, sequence/revision or data changes are authorized by this intake.
+
+**Delivery gate:** Issue #24 depends on [Issue #21](https://github.com/jaronhoh/Task-Tracker/issues/21) native Sites/API authorization verification, [#22](https://github.com/jaronhoh/Task-Tracker/issues/22) real production D1 backup/restore and [#23](https://github.com/jaronhoh/Task-Tracker/issues/23) real-device/release. Do **not** merge PR #20 or claim deployment as a result of this documentation-only change; the last production version verified in repository records is **Sites v15**.
+
+---
+
 # 2026-11-05 — User requested production proceed: preflight checked, native Sites gates BLOCKED
 
 **Decision:** No publish or merge was performed. Project safety requirements remain in effect. Latest tested PR #20 head `930e49252e4a16f862c0f5859ebccc963403750e` had **GitHub Actions run 41975974141 success: 18 React/model + 65 API/D1 + 18 Chromium = 101 passed, 0 failed.** GitHub compare with `main` shows PR branch ahead 40 commits and behind 0, mergeable; changed files contain **no new D1 schema migration**.
