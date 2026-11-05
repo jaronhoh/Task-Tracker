@@ -339,6 +339,12 @@ The current draft branch now contains `sites/react-d1/lib/request-policy.mjs` an
 
 **Crucial limit:** Origin and Fetch Metadata are **request-integrity signals, not identity**. Requests without these signals (including direct command-line HTTP calls) are not authenticated by this code. Native Sites **Owner-only** enforcement on `/api/**` remains a release-blocking unverified requirement, not an achieved property. The implementation does not remove any active external integration because one has not been established from the inspected active route code; confirm true deployed exposure in the Sites owner console.
 
+### 11.4b Native production anonymous-read evidence (2026-11-05)
+
+The first real external read-only negative check **passed** on the currently deployed Owner-restricted Site: GitHub Actions [run 41990957290](https://github.com/jaronhoh/Task-Tracker/actions/runs/41990957290) sent 20 **unauthenticated GET** requests (10 routes: home, health, tasks, customers, log time and non-existent detail/time/color paths; each under ordinary headers and spoofable same-origin-shaped metadata). **All 20 responded HTTP 401** without reporting response bodies. This supports **AC-CR-024-02 for the tested anonymous GET cases only**.
+
+It does **not** prove that a **logged-in non-Owner** would be rejected, nor that POST/PATCH/DELETE methods are blocked before production D1 writes; no production mutation was attempted. Actual authenticated owner-positive acceptance, Site version/access-policy/DB binding inspection, recoverable backup/restore, and original-Site publish remain pending. Keep AC-CR-024-02/03/05/06 open until all remaining evidence exists. This probe measured the **currently deployed version**, not the unreleased draft PR.
+
 ### 11.5 Dependencies, decisions and release sequencing
 
 - **H0 / QA-01 / Issue #21** is now a **mandatory CR-024 acceptance dependency** covering server-side API authorization for all path families and direct non-Owner/anonymous requests.
