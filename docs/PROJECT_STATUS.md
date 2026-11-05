@@ -1,3 +1,28 @@
+# 2026-11-05 — CR-024 application request guards implemented; 105 tests PASS; live Owner authorization STILL BLOCKED
+
+**Status: CR-024 PARTIAL IMPLEMENTATION ON DRAFT PR #20; NOT MERGED OR DEPLOYED.** No production D1 reads/writes or native Sites publish occurred in this implementation round. Last **native-verified** production release is still recorded as Sites **Version 15**; this is not a fresh Sites environment query.
+
+## What actually changed
+
+- Inspected the active app route `sites/react-d1/app/api/[...path]/route.ts`: it delegates GET/POST/PATCH/DELETE to `lib/handler.mjs`; `lib/service.mjs` supplies **website-internal** tasks, customers, log-time and health contracts. There was **no separately provisioned webhook or external API product in the inspected active route sources**. Legacy REST API descriptions remain archived history. The user-approved Option A does **not** authorize removing the internal URLs.
+- Added `lib/request-policy.mjs`, applied in `lib/handler.mjs` **before the D1 repository or per-task mutation queue**. Explicit `Sec-Fetch-Site` cross-site/same-site requests and mismatched/invalid `Origin` are refused (403); POST/PATCH with non-JSON Content-Type is refused (415). API responses include no-store, same-origin resource and nosniff headers. These controls reduce browser cross-origin/CSRF request exposure but **do not authenticate users**.
+- Added `test/security.test.mjs` with exhaustive representative read/write route-family refusal cases asserting **no D1 access after an explicit denial**, plus legitimate same-origin-shaped local CRUD/health positive controls. Existing `test/d1.test.mjs` fixtures now identify JSON writes; isolated HTTP harnesses preserve the original Host to avoid false failures when the browser uses `127.0.0.1`.
+- **Passed final application-source CI**: [Run 41989429042](https://github.com/jaronhoh/Task-Tracker/actions/runs/41989429042) completed **success**: **18 React/model + 69 API/D1/security + 18 Chromium = 105 tests passed, 0 failed**, plus TypeScript checks and production build. An earlier run failed browser tests when the test harness substituted localhost for the real request Host; corrected, then reran to full green. This result is for the tested code revision `da425ff9bfde02717bdc789d0202b3a4d24ed239`; subsequent documentation-only commits do not alter application logic.
+
+## Critical security and release caveat
+
+**CR-024 is NOT an authenticated Owner-only API implementation.** Anyone able to reach the API with a direct client lacking Fetch Metadata/Origin could still issue a request in this isolated application if the **native Sites hosting access gate** does not block them. OpenAI's Sites public documentation describes Site sharing as the visitor access boundary, but the exact protection of this deployed `/api/**` route has **not been observed**. Rejecting cross-site browser request headers, CORS or an embedded secret alone is insufficient to establish Owner identity.
+
+Mandatory blocking tasks remain open:
+- [#24](https://github.com/jaronhoh/Task-Tracker/issues/24) CR-024 real identity/route-access acceptance and integration-exposure review;
+- [#21](https://github.com/jaronhoh/Task-Tracker/issues/21) actual native Sites Owner-only verification plus anonymous/non-Owner API GET denial and safe write-denial evidence;
+- [#22](https://github.com/jaronhoh/Task-Tracker/issues/22) authorized encrypted production D1 backup and **detached restore**;
+- [#23](https://github.com/jaronhoh/Task-Tracker/issues/23) physical touch acceptance and final original-Site publish with exact D1 before/after equality.
+
+**No PR merge, Site permission/URL/DB binding change, D1 migration, production data deletion or deployment is claimed or authorized by the source-level CI.** If native Sites access/backup cannot be verified, do not deploy and mark the remaining controls BLOCKED / NOT VERIFIED.
+
+---
+
 # 2026-11-05 — CR-024: Internal API Only (Option A) approved, implementation PENDING
 
 **User-approved request:** Remove public/third-party API as a product capability. **Preserve only the HTTP APIs that the owner-authorized React frontend needs to read/write D1**; do not delete `/api/*` wholesale. Approved as **CR-024** in [Phase 2 PRD §11](PRD_PHASE2_LOG_TIME_2026-10-19.md) and tracked in [Issue #24](https://github.com/jaronhoh/Task-Tracker/issues/24), linked to open [Draft PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20).
