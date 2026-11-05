@@ -1,5 +1,21 @@
 # Task Tracker for ChatGPT Sites
 
+> **Current production implementation:** React 19 + TypeScript + shadcn-style components / Tailwind; Vinext routes on Workers and Cloudflare D1 via existing production `DB` binding. Last verified production release in GitHub records: **Sites v15** (2026-10-19). Current production is **not** the original jQuery/DataTables frontend. The first-migration notes below are retained for historic context, not instructions to revert the UI.
+
+> **Unreleased work:** Draft [PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20) holds CR-022/023 and reliability fixes; its code, test results and approval status must be checked separately from the currently deployed Site. See `../../docs/PROJECT_STATUS.md`, `../../docs/PRD_PHASE2_LOG_TIME_2026-10-19.md` and `../../docs/operations/RELEASE_AND_RECOVERY.md`.
+
+## Current source folders
+
+- `frontend/src/`: React Task Tracker + Log Time, reusable UI components and model functions.
+- `frontend/test/`: React and model tests.
+- `lib/`: Worker business rules, validation and D1 service endpoints.
+- `db/` and `drizzle/`: D1 repository and immutable applied migrations.
+- `test/`: isolated API/D1 and Chromium browser regression.
+- `scripts/`: build and local test helpers.
+
+## Historical migration notes
+
+
 Migration source: `jaronhoh/Task-Tracker` branch `migration/chatgpt-sites-d1`, commit `440f9be516e11bcba487ae2e899e18cb5a3d15e7`.
 
 The original HTML/CSS/JavaScript interface is retained. Vinext routes serve the original REST API on Cloudflare Workers. All production records live in D1 through `DB`. Production has no dependency on Express, better-sqlite3, local database files, browser storage, or mock records.
