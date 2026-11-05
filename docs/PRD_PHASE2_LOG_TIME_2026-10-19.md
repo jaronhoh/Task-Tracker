@@ -17,6 +17,7 @@ This is an **append-only** PRD. Historic acceptance text remains for traceabilit
 | §8 CR-017–019 | Released at Sites v14 | Independent search, Edit ordinary-field Auto Save, explicit atomic Save Time, row double-click/Enter; **old Edit/Delete table-action claims are superseded by §9**. |
 | §9 CR-020/021 | Released at Sites v15 | `Date | Hours` heading; five-column Log Time table with no Actions/Edit/Delete buttons. |
 | §10 CR-022/023 & H0–H4 | **Draft PR #20; NOT LIVE** | New Deleted this-Malaysia-week card uses task End; 12-hour picker; reliability, backup/access, touch/midnight and maintenance. Do not claim published until a new native Sites release is verified. |
+| §11 CR-024 — Internal API Only | **Requirement APPROVED (Option A), IMPLEMENTATION NOT YET VERIFIED** | No public/third-party API offering; preserve strictly protected same-site React→D1 internal endpoints; verify owner-only API authorization separately for all routes. |
 
 ## 1. Objective and scope
 
@@ -288,3 +289,53 @@ H4 source maintenance includes a weekly Monday 09:00 Malaysia GitHub Actions reg
 - Keep existing production URL, Site project, D1 binding, task/customer/log rows, IDs, sequence, revision, environment and Owner-only access unchanged unless user expressly approves a safe change.
 - Test real build/TypeScript, full API/D1/React and Chromium regression with 1440/390 widths and Light/Dark, explicit 12h/24h boundary checks, failure injection, summary-card period rules, touch, midnight, backup restoration and synthetic-volume checks. Label tests not actually executed as NOT VERIFIED.
 - Use reviewable GitHub changes/PRs; even if one release is preferred, deployment requires all blocking tests/permissions and approved decisions. Separately publish to the **existing** Sites project and verify actual version/deployment ID, authenticated UI, and full D1 pre/post equality. GitHub merge never proves Sites release. If an operational/native step is not possible with available tools, report the blocker, not a fabricated successful result.
+
+## 11. CR-024 — Remove External API Access; keep protected site-internal APIs (2026-11-05)
+
+**Approval:** User confirmed **Option A**. This requirement is **approved**; it is a new change request to be developed/verified as part of existing Draft PR #20. **This PRD update itself does not remove endpoints, implement security controls, merge code, pass new CR-024 tests or deploy Sites.** The last native-verified production baseline is Sites Version 15.
+
+### 11.1 Objective and scope
+
+- Task Tracker is a **single-owner browser application**, not a general-purpose REST API product or an integration platform. There shall be **no separately advertised, documented for consumer use, shared-key or anonymous/third-party API service**.
+- **Keep the operational internal API paths** needed by the existing React frontend to read and write data in D1. These HTTP requests continue to exist and their URLs remain technically addressable: the product requirement is **access restriction**, *not removing every /api URL*.
+- Preserve native **ChatGPT Sites Owner-only access policy for both page and API endpoints**, and add or verify server-side request authorization as supported by the real Sites runtime. Non-owner/anonymous users may not read private data **or** mutate it by manually requesting an API URL.
+- Internal requests from the authorized browser must continue to work for Task Tracker, Customer Management, Log Time, customer rename, linked Time Spent, logical Deleted status, search/filter, Excel export and date/time edits.
+- No new public API keys, service accounts, shared developer tokens, API portal, external webhook, external integrations, cross-origin API consumers or third-party automation are part of this scope. **Do not replace Sites owner access with an app-wide secret embedded in frontend JavaScript.**
+
+### 11.2 Existing route inventory — retain as internal functionality
+
+Based on existing `sites/react-d1/lib/service.mjs`, `lib/handler.mjs` and React's `frontend/src/lib/api.ts`:
+
+| Family | Representative existing internal HTTP operations | CR-024 decision |
+|---|---|---|
+| Tasks | GET/POST `/api/tasks`; GET/PATCH/DELETE `/api/tasks/:taskId`; PATCH `/api/tasks/:taskId/time` | **Retain** for the authorized site, including logical Delete and Time edit. |
+| Customers | GET/POST `/api/customers`; PATCH/DELETE `/api/customers/:name`; PATCH `/api/customers/:name/color` | **Retain** for authorized site-only operations and existing referential checks. |
+| Log Time | GET/POST `/api/log-time`; PATCH/DELETE `/api/log-time/:id` | **Retain the existing backend contract** under Owner-only authorization; CR-021's UI removal of row Delete buttons still applies. Any physical deletion policy is a separate approval. |
+| Health | GET `/api/health` | Retain minimum health functionality as required by the app/CI; do not reveal customer data, internal credentials or platform configuration. Verify correct access policy on the live Site. |
+
+This is an **API exposure/control** change, not an instruction to delete D1 tables or a database migration. Do not assume any additional third-party integration exists without code evidence.
+
+### 11.3 Security and exposure requirements
+
+1. **Hosting access boundary:** Verify actual deployed Sites Owner-only policy on `/` and `/api/**`; there must be **no route-level bypass** that exposes API JSON even when the page requires login. If native Sites only protects the HTML shell and cannot protect API routes, a **real server-side fail-closed authentication boundary** must be implemented using platform-supported identity/session verification **before** release; do not invent a header, static secret, unsupported identity API or security claim.
+2. **Anonymous/non-owner negative access:** For every read/write route family (including ID-specific, color, Time and DELETE variants), ensure unauthorized requests are rejected before any database read/write. For mutation checks, use an isolated environment or a provably rejected request; **never run an unauthorized destructive request with uncertain access against production D1**. A URL being inaccessible through generic web search is **not** proof of HTTP 401/403.
+3. **Owner positive access:** An authenticated Owner session can still create, read and update records through the existing React workflows, including search, Log Time Save Time and linked Time Spent. The application must not require direct cross-origin network access or developer API keys.
+4. **Browser request integrity:** For state-changing operations evaluate and implement suitable server-side CSRF/session protections supported by native Sites, as needed. CORS, Origin/Referer, a client-added header, obscured paths, or a JavaScript-bundled token **alone** are not authentication or authorization. Use strict allowlisting of methods/routes and prevent credential leakage, while preserving legitimate owner use.
+5. **No API commercialization/public documentation:** Review any currently active integration exposure, deployment configuration, public documentation and credentials for removal/deprecation. Retain archived historical docs clearly labeled as historical. Do not claim an external API has been removed unless the audit finds one and verifies its removal.
+6. **Security boundary accuracy:** An authenticated Owner can still send HTTP requests to the same internal endpoints using legitimate authorization. "No external API" means **no public or separately supported third-party API service**, *not* a mathematical guarantee that an authenticated owner cannot issue a direct HTTP request.
+
+### 11.4 Acceptance criteria
+
+- **AC-CR-024-01:** No public/anonymous API functionality and no third-party API integration or distribution remain in the current deployment contract; documentation describes internal endpoint use accurately.
+- **AC-CR-024-02:** Real native Sites evidence verifies Owner-only protection on root and API routes. Anonymous and non-Owner requests cannot obtain task/customer/log data; write routes cannot be exercised outside authorized identity. Record HTTP status and absence of private records **without publishing actual response content to GitHub**.
+- **AC-CR-024-03:** Owner end-to-end CRUD and error/retry behavior work on React, including task/customer/log-time creation/editing, existing logical task Delete, custom-task switching and five-column Log Time table. CR-022/023 regressions must remain green.
+- **AC-CR-024-04:** No new D1 migrations, no data deletion or reset, no change to task IDs, sequence/revision token, Owner-only access lists, existing Site project/URL or other production configuration without separate explicit approval.
+- **AC-CR-024-05:** TypeScript, isolated API/D1/React/Chromium tests and security-negative tests pass; deploy to **existing Sites** only after actual native authenticated checks and full secure backup, then verify pre/post all-field production D1 equality and record exact deployment IDs.
+- **AC-CR-024-06:** If native Sites authorization evidence or required integration removal cannot be established, mark CR-024 **BLOCKED / NOT VERIFIED**, and do not claim public API exposure was eliminated or Site published.
+
+### 11.5 Dependencies, decisions and release sequencing
+
+- **H0 / QA-01 / Issue #21** is now a **mandatory CR-024 acceptance dependency** covering server-side API authorization for all path families and direct non-Owner/anonymous requests.
+- **DATA-01 / Issue #22** requires real off-repository production backup and detached restore validation before publish.
+- **Issue #23** covers real-device mobile checks and authorized same-Site deployment.
+- Keep Draft PR #20 open until CR-024 technical design is implemented/verified and the above release gates are satisfied. **No API route removals or changes to production are authorized by documentation-only changes.**
