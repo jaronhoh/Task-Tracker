@@ -1,4 +1,49 @@
 
+# 2026-11-05 — CR-022/023 + H0–H4 stabilization draft: 100 CI tests GREEN; native release PENDING
+
+**Delivery status: NOT DEPLOYED.** Draft [PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20) contains implementation and this status update; **main production code has not been changed by this draft**. Last native-verified Sites production remains Version 15 (2026-10-19); this entry is **GitHub/CI evidence only**, not a fresh Sites inspection.
+
+## New features and repairs implemented on PR #20
+
+- **CR-022 — RESOLVED option B:** user explicitly chose **only Deleted Tasks whose End timestamp falls in the current Asia/Kuala_Lumpur Monday 00:00 → next Monday 00:00 window**. Weekly Task and Current Week Status now include a clickable Deleted summary card showing those rows; second click restores ordinary view. Other Summary Cards retain their prior totals and default groups. Missing End, prior/future-week End are excluded; keyword search applies. No physical deletion.
+- **CR-023:** New/Edit Log Time Start/End have accessible hour/minute/AM/PM dropdowns, preserving 1-minute precision and stored HH:mm API/D1 strings; Save Time remains the only edit-time date/time write.
+- **REL-01:** PATCH persisted + refresh failed now shows "Saved, refresh failed" with a durable warning; no false fully-synced Saved state.
+- **REL-03:** POST created + refresh failed tracks the created record and offers Retry Refresh; does not resubmit a duplicate POST.
+- **REL-02 (draft safety fix):** changing linked entry to Custom only creates an unsaved draft, clearing the candidate title, and delays unlink until a nonempty Custom Title and relevant ordinary fields are saved in the same PATCH. Closing before confirmation leaves prior link and Task Tracker Time Spent unchanged. User-requested overall hardening authorized drafting; explicit product signoff for this behavior can be obtained before release.
+- **UX-02:** Malaysia midnight/week-boundary re-render on active page and after background-tab visibility resume (no production writes).
+- **PERF-01 targeted improvements:** D1 repository delete-diff detection uses a Set rather than per-row nested scanning; /api/tasks aggregates associated Log Time in one pass. Server/D1 API semantics unchanged.
+- **DATA-01 (partial):** a *synthetic isolated D1 restore regression* exercises every row/field of customers/tasks/log_time/app_sequence/app_revision, IDs, sequence and token. This is **not** a verified real Sites production backup/export/restore.
+- **DOC-01 / OPS-01 (partial):** README root and Sites docs label existing React/D1 production vs legacy HTML/SQLite; PRD has current-effective-rules index; [release/recovery/monitoring runbook](operations/RELEASE_AND_RECOVERY.md) created. **No monitoring automation is enabled** merely because a runbook exists.
+- **Legacy PR #2:** reviewed 42 changed files from old Express/SQLite app migration, then **closed without merge** as obsolete; code/history retained.
+
+## CI results (actual)
+
+[GitHub Actions Run 41968230605](https://github.com/jaronhoh/Task-Tracker/actions/runs/41968230605) completed **success** on app/test commit `2ca5152ddef69b841967d89c4c3e84040052b93a`: **18 React/model + 64 API/D1/synthetic restore/perf + 18 Chromium = 100 passed, 0 failed**. TypeScript, React build and Sites/Vinext production build passed. 1440/390 browser and existing Light/Dark scenarios remain covered. New browser regressions cover CR-022 week End boundaries/search/filter, REL-01/03 server-success/refresh-failure, REL-02 cancel/atomic confirmed unlink, and UX-02 long-lived Today/week rollover.
+
+The synthetic aggregation-only benchmark (200 tasks) reported:
+- 100 logs: **0.8 ms**
+- 1,000 logs: **1.6 ms**
+- 10,000 logs: **7.4 ms**
+
+These are CI isolated app-layer timings, **not real D1 latency, quota, network p95, or production throughput**. No full D1 10k-row saturation test or SLO acceptance is claimed.
+
+## Still open / explicit blockers before production sign-off
+
+| Category | Status / needed action |
+|---|---|
+| H0 SEC-01 GitHub visibility | GitHub currently Public and Sites Owner-only per last verified metadata. Owner must decide whether public is intended. No visibility/secret/history change made. Sensitive-source scan requires explicit review. |
+| H0 DEPLOY-01 | Native Sites current version, owner policy, DB binding and environment require a **fresh authenticated read-only check** before publish; GitHub docs are not live API. |
+| H2 DATA-01 production durable backup | Determine real native Sites/D1 backup/export path, make secure off-repo production backup and test isolated native restore. Our synthetic D1 test is only a rehearsal. |
+| H2 QA-01 | Real anonymous/non-owner HTTP API negative tests must be observed at native Sites without exposing sensitive rows. |
+| H3 UX-01 | Actual physical smartphone touch edit discoverability without Actions button still needs owner/device acceptance. Browser-emulated touch alone is insufficient. |
+| H4 PERF-01 / OPS-01 | Native 100/1k/10k D1 end-to-end performance, agreed thresholds and actual monitoring/backup schedule not yet executed. |
+| Product choices | Linked→Custom draft behavior and optional touch-specific edit affordance require confirmation before behavior-changing release. Export/date-range features remain unapproved/out of scope. |
+
+**Do not merge Draft PR #20 or claim Sites v16 until blockers and required release validation are cleared.** Keep existing Site URL, owner-only policy, all user D1 rows, task ID allocation/sequence, revision/token, env and DB binding unchanged. New Sites version requires native publishing proof + full production D1 pre/post equality. GitHub CI success is not a production deployment.
+
+---
+
+
 # 2026-11-05 — Draft PR #20: CR-023 time picker + REL-01/03 early fixes, CI passed, release NOT COMPLETE
 
 **Status: PARTIAL DEVELOPMENT ON OPEN DRAFT PR ONLY.** No merge to main, no current production data reads/writes, no Sites publish; last verified production release still **Version 15**.
