@@ -18,6 +18,12 @@
 - **Release-blocking native test:** With authorized owner access, inspect current site audience/owner policy and verify every `/api/**` route at the deployed Site. Record real anonymous/non-Owner HTTP status (without copying sensitive JSON to public GitHub). If native Sites does not protect internal API routes, stop the release and obtain a platform-supported server-side identity mechanism; do not create a homemade JS token.
 - CR-024 must be **implemented and verified** before the next Sites production release; documentation or CI success alone does not close it.
 
+### CR-024 first actual anonymous production negative check (2026-11-05)
+
+- [Actual GitHub Actions read-only negative test #41990957290](https://github.com/jaronhoh/Task-Tracker/actions/runs/41990957290) made **20 unauthenticated GET requests** to the real existing Site: 10 routes × (ordinary no-cookie headers and spoofable same-origin-shaped headers without credentials). **Every response was HTTP 401**. It did not inspect or log response bodies or execute write methods.
+- **What this proves:** the tested external anonymous requests cannot obtain Site HTML or business API JSON by supplying those metadata headers alone. **What it does not prove:** logged-in non-Owner rejection, POST/PATCH/DELETE behavior, actual Site version, owner allowlist, DB binding, backup/restore or deployment. Keep #21, #22, #23 and #24 open until their remaining conditions are independently verified.
+- The security probe is safe to repeat via `sites/react-d1/scripts/check-anonymous-sites.mjs`; the GitHub workflow has a weekly Monday 09:15 MYT schedule configured in draft, active only after the change reaches `main`. Do not treat a periodic anonymous check as a real Site Owner login health check.
+
 ## 2. CI and controlled release
 
 - Keep change requests and high-risk decisions traceable in PRD and approved. Review PR, changed files, schema diffs, D1 binding and potential secrets; run TypeScript, React/model, API/D1, browser Chromium desktop/mobile × Light/Dark, accessible keyboard/touch checks and necessary fault injection; **failing or unexecuted necessary tests block release**.
@@ -57,7 +63,7 @@
 | Native Sites active version + owner-only | NOT VERIFIED for current batch | |
 | D1 full-row before/after release comparison | NOT VERIFIED for current batch | |
 | Actual encrypted backup + isolated restore equality | NOT VERIFIED | |
-| Anonymous/non-owner read-only denial | NOT VERIFIED | |
+| Anonymous GET denial (root + 9 API routes, 2 metadata profiles) | VERIFIED 20 × HTTP 401; non-Owner logged-in and writes still NOT VERIFIED | [Actions #41990957290](https://github.com/jaronhoh/Task-Tracker/actions/runs/41990957290), 2026-11-05 15:58 MYT |
 | Desktop/mobile real touch and midnight checks | NOT VERIFIED | |
 | Synthetic load and recovery time | NOT VERIFIED | |
 
