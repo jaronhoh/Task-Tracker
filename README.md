@@ -8,7 +8,11 @@
 
 Core workspaces: Task Tracker (Weekly Task, Current Week Status, Show All Data, customer/task editing and Excel export) and Log Time (Today/This Week/Show All Data, searchable dated work entries, linked or one-off custom tasks, time validation, date Accordion and linked Time Spent). Existing Log Time ordinary edits Auto Save; changes to Date/Start/End use explicit Save Time.
 
-**Changes not yet released:** [Draft PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20) contains proposed CR-022 (Deleted status card in Weekly and Status, using current Malaysia-week End time), CR-023 (12-hour AM/PM pickers) and reliability/hardening. No feature in that draft is production-live solely because it is committed or passes CI. Read `docs/PROJECT_STATUS.md` for status and `docs/PRD_PHASE2_LOG_TIME_2026-10-19.md` §10 for pending decisions.
+**Changes not yet released:** [Draft PR #20](https://github.com/jaronhoh/Task-Tracker/pull/20) contains CR-022 (current-week Deleted card), CR-023 (12-hour AM/PM pickers), reliability/hardening and newly approved **CR-024** (no public/third-party API service, protected internal APIs only). **CR-024 remains documentation-only and is not implemented or verified**; see [Issue #24](https://github.com/jaronhoh/Task-Tracker/issues/24). No draft feature is production-live solely because it was committed or passed CI. Read `docs/PROJECT_STATUS.md` and `docs/PRD_PHASE2_LOG_TIME_2026-10-19.md` §§10–11.
+
+### API access policy — CR-024 (approved requirement, pending verification)
+
+Task Tracker is a single-owner Sites application; **it does not offer a public or third-party API service**. Existing same-origin browser-to-D1 HTTP routes (e.g., `/api/tasks`, `/api/customers`, `/api/log-time` and `/api/health`) must remain available **only to authorized Site Owner requests**. They are **not to be deleted indiscriminately** or exposed to anonymous callers. Native Owner-only protection of every API path requires real Sites verification; a relative URL, CORS setting or client-supplied header is **not** itself authorization. The server/hosting security implementation and denial tests are still pending. Historical REST API sections below are preserved only as archived project context, not an active public API offering.
 
 ### Development and validation
 
