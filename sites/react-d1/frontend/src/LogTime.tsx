@@ -131,6 +131,14 @@ function LogEditor({log,tasks,customers,onClose,onSaved,notify}:{log:Log|null;ta
   function saveField(field:TextField,value:string){
     if(!log)return
     if(field==='taskTitle'&&(!custom||!value.trim())){if(custom)setError('Custom Task Title is required.');return}
+    // A newly chosen Custom Task is still only a draft: do not persist the
+    // unlink until a real custom title can be saved with its copied metadata.
+    if(custom&&draftRef.current.taskId===null&&latest.current?.taskId){
+      if(field!=='taskTitle')return
+      const d=draftRef.current
+      void autoSave({taskId:null,customerName:d.customerName,taskTitle:value,taskDescription:d.taskDescription,note:d.note,trackerLink:d.trackerLink,activity:d.activity})
+      return
+    }
     void autoSave({[field]:value})
   }
   function choose(id:string){
@@ -144,8 +152,9 @@ function LogEditor({log,tasks,customers,onClose,onSaved,notify}:{log:Log|null;ta
   }
   function switchToCustom(){
     if(draftRef.current.taskId===null){setCustom(true);return}
-    replaceDraft({...draftRef.current,taskId:null});setCustom(true)
-    if(log)void autoSave({taskId:null})
+    replaceDraft({...draftRef.current,taskId:null,taskTitle:''});setCustom(true)
+    // User can close/cancel before entering a custom title without changing
+    // the saved task association or the original Task Tracker Time Spent.
   }
   const timeDirty=!!log&&TIME_FIELDS.some(key=>draft[key]!==latest.current?.[key])
   const ordinaryDirty=!!log&&OTHER_FIELDS.some(key=>String(draft[key]??'')!==String(latest.current?.[key]??''))
@@ -191,13 +200,13 @@ function LogEditor({log,tasks,customers,onClose,onSaved,notify}:{log:Log|null;ta
   const start=validTime(draft.startTime)?timeMinutes(draft.startTime):0,end=validTime(draft.endTime)?timeMinutes(draft.endTime):0
   return <Modal id="logDialog" title={log?'Edit Log Time':'New Log Time'} description={log?'Editable fields save automatically on leaving the field. Use Save Time for Date and Start/End Time.':'Each entry covers one Malaysia work date. Overlapping intervals are not allowed.'} onClose={()=>void close()} returnId="newLogBtn">
     <form className="grid gap-4" onSubmit={create}><fieldset disabled={busy||!!createdLog.current} className="grid gap-4 min-w-0">
-      <label>Customer Name *<SearchPicker id="logCustomer" label="Log Customer" value={draft.customerName} disabled={!!draft.taskId} options={customers.map(c=>({value:c.name,label:c.name,color:c.color}))} onChange={v=>{change('customerName',v);if(log)void autoSave({customerName:v})}}/></label>
+      <label>Customer Name *<SearchPicker id="logCustomer" label="Log Customer" value={draft.customerName} disabled={!!draft.taskId} options={customers.map(c=>({value:c.name,label:c.name,color:c.color}))} onChange={v=>{change('customerName',v);if(log&&!(draftRef.current.taskId===null&&latest.current?.taskId))void autoSave({customerName:v})}}/></label>
       <label>Task Title *<SearchPicker id="logTask" label="Log Task Title" value={draft.taskId??''} placeholder={draft.taskId?draft.taskTitle+' · historical task':custom?'Custom Task':'Select Task…'} options={tasks.filter(t=>ACTIVE.has(t.status)).map(t=>({value:t.taskId,label:t.taskTitle,columns:[t.taskTitle,t.taskDescription??'',t.customerName],searchText:[t.taskTitle,t.taskDescription,t.customerName].join(' ')}))} onChange={choose} actionsAtTop actions={[{label:'+ Add Custom Task',onClick:switchToCustom}]}/></label>
       {custom&&<label>Custom Task Title *<Input id="logCustomTitle" required maxLength={100} value={draft.taskTitle} onChange={e=>change('taskTitle',e.target.value)} onBlur={e=>saveField('taskTitle',e.target.value)}/></label>}
       <label>Task Description / Comment<Textarea id="logDescription" maxLength={10000} value={draft.taskDescription} onChange={e=>change('taskDescription',e.target.value)} onBlur={e=>saveField('taskDescription',e.target.value)}/></label>
       <label>Note<Textarea id="logNote" maxLength={10000} value={draft.note} onChange={e=>change('note',e.target.value)} onBlur={e=>saveField('note',e.target.value)}/></label>
       <label>Tracker Link<Input id="logLink" type="url" maxLength={2048} value={draft.trackerLink} onChange={e=>change('trackerLink',e.target.value)} onBlur={e=>saveField('trackerLink',e.target.value)}/></label>
-      <label>Activity *<SearchPicker id="logActivity" label="Log Activity" value={draft.activity} options={ACTIVITIES.map(value=>({value,label:value}))} onChange={v=>{change('activity',v);if(log)void autoSave({activity:v})}}/></label>
+      <label>Activity *<SearchPicker id="logActivity" label="Log Activity" value={draft.activity} options={ACTIVITIES.map(value=>({value,label:value}))} onChange={v=>{change('activity',v);if(log&&!(draftRef.current.taskId===null&&latest.current?.taskId))void autoSave({activity:v})}}/></label>
       <div className="grid gap-4 sm:grid-cols-2"><label className="sm:col-span-2">Date *<Input id="logDate" type="date" required max={today()} value={draft.date} onChange={e=>change('date',e.target.value)}/></label><div><p className="text-sm mb-1">Start Time *</p><LogTimePicker id="logStart" label="Start Time" value={draft.startTime} onChange={v=>change('startTime',v)}/></div><div><p className="text-sm mb-1">End Time *</p><LogTimePicker id="logEnd" label="End Time" value={draft.endTime} onChange={v=>change('endTime',v)}/></div></div>
       <label>Spend Time (Hour)<Input id="logSpend" readOnly value={hours(Math.max(0,end-start))}/></label>
     </fieldset><ErrorText id="logDialogError" error={error}/>
