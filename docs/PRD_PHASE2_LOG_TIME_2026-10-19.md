@@ -17,7 +17,7 @@ This is an **append-only** PRD. Historic acceptance text remains for traceabilit
 | §8 CR-017–019 | Released at Sites v14 | Independent search, Edit ordinary-field Auto Save, explicit atomic Save Time, row double-click/Enter; **old Edit/Delete table-action claims are superseded by §9**. |
 | §9 CR-020/021 | Released at Sites v15 | `Date | Hours` heading; five-column Log Time table with no Actions/Edit/Delete buttons. |
 | §10 CR-022/023 & H0–H4 | **Draft PR #20; NOT LIVE** | New Deleted this-Malaysia-week card uses task End; 12-hour picker; reliability, backup/access, touch/midnight and maintenance. Do not claim published until a new native Sites release is verified. |
-| §11 CR-024 — Internal API Only | **Requirement APPROVED (Option A), IMPLEMENTATION NOT YET VERIFIED** | No public/third-party API offering; preserve strictly protected same-site React→D1 internal endpoints; verify owner-only API authorization separately for all routes. |
+| §11 CR-024 — Internal API Only | **Request guards TESTED in draft; native Owner authorization NOT VERIFIED** | No public/third-party API offering; preserve strictly protected same-site React→D1 internal endpoints; verify owner-only API authorization separately for all routes. |
 
 ## 1. Objective and scope
 
