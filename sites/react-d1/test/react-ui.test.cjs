@@ -577,3 +577,37 @@ test('CR-022: weekly and status Deleted cards use Malaysia-week End, filter and 
     }finally{await ctx.close()}
   }
 }))
+
+
+test('REL-02: cancelling Linked-to-Custom keeps original link and time total; title commits unlink atomically',async()=>harness(async({browser,url,api})=>{
+  const task=await api('/api/tasks',{customerName:'Customer A',taskTitle:'Original linked task',taskDescription:'Unchanged'})
+  const linked=await api('/api/log-time',{taskId:task.taskId,customerName:'Customer A',taskTitle:'Original linked task',activity:'Development',date:'2026-10-13',startTime:'09:00',endTime:'10:00'})
+  const ctx=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,timezoneId:'Asia/Kuala_Lumpur'}),page=await ctx.newPage()
+  try{
+    await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
+    await page.getByRole('tab',{name:'Log Time',exact:true}).click()
+    await page.getByRole('tab',{name:'Show All Data',exact:true}).click()
+    const row=page.locator('tr[data-log-id="'+linked.id+'"]')
+    await row.dblclick();await page.locator('#logDialog').waitFor()
+    await page.locator('#logTask').click()
+    await page.getByRole('button',{name:'+ Add Custom Task',exact:true}).click()
+    assert.equal(await page.locator('#logCustomTitle').inputValue(),'')
+    assert.equal((await api('/api/log-time',undefined,'GET'))[0].taskId,task.taskId)
+    assert.equal((await api('/api/tasks',undefined,'GET'))[0].timeSpentMinutes,60)
+    page.once('dialog',d=>d.accept())
+    await page.locator('#logDialog').getByRole('button',{name:'Close',exact:true}).last().click()
+    await page.locator('#logDialog').waitFor({state:'hidden'})
+    assert.equal((await api('/api/log-time',undefined,'GET'))[0].taskId,task.taskId)
+    assert.equal((await api('/api/tasks',undefined,'GET'))[0].timeSpentMinutes,60)
+    await row.dblclick();await page.locator('#logTask').click()
+    await page.getByRole('button',{name:'+ Add Custom Task',exact:true}).click()
+    await page.locator('#logCustomTitle').fill('Custom work confirmed')
+    await page.locator('#logDescription').click()
+    await page.waitForFunction(()=>document.getElementById('logAutoSaveStatus')?.textContent?.startsWith('Saved'))
+    const custom=(await api('/api/log-time',undefined,'GET'))[0]
+    assert.equal(custom.taskId,null)
+    assert.equal(custom.taskTitle,'Custom work confirmed')
+    assert.equal(custom.durationMinutes,60)
+    assert.equal((await api('/api/tasks',undefined,'GET'))[0].timeSpentMinutes,0)
+  }finally{await ctx.close()}
+}))
