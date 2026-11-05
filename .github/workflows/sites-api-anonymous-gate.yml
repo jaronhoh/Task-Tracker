@@ -5,6 +5,9 @@ on:
       - 'sites/react-d1/scripts/check-anonymous-sites.mjs'
       - '.github/workflows/sites-api-anonymous-gate.yml'
   workflow_dispatch:
+  # Activates on main after merge; read-only anonymous access regression.
+  schedule:
+    - cron: '15 1 * * 1'
 permissions:
   contents: read
 jobs:
