@@ -17,7 +17,7 @@ test('migration acceptance: customer management, restore, pagination, weekly bou
   await api(`/api/tasks/${tasks[0].taskId}/time`,'PATCH',{created:'2020-01-01T00:00:00+08:00'});
   await api(`/api/tasks/${tasks[1].taskId}/time`,'PATCH',{created:'2020-01-01T00:00:00+08:00',end:'2020-01-02T00:00:00+08:00',status:'Closed'});
   await api(`/api/tasks/${tasks[2].taskId}`,'DELETE');
-  await page.goto(base);await page.locator('#healthBadge.ok').waitFor();
+  await page.goto(base);await page.locator('[data-api-status="connected"]').waitFor();
   await page.locator(`tr[data-task-id="${tasks[0].taskId}"]`).waitFor();
   assert.deepEqual(await page.locator('.weekly-group-row').allTextContents(), ['Carry Over (1)', 'New This Week (25)']);
   assert.equal(await page.locator('#tasksTable tbody tr[data-task-id]').count(),26);
@@ -54,7 +54,7 @@ test('migration acceptance: customer management, restore, pagination, weekly bou
   const workbook=XLSX.readFile(downloadPath);
   const rows=XLSX.utils.sheet_to_json(workbook.Sheets.Tasks);
   assert.equal(rows.length,28);assert.ok(rows.every(r=>r['Customer Name']==='Renamed Migration'));
-  await page.reload();await page.locator('#healthBadge.ok').waitFor();assert.equal((await api('/api/tasks')).length,28);
+  await page.reload();await page.locator('[data-api-status="connected"]').waitFor();assert.equal((await api('/api/tasks')).length,28);
   await page.setViewportSize({width:390,height:844});
   await page.locator('#newTaskBtn').click();await page.locator('#taskDialog').waitFor();
   const bounds=await page.locator('#taskDialog').boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=391);

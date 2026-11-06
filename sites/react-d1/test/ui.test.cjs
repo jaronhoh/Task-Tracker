@@ -52,13 +52,13 @@ test('browser acceptance: create, auto-save, status groups, close flow and Excel
     page.setDefaultTimeout(10000);
     await page.goto(baseUrl);
     try {
-      await page.locator('#healthBadge.ok').waitFor({ state: 'visible' });
+      await page.locator('[data-api-status="connected"]').waitFor({ state: 'visible' });
     } catch (error) {
-      const badge = await page.locator('#healthBadge').textContent().catch(() => 'missing');
+      const apiStatus = await page.locator('[data-api-status]').getAttribute('data-api-status').catch(() => 'missing');
       const vendorStatus = await Promise.all(['/'].map(async url => ({ url, status: (await page.request.get(baseUrl + url)).status() })));
-      throw new Error(`UI initialization failed; badge=${badge}; vendors=${JSON.stringify(vendorStatus)}; browserErrors=${JSON.stringify(pageErrors)}; cause=${error.message}`);
+      throw new Error(`UI initialization failed; apiStatus=${apiStatus}; vendors=${JSON.stringify(vendorStatus)}; browserErrors=${JSON.stringify(pageErrors)}; cause=${error.message}`);
     }
-    assert.equal((await page.locator('#healthBadge').textContent()).trim(), 'API Connected');
+    assert.equal(await page.locator('[data-api-status]').getAttribute('data-api-status'), 'connected');
 
     await page.locator('#newTaskBtn').click();
     await page.locator('#customerName').selectOption('__add_customer__');
@@ -170,7 +170,7 @@ test('P0-009 and P0-013 UI: failed Auto Save keeps input; exhausted color pool d
     const page = await context.newPage();
     page.setDefaultTimeout(10000);
     await page.goto(baseUrl);
-    await page.locator('#healthBadge.ok').waitFor({ state: 'visible' });
+    await page.locator('[data-api-status="connected"]').waitFor({ state: 'visible' });
     await page.locator(`#tasksTable tbody tr[data-task-id="${task.taskId}"]`).waitFor();
     await page.locator(`#tasksTable tbody tr[data-task-id="${task.taskId}"]`).click();
     await page.locator('#editTaskBtn').click();
@@ -207,7 +207,7 @@ test('P0-009 and P0-013 UI: failed Auto Save keeps input; exhausted color pool d
     const customers = await fetch(`${baseUrl}/api/customers`).then(response => response.json());
     assert.equal(customers.length, 16);
     await page.reload();
-    await page.locator('#healthBadge.ok').waitFor({ state: 'visible' });
+    await page.locator('[data-api-status="connected"]').waitFor({ state: 'visible' });
     await page.locator('#newTaskBtn').click();
     await page.waitForFunction(() => document.querySelectorAll('#customerName option').length === 18);
     const addCustomerOption = page.locator('#customerName option[value="__add_customer__"]');
@@ -245,7 +245,7 @@ test('P0-015 UI: Edit Time rejects End before Created and Created after existing
     const page = await context.newPage();
     page.setDefaultTimeout(10000);
     await page.goto(baseUrl);
-    await page.locator('#healthBadge.ok').waitFor({ state: 'visible' });
+    await page.locator('[data-api-status="connected"]').waitFor({ state: 'visible' });
     await page.locator('.view-tab[data-view="all"]').click();
     await page.locator(`#tasksTable tbody tr[data-task-id="${task.taskId}"]`).waitFor();
     await page.locator(`#tasksTable tbody tr[data-task-id="${task.taskId}"]`).click();

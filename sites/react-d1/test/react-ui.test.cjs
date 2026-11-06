@@ -46,7 +46,7 @@ test('React UI: weekly totals, boundaries, search, timezone independence, mobile
     await page.clock.setFixedTime(new Date('2026-10-15T04:00:00Z'));
     await page.route('**/api/tasks', route => route.fulfill({json:fixture}));
     await page.route('**/api/customers', route => route.fulfill({json:[{name:'Customer A',color:'#F87171'}]}));
-    page.setDefaultTimeout(8000);await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+    page.setDefaultTimeout(8000);await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor();
     assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['3','2','1','0']);
     assert.deepEqual(await page.locator('.weekly-group-row .group-count-badge').allTextContents(),['2','1']);
     assert.deepEqual(await page.locator('.weekly-group-row .group-count-badge').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('aria-label'))),['Carry Over: 2 tasks','New This Week: 1 tasks']);
@@ -72,7 +72,7 @@ test('React UI: TanStack sorting/pagination/reset and full filtered single-sheet
   const ctx=await browser.newContext({acceptDownloads:true,timezoneId:'UTC'}),page=await ctx.newPage();
   await page.clock.setFixedTime(new Date('2026-10-15T17:00:00Z'));
   const fixture=Array.from({length:61},(_,i)=>({...task(`TSK-${String(i+1).padStart(4,'0')}`,'2026-10-13T10:00:00'),taskTitle:`Title ${String(i+1).padStart(3,'0')}`}));
-  await page.route('**/api/tasks',r=>r.fulfill({json:fixture}));page.setDefaultTimeout(8000);await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+  await page.route('**/api/tasks',r=>r.fulfill({json:fixture}));page.setDefaultTimeout(8000);await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor();
   await page.locator('[data-view="all"]').click();assert.equal(await page.locator('[data-task-id]').count(),25);
   await page.getByRole('button',{name:'Next page',exact:true}).click();await page.locator('[data-task-id="TSK-0026"]').waitFor();
   await page.locator('#globalSearch').fill('Title');await page.locator('#searchBtn').click();await page.locator('[data-task-id="TSK-0001"]').waitFor();
@@ -92,7 +92,7 @@ test('React UI: TanStack sorting/pagination/reset and full filtered single-sheet
 }));
 test('React UI: ordered blur saves, retry, Customer rename/color, logical delete and restore', async () => harness(async ({browser,url,api}) => {
   const original=await api('/api/tasks',{customerName:'Original Customer',taskTitle:'Original title'});
-  const ctx=await browser.newContext(),page=await ctx.newPage();page.setDefaultTimeout(8000);await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+  const ctx=await browser.newContext(),page=await ctx.newPage();page.setDefaultTimeout(8000);await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor();
   const row=page.locator(`[data-task-id="${original.taskId}"]`);await row.dblclick();
   const order=[];let failed=false;
   await page.route(`**/api/tasks/${original.taskId}`,async route=>{const body=route.request().postDataJSON();order.push(body);if(body.taskTitle==='First title'){await new Promise(r=>setTimeout(r,100));}if(body.note==='Retry note'&&!failed){failed=true;await route.fulfill({status:500,json:{error:'Injected save failure'}})}else await route.continue()});
@@ -109,7 +109,7 @@ test('React UI: ordered blur saves, retry, Customer rename/color, logical delete
   await page.locator('#manageCustomersDialog [data-close="manageCustomersDialog"]').first().click();
   const fresh=await api(`/api/tasks/${original.taskId}`,undefined,'GET');assert.equal(fresh.customerName,'Renamed Customer');
   assert.equal((await api('/api/customers',undefined,'GET'))[0].color,'#FB923C');
-  await api(`/api/tasks/${original.taskId}`,undefined,'DELETE');await page.reload();await page.locator('#healthBadge.ok').waitFor();assert.equal(await page.locator('[data-task-id]').count(),0);
+  await api(`/api/tasks/${original.taskId}`,undefined,'DELETE');await page.reload();await page.locator('[data-api-status="connected"]').waitFor();assert.equal(await page.locator('[data-task-id]').count(),0);
   await page.locator('[data-view="all"]').click();await page.locator(`[data-task-id="${original.taskId}"]`).dblclick();await page.locator('#taskStatus').click();await page.getByRole('option',{name:'KIV',exact:true}).click();await page.locator('#taskStatus').press('Tab');await page.getByText('Status saved.',{exact:true}).waitFor();
   await page.locator('#taskDialog [data-close="taskDialog"]').click();await page.locator('[data-view="weekly"]').click();await page.locator(`[data-task-id="${original.taskId}"]`).waitFor();
   const restored=await api(`/api/tasks/${original.taskId}`,undefined,'GET');assert.equal(restored.status,'KIV');assert.equal(restored.end,null);
@@ -122,7 +122,7 @@ test('Customer deletion guard remains active on desktop and mobile', async () =>
   for(const width of [1440,390]) {
     const unusedName=`Unused Customer ${width}`;await api('/api/customers',{name:unusedName});
     const ctx=await browser.newContext({viewport:{width,height:900}}),page=await ctx.newPage();page.setDefaultTimeout(8000);page.on('dialog',d=>d.accept());
-    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();await page.locator('#manageCustomersBtn').click();
+    await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor();await page.locator('#manageCustomersBtn').click();
     await page.waitForFunction(name=>[...document.querySelectorAll('.customer-management-row input')].some(input=>input.value===name),linkedName);
     await page.locator(`[aria-label="Delete ${linkedName}"]`).click();
     await page.locator('#manageCustomersError').filter({hasText:'referenced by 1 Task'}).waitFor();
@@ -139,7 +139,7 @@ test('CR-009–011: timed Alerts, Manage Customers Add, inline Delete and mobile
     await api('/api/customers',{name:`CR${width} Unused`});
     const ctx=await browser.newContext({viewport:{width,height:900}}),page=await ctx.newPage();
     await page.clock.install();page.setDefaultTimeout(8000);page.on('dialog',d=>d.accept());
-    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();await page.locator('#manageCustomersBtn').click();await page.waitForFunction(()=>document.querySelectorAll('.customer-management-row').length>=2);
+    await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor();await page.locator('#manageCustomersBtn').click();await page.waitForFunction(()=>document.querySelectorAll('.customer-management-row').length>=2);
     await page.getByRole('button',{name:'Add Customer',exact:true}).first().click();
     await page.locator('#manageNewCustomerName').fill(`CR${width} Added`);
     await page.getByRole('button',{name:'Customer Color',exact:true}).click();
@@ -177,7 +177,7 @@ test('Sites correction: all cards, repeated clicks, accordions, export and line 
     await page.clock.setFixedTime(new Date('2026-10-15T04:00:00Z'));
     await page.route('**/api/tasks',r=>r.fulfill({json:fixture}));
     await page.route('**/api/customers',r=>r.fulfill({json:[{name:'Customer A',color:'#F87171'}]}));
-    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+    await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor();
     const ids=async()=> (await page.locator('[data-task-id]').evaluateAll(ns=>ns.map(n=>n.dataset.taskId))).sort();
     const card=label=>page.locator('#summaryRow').getByRole('button',{name:new RegExp('^'+label+'\\s')});
     for(const [label,expected] of [['Overall Total',['carry','closed','new']],['Carry Over',['carry','closed']],['New This Week',['new']]]) {
@@ -242,7 +242,7 @@ test('CR-012: real Chromium theme acceptance, persistence, OS preference, surfac
     const ctx=await browser.newContext({viewport:{width,height:1000},colorScheme:'dark'}), page=await ctx.newPage();
     page.setDefaultTimeout(8000);
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
-    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+    await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor();
     const theme=()=>page.locator('html').getAttribute('data-theme');
     const toggle=page.locator('#themeToggle');
     assert.equal(await theme(),'dark');assert.equal(await toggle.getAttribute('aria-label'),'Switch to light mode');
@@ -253,13 +253,13 @@ test('CR-012: real Chromium theme acceptance, persistence, OS preference, surfac
     await toggle.focus();await toggle.press('Enter');assert.equal(await theme(),'dark');
     assert.equal(await page.locator('#globalSearch').inputValue(),'retain search');
     assert.equal(await page.evaluate(()=>localStorage.getItem('task-tracker-theme')),'dark');
-    await page.reload();await page.locator('#healthBadge.ok').waitFor();assert.equal(await theme(),'dark');
+    await page.reload();await page.locator('[data-api-status="connected"]').waitFor();assert.equal(await theme(),'dark');
     await page.emulateMedia({colorScheme:'light'});assert.equal(await theme(),'dark');
     await toggle.press('Space');assert.equal(await theme(),'light');
-    await page.reload();await page.locator('#healthBadge.ok').waitFor();assert.equal(await theme(),'light');
+    await page.reload();await page.locator('[data-api-status="connected"]').waitFor();assert.equal(await theme(),'light');
     await page.emulateMedia({colorScheme:'dark'});assert.equal(await theme(),'light');
     const box=await toggle.boundingBox();assert.ok(box.x+box.width<=width&&box.y<100,'toggle visible at top right');
-    const peer=await ctx.newPage();await peer.goto(url);await peer.locator('#healthBadge.ok').waitFor();
+    const peer=await ctx.newPage();await peer.goto(url);await peer.locator('[data-api-status="connected"]').waitFor();
     for(const mode of ['light','dark']) {
       if(await theme()!==mode)await toggle.click();
       assert.equal(await theme(),mode);
@@ -309,13 +309,13 @@ test('CR-012: real Chromium theme acceptance, persistence, OS preference, surfac
       await page.reload();await page.locator('.notification-error').waitFor();
       assert.equal(await page.locator('.notification-error').evaluate(n=>getComputedStyle(n).backgroundColor),mode==='dark'?'rgb(59, 25, 30)':'rgb(254, 242, 242)');
       if(evidence)await page.screenshot({path:path.join(evidence,`theme-${mode}-${width}-error.png`),fullPage:true,animations:'disabled'});
-      await page.unroute('**/api/health');await page.reload();await page.locator('#healthBadge.ok').waitFor();
+      await page.unroute('**/api/health');await page.reload();await page.locator('[data-api-status="connected"]').waitFor();
     }
     assert.deepEqual(errors,[]);await ctx.close();
   }
   const blocked=await browser.newContext({colorScheme:'dark'}),p=await blocked.newPage();
   await p.addInitScript(()=>{Object.defineProperty(window,'localStorage',{get(){throw new DOMException('Blocked','SecurityError')}})});
-  await p.goto(url);await p.locator('#healthBadge.ok').waitFor();assert.equal(await p.locator('html').getAttribute('data-theme'),'dark');
+  await p.goto(url);await p.locator('[data-api-status="connected"]').waitFor();assert.equal(await p.locator('html').getAttribute('data-theme'),'dark');
   await p.locator('#themeToggle').click();assert.equal(await p.locator('html').getAttribute('data-theme'),'light');await blocked.close();
 }));
 
@@ -331,7 +331,7 @@ test('CR-013/014: single-row customer summaries, exact filtered counts, colors, 
     let live=fixture;
     await page.route('**/api/tasks',r=>r.fulfill({json:live}));
     await page.route('**/api/customers',r=>r.fulfill({json:customers}));
-    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+    await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor();
     const verify=async()=>{
       const groups=await page.locator('.status-group-row').evaluateAll(nodes=>nodes.map(n=>{
         const header=n.querySelector('.group-header'),toggle=n.querySelector('.group-toggle'),summary=n.querySelector('.customer-summary');
@@ -385,7 +385,7 @@ test('CR-013/014: single-row customer summaries, exact filtered counts, colors, 
     await page.locator('[data-view="status"][aria-selected="true"]').waitFor();await verify();
     await page.locator('[data-view="all"]').click();assert.equal(await page.locator('.customer-summary').count(),0);
     // Refreshed task/customer responses must recompute, using no production writes.
-    live=fixture.slice(0,1);await page.reload();await page.locator('#healthBadge.ok').waitFor();const refreshed=await verify();assert.equal(refreshed.reduce((n,g)=>n+g.total,0),1);
+    live=fixture.slice(0,1);await page.reload();await page.locator('[data-api-status="connected"]').waitFor();const refreshed=await verify();assert.equal(refreshed.reduce((n,g)=>n+g.total,0),1);
     assert.deepEqual(errors,[]);console.log(JSON.stringify({release:'CR-013/014',width,mode,result:'passed'}));await ctx.close();
   }
 }));
@@ -397,7 +397,7 @@ test('CR-015/016: keyword selectors preserve draft, footer actions, saves, RGB, 
   for(const width of [1440,390])for(const mode of ['light','dark']) {
     const ctx=await browser.newContext({viewport:{width,height:1000},colorScheme:mode,isMobile:width===390,hasTouch:width===390}),page=await ctx.newPage();
     page.setDefaultTimeout(8000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
-    await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+    await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor();
     const shot=async label=>{if(process.env.TASK_TRACKER_EVIDENCE_DIR)await page.screenshot({path:path.join(process.env.TASK_TRACKER_EVIDENCE_DIR,`cr015-016-${width}-${mode}-${label}.png`),fullPage:true,animations:'disabled'})};
     await page.locator('[data-view="status"]').click();
     const badge=page.locator('.customer-count-badge').first();assert.match(await badge.innerText(),/\|/);assert.equal(await badge.locator('[aria-hidden="true"]').last().innerText(),'|');
@@ -435,7 +435,7 @@ test('CR-017 to CR-019: Log Time Search/Clear, double-click/Enter editing, edit 
   for(const width of [1440,390]){
     const ctx=await browser.newContext({viewport:{width,height:844},timezoneId:'Asia/Kuala_Lumpur'}),page=await ctx.newPage();
     try{
-      await page.goto(url);await page.locator('#healthBadge.ok').waitFor();
+      await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor();
       await page.getByRole('tab',{name:'Log Time',exact:true}).click();
       await page.getByRole('tab',{name:'Show All Data',exact:true}).click();
       const row=page.locator('tr[data-log-id="'+first.id+'"]');
@@ -488,7 +488,7 @@ test('REL-01 and REL-03: server saved but refresh failed cannot masquerade as fa
   const task=await api('/api/tasks',{customerName:'Reliability Customer',taskTitle:'Reliability task',taskDescription:'Description'})
   const ctx=await browser.newContext({viewport:{width:1000,height:760},timezoneId:'Asia/Kuala_Lumpur'}),page=await ctx.newPage()
   try{
-    await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
+    await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor()
     await page.getByRole('tab',{name:'Log Time',exact:true}).click()
     await page.locator('#newLogBtn').click()
     await page.locator('#logTask').click()
@@ -543,7 +543,7 @@ test('CR-022: weekly and status Deleted cards use Malaysia-week End, filter and 
       await page.clock.setFixedTime(new Date('2026-10-15T04:00:00Z'))
       await page.route('**/api/tasks',r=>r.fulfill({json:fixture}))
       await page.route('**/api/customers',r=>r.fulfill({json:[{name:'Customer A',color:'#F87171'}]}))
-      await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
+      await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor()
       await page.locator('html').evaluate((node,mode)=>{node.classList.toggle('dark',mode==='dark')},theme)
       const ids=async()=>await page.locator('[data-task-id]').evaluateAll(ns=>ns.map(n=>n.dataset.taskId).sort())
       const deletedCard=page.locator('#summaryRow button').filter({has:page.getByText('Deleted',{exact:true})})
@@ -584,7 +584,7 @@ test('REL-02: cancelling Linked-to-Custom keeps original link and time total; ti
   const linked=await api('/api/log-time',{taskId:task.taskId,customerName:'Customer A',taskTitle:'Original linked task',activity:'Development',date:'2026-10-13',startTime:'09:00',endTime:'10:00'})
   const ctx=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,timezoneId:'Asia/Kuala_Lumpur'}),page=await ctx.newPage()
   try{
-    await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
+    await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor()
     await page.getByRole('tab',{name:'Log Time',exact:true}).click()
     await page.getByRole('tab',{name:'Show All Data',exact:true}).click()
     const row=page.locator('tr[data-log-id="'+linked.id+'"]')
@@ -631,7 +631,7 @@ test('UX-02: long-lived tab updates Malaysia Today and weekly data at midnight w
   await page.route('**/api/tasks',r=>r.fulfill({json:tasks}))
   await page.route('**/api/customers',r=>r.fulfill({json:[{name:'Customer A',color:'#F87171'}]}))
   await page.route('**/api/log-time',r=>r.fulfill({json:logs}))
-  await page.goto(url);await page.locator('#healthBadge.ok').waitFor()
+  await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor()
   assert.deepEqual(await page.locator('#summaryRow strong').allTextContents(),['1','0','1','1'])
   await page.getByRole('tab',{name:'Log Time',exact:true}).click()
   await page.waitForFunction(()=>document.querySelector('[data-log-summary="Today"]')?.textContent==='1.00h')

@@ -17,7 +17,7 @@ for(const width of [1440,390])for(const theme of ['light','dark'])test(`Log Time
   const task=await api('/api/tasks',{customerName:'Customer A',taskTitle:'Prepare FDD',taskDescription:'Design document',note:'Task note',trackerLink:'https://example.com/tracker'});
   const other=await api('/api/tasks',{customerName:'Customer B',taskTitle:'Second task',taskDescription:'Other description',note:'Other note'});
   browser=await chromium.launch({headless:true});const ctx=await browser.newContext({viewport:{width,height:900},timezoneId:'America/Los_Angeles',colorScheme:theme,hasTouch:width===390});const page=await ctx.newPage();page.setDefaultTimeout(12000);
-  await page.goto(url);await page.locator('#healthBadge.ok').waitFor();await page.getByRole('tab',{name:'Log Time',exact:true}).click();
+  await page.goto(url);await page.locator('[data-api-status="connected"]').waitFor();await page.getByRole('tab',{name:'Log Time',exact:true}).click();
   const workspace=page.getByRole('region',{name:'Log Time workspace'});await workspace.getByText('No Log Time records',{exact:true}).waitFor();
   for(const label of ['Workspace','Log Time views']){const tops=await page.getByRole('tablist',{name:label,exact:true}).getByRole('tab').evaluateAll(ns=>ns.map(n=>n.getBoundingClientRect().top));assert.ok(tops.every(y=>y===tops[0]),`${label} tabs remain on one line`);}
   await page.locator('#newLogBtn').click();
@@ -33,7 +33,7 @@ for(const width of [1440,390])for(const theme of ['light','dark'])test(`Log Time
   await page.locator('#logTask').click();page.once('dialog',d=>d.dismiss());await page.getByRole('option').filter({hasText:'Second task'}).click();assert.equal(await page.locator('#logNote').inputValue(),'Log only note');assert.match(await page.locator('#logTask').textContent(),/Prepare FDD/);
   await page.locator('#logTask').click();page.once('dialog',d=>d.accept());await page.getByRole('option').filter({hasText:'Second task'}).click();assert.equal(await page.locator('#logNote').inputValue(),'Other note');assert.equal(await page.locator('#logDate').inputValue(),'2026-01-05');
   await page.locator('#logDialog').getByRole('button',{name:'Close',exact:true}).last().click();await page.locator('#logDialog').waitFor({state:'hidden'});let tasks=await api('/api/tasks',undefined,'GET');assert.equal(tasks.find(t=>t.taskId===task.taskId).timeSpentMinutes,0);assert.equal(tasks.find(t=>t.taskId===other.taskId).timeSpentMinutes,60);
-  await api(`/api/tasks/${other.taskId}`,{status:'Closed'},'PATCH');await page.reload();await page.locator('#healthBadge.ok').waitFor();await page.getByRole('tab',{name:'Log Time',exact:true}).click();await workspace.getByRole('tab',{name:'Show All Data',exact:true}).click();await page.locator('[data-log-id]').first().focus();await page.locator('[data-log-id]').first().press('Enter');assert.match(await page.locator('#logTask').textContent(),/Second task/);
+  await api(`/api/tasks/${other.taskId}`,{status:'Closed'},'PATCH');await page.reload();await page.locator('[data-api-status="connected"]').waitFor();await page.getByRole('tab',{name:'Log Time',exact:true}).click();await workspace.getByRole('tab',{name:'Show All Data',exact:true}).click();await page.locator('[data-log-id]').first().focus();await page.locator('[data-log-id]').first().press('Enter');assert.match(await page.locator('#logTask').textContent(),/Second task/);
   await selectLogTime(page,'logEnd','11:00');await page.locator('#saveLogTimeChanges').click();await page.waitForFunction(()=>document.getElementById('logAutoSaveStatus')?.textContent?.startsWith('Saved'));await page.locator('#logDialog').getByRole('button',{name:'Close',exact:true}).last().click();await page.locator('#logDialog').waitFor({state:'hidden'});assert.equal((await api('/api/tasks',undefined,'GET')).find(t=>t.taskId===other.taskId).timeSpentMinutes,120);
   await page.locator('[data-log-id]').first().dblclick();await page.locator('#logTask').click();assert.equal(await page.getByRole('option').filter({hasText:'Second task'}).count(),0);await page.getByRole('button',{name:'+ Add Custom Task',exact:true}).click();assert.equal(await page.locator('#logCustomer').isDisabled(),false);assert.equal(await page.locator('#logNote').inputValue(),'Other note');await page.locator('#logCustomTitle').fill('Internal Meeting');await page.locator('#logNote').click();await page.waitForFunction(()=>document.getElementById('logAutoSaveStatus')?.textContent?.startsWith('Saved'));await page.locator('#logDialog').getByRole('button',{name:'Close',exact:true}).last().click();await page.locator('#logDialog').waitFor({state:'hidden'});assert.equal((await api('/api/tasks',undefined,'GET')).find(t=>t.taskId===other.taskId).timeSpentMinutes,0);
   await page.locator('#newLogBtn').click();await page.locator('#logTask').click();await page.getByRole('combobox',{name:'Search Log Task Title'}).fill('Internal Meeting');assert.equal(await page.getByRole('listbox',{name:'Log Task Title'}).getByRole('option').count(),0);await page.keyboard.press('Escape');await page.keyboard.press('Escape');await page.locator('#logDialog').waitFor({state:'hidden'});
@@ -41,3 +41,47 @@ for(const width of [1440,390])for(const theme of ['light','dark'])test(`Log Time
   assert.equal(await page.locator('#logTimeTable thead th').count(),5);assert.equal(await page.locator('#logTimeTable [data-log-id] td').count(),5);assert.equal(await page.locator('#deleteLogDialog').count(),0);assert.equal(await page.getByRole('button',{name:/^Delete Internal Meeting$/}).count(),0);assert.equal((await api('/api/tasks',undefined,'GET')).length,2);assert.equal((await api('/api/log-time',undefined,'GET')).length,1);await ctx.close();
  }finally{if(browser)await browser.close();await instance.close();}
 });
+
+
+test('CR-025 responsive header navigation and fixed release footer', async()=>{
+  const {startServer}=await import('../scripts/test-server.mjs')
+  const instance=await startServer(0,false),url=`http://127.0.0.1:${instance.server.address().port}`
+  let browser
+  try {
+    browser=await chromium.launch({headless:true})
+    for (const width of [1440,390]) {
+      const context=await browser.newContext({viewport:{width,height:900},colorScheme:'dark'})
+      const page=await context.newPage()
+      page.setDefaultTimeout(12000)
+      try {
+        await page.goto(url)
+        await page.locator('[data-api-status="connected"]').waitFor()
+        const header=page.locator('header')
+        const tabs=header.getByRole('tablist',{name:'Workspace',exact:true})
+        assert.equal(await tabs.count(),1,'Workspace navigation moved inside header')
+        assert.equal(await page.locator('main').getByRole('tablist',{name:'Workspace',exact:true}).count(),0,'No duplicate workspace tabs in main')
+        assert.equal(await header.getByText('API Connected',{exact:true}).count(),0,'API badge not visible')
+        assert.equal(await header.getByText('Malaysia Time · UTC+8',{exact:true}).count(),0,'Timezone label not visible')
+        assert.ok(await page.locator('#themeToggle').isVisible(),'Theme toggle retained')
+        const metrics=await page.evaluate(()=>{
+          const brand=document.querySelector('header h1').getBoundingClientRect()
+          const nav=document.querySelector('header .header-workspaces').getBoundingClientRect()
+          const theme=document.querySelector('#themeToggle').getBoundingClientRect()
+          const header=document.querySelector('header').getBoundingClientRect()
+          return {brandRight:brand.right,brandBottom:brand.bottom,navLeft:nav.left,navTop:nav.top,navRight:nav.right,themeLeft:theme.left,headerRight:header.right}
+        })
+        assert.ok(metrics.navRight<=metrics.headerRight+1,'Workspace nav stays inside header viewport')
+        if(width===1440)assert.ok(metrics.navLeft>metrics.brandRight,'Workspace tabs positioned right of title on desktop')
+        else assert.ok(metrics.navTop>=metrics.brandBottom,'Mobile tabs wrap below title')
+        const footer=page.getByRole('contentinfo',{name:'Application version'})
+        const stamp=await footer.getByTestId('release-meta').textContent()
+        assert.match(stamp,/^App v\d+(?:\.\d+)+ · Updated \d{4}-\d{2}-\d{2} \d{2}:\d{2} MYT$/)
+        await header.getByRole('tab',{name:'Log Time',exact:true}).click()
+        await page.getByRole('region',{name:'Log Time workspace'}).waitFor()
+        assert.equal(await footer.getByTestId('release-meta').textContent(),stamp,'Version and update time stay stable after switching workspaces')
+        await header.getByRole('tab',{name:'Task Tracker',exact:true}).click()
+        assert.ok(await page.getByRole('heading',{name:'Your workspace'}).isVisible())
+      } finally {await context.close()}
+    }
+  } finally {if(browser)await browser.close();await instance.close()}
+})
