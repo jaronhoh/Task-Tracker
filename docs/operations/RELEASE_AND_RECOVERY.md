@@ -1,5 +1,24 @@
 # Task Tracker — Release, D1 Recovery and Operations Checklist
 
+## Latest actual rollback — 2026-11-06: active production restored to saved v15
+
+**User-relayed ChatGPT Work report of completed native deployment (not an instruction to redeploy):**
+
+- **Site project:** `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979` (original project). **Active production before rollback:** v16. **After rollback:** the **saved v15** version is actively deployed. **Deployment ID:** `appgdep_6aed235c3ea4819199d0d03b9af3ce9d`.
+- **Production URL reported by Work:** `https://task-tracker-jaron-migration.jaron-hoh.chatgpt.site/`. This differs from the historical `savoryboar128` hostname below. Whether both URLs resolve is **unverified**; do not silently assume redirect/equivalence.
+- Sites settings still lists **latest saved source version v16**. That is normal in the Work report and **does not override the actual active deployment of saved v15**. Keep **saved source version / active deployed version / deployment ID** distinct in all runbooks.
+- **D1 remains bound to `DB`**; all five data tables were readable. Work reported **Revision 290** and task next-ID sequence **37**, with both values unchanged on immediate pre-/post-rollback reads. No D1 schema migration, data rollback, truncation or reset was performed.
+- **Site UI smoke:** page opened with `API Connected`; Tasks view **displayed 18 tasks**, Log Time displayed **49 records**. The tasks view count is **not evidence of a total tasks-table count**.
+- **Permission state:** Owner-only allowlist contains Owner only, no guest/group access, per native Work report. Authenticated non-Owner negative checks were not separately reported.
+- **Limitations:** no independent full-row and full-field production D1 parity comparison or recoverable backup/restore proof provided; two control values and readable tables do not establish this. No Chat-native deployment API was used in this status update.
+- **Source:** GitHub `main` including merged PR #20 was **not rolled back**. This release selected the already-saved Sites v15 artifact, **not the GitHub merge SHA**. No new Sites source version was saved.
+
+**Operational instruction:** Treat rollback as **already performed** and preserve active v15. Do not automatically re-publish the newest saved v16 or merged `main`. Any new Sites deployment must be a fresh user-requested release. The earlier “no additional feature release” statement below has been **superseded only as to this later expressly authorized rollback**, not as a mandate to deploy PR #20.
+
+Full project record: [docs/PROJECT_STATUS.md](../PROJECT_STATUS.md).
+
+---
+
 ## Current release decision — 2026-11-05: existing Sites functionality confirmed; no extra deployment requested
 
 The user has confirmed that the **existing Task Tracker Site already contains the features they need**. The previously attempted release of merged PR #20 through the original Site source-sync process is **no longer requested**. This is a **functional user confirmation**, not proof of a new native Sites deployment or of GitHub/Sites source-SHA equality.
