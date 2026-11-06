@@ -17,7 +17,7 @@ This is an **append-only** PRD. Historic acceptance text remains for traceabilit
 | §8 CR-017–019 | Released at Sites v14 | Independent search, Edit ordinary-field Auto Save, explicit atomic Save Time, row double-click/Enter; **old Edit/Delete table-action claims are superseded by §9**. |
 | §9 CR-020/021 | Released at Sites v15 | `Date | Hours` heading; five-column Log Time table with no Actions/Edit/Delete buttons. |
 | §10 CR-022/023 & H0–H4 | **Draft PR #20; NOT LIVE** | New Deleted this-Malaysia-week card uses task End; 12-hour picker; reliability, backup/access, touch/midnight and maintenance. Do not claim published until a new native Sites release is verified. |
-| §12 CR-025 — Header tabs + minimal footer | **APPROVED REQUIREMENT ONLY; NOT IMPLEMENTED / NOT DEPLOYED** | Move workspace navigation to top-right header; remove API/time badges; show minimal release metadata in footer. |
+| §12 CR-025 — Header tabs + minimal footer | **GitHub PR #26 MERGED; CI 108/108 PASS; NOT DEPLOYED** | Header workspace tabs moved right; header badges removed; footer displays bundled app version and actual build time. Sites version remains separately tracked. |
 | §11 CR-024 — Internal API Only | **Request guards TESTED in draft; native Owner authorization NOT VERIFIED** | No public/third-party API offering; preserve strictly protected same-site React→D1 internal endpoints; verify owner-only API authorization separately for all routes. |
 
 ## 1. Objective and scope
@@ -356,19 +356,27 @@ It does **not** prove that a **logged-in non-Owner** would be rejected, nor that
 
 ## 12. CR-025 — Header navigation and minimal footer (2026-11-06)
 
-**Source:** User's annotated screenshot of currently running Task Tracker and explicit instruction `更简洁，ABCD`. **State:** requirement captured; source implementation, QA and Sites release **not performed**. This is a **new request after the rollback to actively deployed Sites v15**, not permission to redeploy v16.
+**Source:** User's annotated screenshot and explicit instruction `更简洁，ABCD`. **State:** implemented and merged to GitHub `main` via [PR #26](https://github.com/jaronhoh/Task-Tracker/pull/26), exact tested Head `887de68594d2eea4ade2083bd8444415d06b8fcb`, [CI #42150978484](https://github.com/jaronhoh/Task-Tracker/actions/runs/42150978484) **108/108 PASS** (20 frontend, 69 API/D1, 19 Chromium). **NOT DEPLOYED**. Production remains saved Sites v15 after v16→v15 rollback.
 
 ### 12.1 UI scope (F01 / cross-workspace layout)
 
 - **Header:** move the existing `Task Tracker | Log Time` workspace tabs from the page-content top-left to the **right side of the global top header** (in the space formerly occupied by the current API/time status text). Keep the existing logo/title/subtitle at left and the theme toggle at right; adapt spacing/wrapping for mobile.
 - **Remove header labels only:** hide `API Connected` and `Malaysia Time · UTC+8` **from the visible UI**. Do **not** remove or disable the underlying website-internal API, connectivity, Malaysia-time calculations or D1 persistence.
-- **Footer:** show one compact metadata line, e.g. `v15 · Updated 2026-11-06 08:45 MYT` (illustrative format only; **not a literal version or timestamp to hard-code**). `Version` must reflect the **actual actively deployed application/Sites release**, not merely the latest saved Sites source version. `Updated` means the **release/build/publish timestamp**, not current time on every page load. If the platform cannot expose trusted active-version/timestamp metadata, mark the missing source as an implementation dependency and do not invent values; choose an explicitly maintained release manifest if supported.
+- **Footer:** one compact metadata line. Implementation displays `App v<package version> · Updated YYYY-MM-DD HH:mm MYT`, where both values are embedded into the **running app bundle** at build from `package.json` and real Vite build timestamp (or reproducible `SOURCE_DATE_EPOCH`). It is **not** a ChatGPT Sites v15/v16/v17 release number; this distinction is explicit through the `App` prefix. The Sites active deployment version cannot be automatically sourced from the currently documented public runtime APIs and is **not invented**. Build time is fixed until a new build, not the browser wall clock. The earlier `v15` example was illustrative and is superseded by this honest source contract.
 - **Unchanged:** workspace selection/routing, Task Tracker and Log Time screens, search, tables, data, status filters, existing API calls, D1, time-zone semantics, Light/Dark toggle and Owner-only permissions.
 
 ### 12.2 Acceptance criteria
 
 - **AC-CR-025-01:** Both workspace tabs appear inside the top-right global header on desktop and mobile and retain switching behavior, focus and active-tab styling. Old content-area navigation does not remain duplicated.
 - **AC-CR-025-02:** Neither `API Connected` nor `Malaysia Time · UTC+8` appears in the header; internal API actions still work and stored/calculated times remain Malaysia time.
-- **AC-CR-025-03:** Footer displays a single concise `vN · Updated YYYY-MM-DD HH:mm MYT` line using verified deployed version and release/update timestamp, with no misleading hard-coded v15 or dynamic wall-clock time.
+- **AC-CR-025-03:** Footer displays one concise `App vX.Y.Z · Updated YYYY-MM-DD HH:mm MYT` line based on the actual app bundle package version and build timestamp; no hard-coded Sites v15/v16, latest-saved-version inference, or dynamic wall clock. Actual native Sites release numbering requires a separate authoritative deployment metadata source and is not claimed.
 - **AC-CR-025-04:** Responsive header, theme toggle, Task Tracker and Log Time flows, keyboard accessibility, light/dark mode, D1 records and Owner-only access remain intact; affected UI tests pass.
 - **AC-CR-025-05:** Develop/test/commit in Chat-first workflow. **Do not publish automatically**: existing production must stay on active saved Sites v15 until the user explicitly requests a later Sites deployment and the original-Site source update path is genuinely available. Record GitHub vs active Sites versions separately.
+
+
+### 12.3 Delivery evidence (2026-11-06)
+
+- **GitHub:** [PR #26](https://github.com/jaronhoh/Task-Tracker/pull/26) MERGED; merge SHA `41b66fceb74fc267f076a9307fe0120be829188a`; exact CI Head `887de68594d2eea4ade2083bd8444415d06b8fcb`.
+- **Tests:** [Sites React acceptance Actions #42150978484](https://github.com/jaronhoh/Task-Tracker/actions/runs/42150978484) success: TypeScript, React build, React/model tests **20**, API/D1 **69**, Chromium browser tests **19**; total **108/108**, 0 failures. Chromium covers 1440/390 widths, theme retention, header navigation, removed text, fixed footer, and no duplicate tabs.
+- **Scope:** `frontend/src/App.tsx`, `frontend/src/styles.css`, `frontend/src/lib/release-meta.ts`, `frontend/vite.config.ts` and scoped automated tests. **No D1 schema change.**
+- **Native Sites:** **NOT DEPLOYED** by GitHub merge. Existing production active **saved v15** after explicit rollback; latest saved source **v16** is separate. Future Work/Sites deployment must verify the actual original-Site hosted source and requires explicit user intent.
