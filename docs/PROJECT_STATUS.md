@@ -1,3 +1,24 @@
+# 2026-11-06 — CR-025 release blocked by missing original-Site source sync/push and build artifact
+
+**CURRENT RELEASE BLOCKER (user-relayed ChatGPT Work read-only verification; no new deployment):** [PR #26](https://github.com/jaronhoh/Task-Tracker/pull/26) is merged into GitHub `main` (merge SHA `41b66fceb74fc267f076a9307fe0120be829188a`); 108/108 [exact-head CI](https://github.com/jaronhoh/Task-Tracker/actions/runs/42150978484) passed. However, the available Sites tools **cannot** transfer `main/sites/react-d1/` into the **existing Site's configured source repository/branch**, push the matching remote HEAD, or produce the matching Sites build archive. The Sites `save version` operation requires the configured source-branch HEAD SHA and corresponding build artifact, so a GitHub merge SHA or `.openai/hosting.json` Project ID cannot substitute. Available native actions to save and deploy **already-synced / already-saved** versions are insufficient.
+
+| Item | Current status |
+|---|---|
+| CR-025 GitHub code | **MERGED**: PR #26; 108/108 CI green (GitHub verified). |
+| Original Site access | Work reports existing private original project `appgprj_6ad0f51ede5c8191bb6ab29c1b9b8979`, configured URL, Owner-only access and D1 `DB` remain unchanged. |
+| Production version | Last verified by user-relayed Work **rollback to active saved v15**; latest saved source was v16. This Work attempt **did not publish any version**. |
+| Missing capability (specific) | **Read GitHub `main/sites/react-d1/` → write/sync/push into original Site's configured source repository and branch → build matching archive → save and deploy.** Current connector can read GitHub source but has **no writable original-Site source-sync/push action**. |
+| Version save / deployment IDs for this attempt | **NONE**. Do not record a new version, deploy ID, GitHub source association or live UI verification. |
+| Production safety | No new Site, no publishing old v16, no D1/schema/permission/URL changes. |
+| Resolution trigger | An **official supported original-Site hosted-source editor/sync/push/build path** or newly granted capability. Only then recheck source HEAD and artifact correspondence, save a new version, publish to original Site, verify URL/D1/Owner-only/UI. |
+| Issue | [#25 remains OPEN — release blocked](https://github.com/jaronhoh/Task-Tracker/issues/25). |
+
+**Stop condition:** Do not resend substantially identical Work deployment instructions, guess the remote source branch, push an unverified GitHub SHA into `save version`, or create a replacement Site. No additional coding is needed until this distinct platform capability is available. Keep this deployment blocker separate from GitHub development completion.
+
+**Evidence class:** source/CI = **GitHub verified**; original Sites permission/tools/deployment attempt = **User-relayed Work report**; original-Site configured source remote/branch and archive = **Not available / Not verified**.
+
+---
+
 # 2026-11-06 — CR-025 code merged; 108/108 CI success; production Sites v15 retained
 
 **CURRENT STATUS: CR-025 IMPLEMENTED + MERGED IN GITHUB / VERIFIED CI PASSED / NOT DEPLOYED TO SITES.** Supersedes the **2026-11-06 CR-025 requirement-only / not started** entry below; keep it as history. Original production stays on **rollback-selected Sites saved v15**, per last user-relayed Work report, not the latest Sites saved source v16.
