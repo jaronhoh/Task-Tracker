@@ -1,3 +1,24 @@
+# 2026-11-06 — CR-025 code merged; 108/108 CI success; production Sites v15 retained
+
+**CURRENT STATUS: CR-025 IMPLEMENTED + MERGED IN GITHUB / VERIFIED CI PASSED / NOT DEPLOYED TO SITES.** Supersedes the **2026-11-06 CR-025 requirement-only / not started** entry below; keep it as history. Original production stays on **rollback-selected Sites saved v15**, per last user-relayed Work report, not the latest Sites saved source v16.
+
+| Dimension | Latest result / evidence |
+|---|---|
+| User requirement | Header-right `Task Tracker | Log Time` navigation; remove **visible** `API Connected` and `Malaysia Time · UTC+8`; compact footer. [PRD §12](https://github.com/jaronhoh/Task-Tracker/blob/main/docs/PRD_PHASE2_LOG_TIME_2026-10-19.md). |
+| Implementation | **COMPLETE on GitHub**. [PR #26](https://github.com/jaronhoh/Task-Tracker/pull/26) merged into `main`. Merge Commit `41b66fceb74fc267f076a9307fe0120be829188a`; tested head `887de68594d2eea4ade2083bd8444415d06b8fcb`. |
+| Exact-head CI | **[Actions #42150978484](https://github.com/jaronhoh/Task-Tracker/actions/runs/42150978484) SUCCESS**: TypeScript check, React build, 20 frontend/model tests, 69 API/D1 tests, 19 Chromium tests = **108 passed / 0 failed**. |
+| Browser acceptance | New responsive CR-025 test covers desktop **1440 px** and mobile **390 px**, visible header/navigation location and tab switching, theme toggle, removal of the two header labels, footer MYT format and fixed text after switching workspaces. Automated emulation is not real-device acceptance. |
+| Footer version meaning | **`App vX.Y.Z · Updated YYYY-MM-DD HH:mm MYT`** is derived from the **running bundle's `package.json` version and actual build timestamp**. It does **not** claim the active ChatGPT Sites native deployment version (v15/v16); the app cannot reliably inspect that native value from current frontend APIs. The `App` prefix avoids confusing build metadata with native Sites history. No hard-coded fake deployment time. |
+| Production Site | **UNCHANGED** by this GitHub merge. Previously confirmed active deployment **saved v15**, latest saved Sites source **v16**; rollback Deployment ID `appgdep_6aed235c3ea4819199d0d03b9af3ce9d`, Work-reported, not independently rechecked here. |
+| Data & permissions | **No migration, D1 writes, Site access changes, or new Sites deployment performed**. Keep D1 `DB` binding and Owner-only access. GitHub merged code ≠ Sites published. |
+| Follow-up | **No further coding required for approved CR-025 scope.** A future **explicit user-requested** Sites release still needs supported original Site source sync, correctly saved release, verified version, D1/Owner-only checks and a real native deployment report. Do not re-publish saved v16 by default. |
+
+**Release decision:** GitHub development goal reached. Native Sites production release was **not performed** because this Chat session has no supported Sites management/publishing operation and prior Work workspaces lacked hosted-source sync. Do not claim active v15 already contains CR-025.
+
+**Evidence:** GitHub PR, source and CI = GitHub verified. Sites v15 production state and rollback = User-relayed Work native report. CR-025 Sites deployment = Not performed.
+
+---
+
 # 2026-11-06 — CR-025 header navigation + compact release footer scoped (no deploy)
 
 **Latest approved UI requirement:** User supplied an annotated screenshot and chose concise A+B+C+D deliverables. [PRD §12 CR-025](https://github.com/jaronhoh/Task-Tracker/blob/main/docs/PRD_PHASE2_LOG_TIME_2026-10-19.md) and [Issue #25](https://github.com/jaronhoh/Task-Tracker/issues/25) now specify: move global `Task Tracker | Log Time` tabs to header right; remove only visible `API Connected` / `Malaysia Time · UTC+8` labels; add compact footer `vN · Updated YYYY-MM-DD HH:mm MYT` sourced from **actual active application version and real release time** (no hard-coded example, no latest-saved-vs-active version confusion). Preserve navigation, internal APIs, timezone calculations, theme toggle, mobile behavior and Owner-only/D1. User selected **documentation and implementation-handoff formats A–D**, not an automatic Site publish.
