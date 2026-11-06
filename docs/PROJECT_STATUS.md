@@ -1,3 +1,21 @@
+# 2026-11-06 — CR-025 header navigation + compact release footer scoped (no deploy)
+
+**Latest approved UI requirement:** User supplied an annotated screenshot and chose concise A+B+C+D deliverables. [PRD §12 CR-025](https://github.com/jaronhoh/Task-Tracker/blob/main/docs/PRD_PHASE2_LOG_TIME_2026-10-19.md) and [Issue #25](https://github.com/jaronhoh/Task-Tracker/issues/25) now specify: move global `Task Tracker | Log Time` tabs to header right; remove only visible `API Connected` / `Malaysia Time · UTC+8` labels; add compact footer `vN · Updated YYYY-MM-DD HH:mm MYT` sourced from **actual active application version and real release time** (no hard-coded example, no latest-saved-vs-active version confusion). Preserve navigation, internal APIs, timezone calculations, theme toggle, mobile behavior and Owner-only/D1. User selected **documentation and implementation-handoff formats A–D**, not an automatic Site publish.
+
+| Dimension | Current state |
+|---|---|
+| CR-025 requirement | **User-approved; documented** |
+| PRD | **Updated on GitHub main; §12** |
+| Tracking | **Issue #25 OPEN** |
+| Source implementation / tests for CR-025 | **NOT STARTED / NOT RUN** |
+| PR / Sites deployment of CR-025 | **NOT CREATED / NOT DEPLOYED** |
+| Current production | **Saved Sites v15 active**, per last Work-reported rollback; latest saved Sites source v16 is distinct |
+| Deployment instructions | **Future use only**; Work only for actual native Sites deployment after source changes + tests + explicit user release request |
+
+**Do not** publish v16 or `main` merely because this UI requirement was documented. Current production remains the rollback-selected v15. GitHub merge/CI previously reported for PR #20 do **not** prove CR-025 code has been implemented or tested.
+
+---
+
 # 2026-11-06 — Production rolled back from v16 to saved Sites v15 (Work-reported deployment)
 
 **CURRENT PRODUCTION (user-relayed ChatGPT Work native deployment report): ROLLBACK SUCCESS — active Sites deployment uses saved Version 15.** This **supersedes** the 2026-11-05 entries below saying no Sites version was deployed / no extra release requested. The user subsequently **explicitly requested and authorized rollback** after the active Site became v16. The earlier no-extra-feature-deploy decision still applies to **publishing PR #20**; it does **not** preclude this explicitly requested rollback.
