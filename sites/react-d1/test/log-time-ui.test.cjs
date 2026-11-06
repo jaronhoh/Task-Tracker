@@ -41,3 +41,47 @@ for(const width of [1440,390])for(const theme of ['light','dark'])test(`Log Time
   assert.equal(await page.locator('#logTimeTable thead th').count(),5);assert.equal(await page.locator('#logTimeTable [data-log-id] td').count(),5);assert.equal(await page.locator('#deleteLogDialog').count(),0);assert.equal(await page.getByRole('button',{name:/^Delete Internal Meeting$/}).count(),0);assert.equal((await api('/api/tasks',undefined,'GET')).length,2);assert.equal((await api('/api/log-time',undefined,'GET')).length,1);await ctx.close();
  }finally{if(browser)await browser.close();await instance.close();}
 });
+
+
+test('CR-025 responsive header navigation and fixed release footer', async()=>{
+  const {startServer}=await import('../scripts/test-server.mjs')
+  const instance=await startServer(0,false),url=`http://127.0.0.1:${instance.server.address().port}`
+  let browser
+  try {
+    browser=await chromium.launch({headless:true})
+    for (const width of [1440,390]) {
+      const context=await browser.newContext({viewport:{width,height:900},colorScheme:'dark'})
+      const page=await context.newPage()
+      page.setDefaultTimeout(12000)
+      try {
+        await page.goto(url)
+        await page.locator('[data-api-status="connected"]').waitFor()
+        const header=page.locator('header')
+        const tabs=header.getByRole('tablist',{name:'Workspace',exact:true})
+        assert.equal(await tabs.count(),1,'Workspace navigation moved inside header')
+        assert.equal(await page.locator('main').getByRole('tablist',{name:'Workspace',exact:true}).count(),0,'No duplicate workspace tabs in main')
+        assert.equal(await header.getByText('API Connected',{exact:true}).count(),0,'API badge not visible')
+        assert.equal(await header.getByText('Malaysia Time · UTC+8',{exact:true}).count(),0,'Timezone label not visible')
+        assert.ok(await page.locator('#themeToggle').isVisible(),'Theme toggle retained')
+        const metrics=await page.evaluate(()=>{
+          const brand=document.querySelector('header h1').getBoundingClientRect()
+          const nav=document.querySelector('header .header-workspaces').getBoundingClientRect()
+          const theme=document.querySelector('#themeToggle').getBoundingClientRect()
+          const header=document.querySelector('header').getBoundingClientRect()
+          return {brandRight:brand.right,brandBottom:brand.bottom,navLeft:nav.left,navTop:nav.top,navRight:nav.right,themeLeft:theme.left,headerRight:header.right}
+        })
+        assert.ok(metrics.navRight<=metrics.headerRight+1,'Workspace nav stays inside header viewport')
+        if(width===1440)assert.ok(metrics.navLeft>metrics.brandRight,'Workspace tabs positioned right of title on desktop')
+        else assert.ok(metrics.navTop>=metrics.brandBottom,'Mobile tabs wrap below title')
+        const footer=page.getByRole('contentinfo',{name:'Application version'})
+        const stamp=await footer.getByTestId('release-meta').textContent()
+        assert.match(stamp,/^App v\d+(?:\.\d+)+ · Updated \d{4}-\d{2}-\d{2} \d{2}:\d{2} MYT$/)
+        await header.getByRole('tab',{name:'Log Time',exact:true}).click()
+        await page.getByRole('region',{name:'Log Time workspace'}).waitFor()
+        assert.equal(await footer.getByTestId('release-meta').textContent(),stamp,'Version and update time stay stable after switching workspaces')
+        await header.getByRole('tab',{name:'Task Tracker',exact:true}).click()
+        assert.ok(await page.getByRole('heading',{name:'Your workspace'}).isVisible())
+      } finally {await context.close()}
+    }
+  } finally {if(browser)await browser.close();await instance.close()}
+})
