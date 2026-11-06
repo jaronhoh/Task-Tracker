@@ -17,6 +17,7 @@ This is an **append-only** PRD. Historic acceptance text remains for traceabilit
 | §8 CR-017–019 | Released at Sites v14 | Independent search, Edit ordinary-field Auto Save, explicit atomic Save Time, row double-click/Enter; **old Edit/Delete table-action claims are superseded by §9**. |
 | §9 CR-020/021 | Released at Sites v15 | `Date | Hours` heading; five-column Log Time table with no Actions/Edit/Delete buttons. |
 | §10 CR-022/023 & H0–H4 | **Draft PR #20; NOT LIVE** | New Deleted this-Malaysia-week card uses task End; 12-hour picker; reliability, backup/access, touch/midnight and maintenance. Do not claim published until a new native Sites release is verified. |
+| §12 CR-025 — Header tabs + minimal footer | **APPROVED REQUIREMENT ONLY; NOT IMPLEMENTED / NOT DEPLOYED** | Move workspace navigation to top-right header; remove API/time badges; show minimal release metadata in footer. |
 | §11 CR-024 — Internal API Only | **Request guards TESTED in draft; native Owner authorization NOT VERIFIED** | No public/third-party API offering; preserve strictly protected same-site React→D1 internal endpoints; verify owner-only API authorization separately for all routes. |
 
 ## 1. Objective and scope
@@ -351,3 +352,23 @@ It does **not** prove that a **logged-in non-Owner** would be rejected, nor that
 - **DATA-01 / Issue #22** requires real off-repository production backup and detached restore validation before publish.
 - **Issue #23** covers real-device mobile checks and authorized same-Site deployment.
 - Keep Draft PR #20 open until CR-024 technical design is implemented/verified and the above release gates are satisfied. **No API route removals or changes to production are authorized by documentation-only changes.**
+
+
+## 12. CR-025 — Header navigation and minimal footer (2026-11-06)
+
+**Source:** User's annotated screenshot of currently running Task Tracker and explicit instruction `更简洁，ABCD`. **State:** requirement captured; source implementation, QA and Sites release **not performed**. This is a **new request after the rollback to actively deployed Sites v15**, not permission to redeploy v16.
+
+### 12.1 UI scope (F01 / cross-workspace layout)
+
+- **Header:** move the existing `Task Tracker | Log Time` workspace tabs from the page-content top-left to the **right side of the global top header** (in the space formerly occupied by the current API/time status text). Keep the existing logo/title/subtitle at left and the theme toggle at right; adapt spacing/wrapping for mobile.
+- **Remove header labels only:** hide `API Connected` and `Malaysia Time · UTC+8` **from the visible UI**. Do **not** remove or disable the underlying website-internal API, connectivity, Malaysia-time calculations or D1 persistence.
+- **Footer:** show one compact metadata line, e.g. `v15 · Updated 2026-11-06 08:45 MYT` (illustrative format only; **not a literal version or timestamp to hard-code**). `Version` must reflect the **actual actively deployed application/Sites release**, not merely the latest saved Sites source version. `Updated` means the **release/build/publish timestamp**, not current time on every page load. If the platform cannot expose trusted active-version/timestamp metadata, mark the missing source as an implementation dependency and do not invent values; choose an explicitly maintained release manifest if supported.
+- **Unchanged:** workspace selection/routing, Task Tracker and Log Time screens, search, tables, data, status filters, existing API calls, D1, time-zone semantics, Light/Dark toggle and Owner-only permissions.
+
+### 12.2 Acceptance criteria
+
+- **AC-CR-025-01:** Both workspace tabs appear inside the top-right global header on desktop and mobile and retain switching behavior, focus and active-tab styling. Old content-area navigation does not remain duplicated.
+- **AC-CR-025-02:** Neither `API Connected` nor `Malaysia Time · UTC+8` appears in the header; internal API actions still work and stored/calculated times remain Malaysia time.
+- **AC-CR-025-03:** Footer displays a single concise `vN · Updated YYYY-MM-DD HH:mm MYT` line using verified deployed version and release/update timestamp, with no misleading hard-coded v15 or dynamic wall-clock time.
+- **AC-CR-025-04:** Responsive header, theme toggle, Task Tracker and Log Time flows, keyboard accessibility, light/dark mode, D1 records and Owner-only access remain intact; affected UI tests pass.
+- **AC-CR-025-05:** Develop/test/commit in Chat-first workflow. **Do not publish automatically**: existing production must stay on active saved Sites v15 until the user explicitly requests a later Sites deployment and the original-Site source update path is genuinely available. Record GitHub vs active Sites versions separately.
