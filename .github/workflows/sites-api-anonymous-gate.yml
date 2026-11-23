@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      TASK_TRACKER_SITE_URL: https://task-tracker-jaron-migration.savoryboar128.chatgpt.site/
+      TASK_TRACKER_SITE_URL: https://task-tracker-jaron-migration.jaron-hoh.chatgpt.site/
     steps:
       - uses: actions/checkout@v4
       - name: Probe original Sites root and private API GETs without credentials
